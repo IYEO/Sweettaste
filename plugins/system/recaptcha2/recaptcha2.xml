@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="plugin" version="2.5" method="upgrade" group="system">
+	<name>HikaShop ReCaptcha v2</name>
+	<creationDate>{__DAY__} {__MONTH__} {__YEAR__}</creationDate>
+	<version>{__PLUGIN_VERSION__}</version>
+	<author>Hikari Software</author>
+	<authorEmail>dev@hikashop.com</authorEmail>
+	<authorUrl>http://www.hikashop.com</authorUrl>
+	<copyright>(C) 2010-{__YEAR__} HIKARI SOFTWARE. All rights reserved.</copyright>
+	<license>http://www.gnu.org/licenses/gpl-3.0.html GNU/GPL</license>
+	<description>Display ReCaptcha v2 on contact and registration forms</description>
+	<files>
+		<filename plugin="recaptcha2">recaptcha2.php</filename>
+		<folder>language</folder>
+	</files>
+	<languages folder="language">
+		<language tag="en-GB">en-GB/en-GB.plg_system_recaptcha2.ini</language>
+	</languages>
+	<params>
+		<param name="public_key" type="text" size="50" default="" label="Public key" description="Public key you get after registering on ReCaptcha website" />
+		<param name="private_key" type="text" size="50" default="" label="Private key" description="Private key you get after registering on ReCaptcha website" />
+		<param name="captchatext" type="text" size="50" default="" label="Captcha Caption" description="Text displayed for the captcha field." />
+		<param name="theme" type="list" default="light" label="Theme" description="Theme used for the captcha">
+			<option value="light">Light</option>
+			<option value="dark">Dark</option>
+		</param>
+		<param name="registration" type="radio" default="1" label="Use in registration forms" description="The plugin will display the catpcha on your registration forms">
+			<option value="0">No</option>
+			<option value="1">Yes</option>
+		</param>
+		<param name="fieldafter" type="radio" default="password" label="Display after" description="The plugin will display the catpcha after the selected field on your registration form">
+			<option value="password">Password</option>
+			<option value="email">Email</option>
+		</param>
+		<param name="contact" type="radio" default="0" label="Use in contact forms" description="The plugin will display the catpcha on your contact forms">
+			<option value="0">No</option>
+			<option value="1">Yes</option>
+		</param>
+		<param name="checkpos" type="list" default="contact_text" label="Display position on contact forms" description="If you display the captcha on the contact forms, where do you want it to be displayed?">
+			<option value="contact_email_copy">After the receive a copy</option>
+			<option value="contact_text">After the message textarea</option>
+			<option value="contact_email">After the e-mail address input</option>
+		</param>
+		<param name="comment" type="radio" default="0" label="Use in comment forms" description="The plugin will display the catpcha on your comment forms">
+			<option value="0">No</option>
+			<option value="1">Yes</option>
+		</param>
+		<param name="commentpos" type="list" default="hikashop_vote_comment" label="Display position on comment forms" description="If you display the captcha on the comment forms, where do you want it to be displayed?">
+			<option value="hikashop_vote_comment">After the comment textarea</option>
+			<option value="pseudo_comment">After the username input</option>
+			<option value="email_comment">After the e-mail address input</option>
+		</param>
+	</params>
+	<config>
+		<fields name="params">
+			<fieldset name="basic">
+				<field name="public_key" type="text" size="50" default="" label="Public key" description="Public key you get after registering on ReCaptcha website" />
+				<field name="private_key" type="text" size="50" default="" label="Private key" description="Private key you get after registering on ReCaptcha website" />
+				<field name="captchatext" type="text" size="50" default="" label="Captcha Caption" description="Text displayed for the captcha field." />
+				<field name="theme" type="list" default="light" label="Theme" description="Theme used for the captcha">
+			<option value="light">Light</option>
+			<option value="dark">Dark</option>
+				</field>
+				<field name="registration" type="radio" default="1" label="Use in registration forms" description="The plugin will display the catpcha on your registration forms">
+					<option value="0">No</option>
+					<option value="1">Yes</option>
+				</field>
+				<field name="fieldafter" type="radio" default="password" label="Display after" description="The plugin will display the catpcha after the selected field on your registration form">
+					<option value="password">Password</option>
+					<option value="email">Email</option>
+				</field>
+				<field name="contact" type="radio" default="0" label="Use in contact forms" description="The plugin will display the catpcha on your contact forms">
+					<option value="0">No</option>
+					<option value="1">Yes</option>
+				</field>
+				<field name="checkpos" type="list" default="contact_text" label="Display position on contact forms" description="If you display the captcha on the contact forms, where do you want it to be displayed?">
+					<option value="contact_email_copy">After the receive a copy</option>
+					<option value="contact_text">After the message textarea</option>
+					<option value="contact_email">After the e-mail address input</option>
+				</field>
+				<field name="comment" type="radio" default="0" label="Use in comment forms" description="The plugin will display the catpcha on your comment forms">
+					<option value="0">No</option>
+					<option value="1">Yes</option>
+				</field>
+				<field name="commentpos" type="list" default="hikashop_vote_comment" label="Display position on comment forms" description="If you display the captcha on the comment forms, where do you want it to be displayed?">
+					<option value="hikashop_vote_comment">After the comment textarea</option>
+					<option value="pseudo_comment">After the username input</option>
+					<option value="email_comment">After the e-mail address input</option>
+				</field>
+			</fieldset>
+		</fields>
+	</config>
+</extension>

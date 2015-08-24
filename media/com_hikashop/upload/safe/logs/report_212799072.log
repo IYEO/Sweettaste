@@ -1,0 +1,51 @@
+-- 11.19.14 20:12:12 --
+Fail at step 0 :Connection failure - error code : 10002 , error message : Security header is not valid-- 11.19.14 20:12:12 --
+Array
+(
+    [USER] => spy67-facilitator_api1.ya.ru
+    [PWD] => 4EYW5ZAXPEHXR7D2
+    [SIGNATURE] => AgmcL-qCFGoervDfFHJIL6G1bUWpA.nXbiaGzBmvIYra81ZyUVfLcykP
+    [VERSION] => 109.0
+    [PAYMENTREQUEST_0_PAYMENTACTION] => Sale
+    [SOLUTIONTYPE] => Sole
+    [LANDINGPAGE] => Billing
+    [PAYMENTREQUEST_0_AMT] => 1000
+    [PAYMENTREQUEST_0_CURRENCYCODE] => RUB
+    [RETURNURL] => http://localhost/sweettaste/index.php?option=com_hikashop&ctrl=checkout&task=notify&notif_payment=paypalexpress&tmpl=component&Itemid=125
+    [CANCELURL] => http://localhost/sweettaste/index.php?option=com_hikashop&ctrl=order&task=cancel_order&Itemid=125
+    [METHOD] => SetExpressCheckout
+)
+-- 11.19.14 20:17:35 --
+Fail at step 0 :Connection failure - error code : 10002 , error message : Security header is not valid-- 11.19.14 20:17:35 --
+Array
+(
+    [USER] => spy67-facilitator_api1.ya.ru
+    [PWD] => 4EYW5ZAXPEHXR7D2
+    [SIGNATURE] => AgmcL-qCFGoervDfFHJIL6G1bUWpA.nXbiaGzBmvIYra81ZyUVfLcykP
+    [VERSION] => 119.0
+    [PAYMENTREQUEST_0_PAYMENTACTION] => Sale
+    [SOLUTIONTYPE] => Sole
+    [LANDINGPAGE] => Billing
+    [PAYMENTREQUEST_0_AMT] => 1000
+    [PAYMENTREQUEST_0_CURRENCYCODE] => RUB
+    [RETURNURL] => http://localhost/sweettaste/index.php?option=com_hikashop&ctrl=checkout&task=notify&notif_payment=paypalexpress&tmpl=component&Itemid=125
+    [CANCELURL] => http://localhost/sweettaste/index.php?option=com_hikashop&ctrl=order&task=cancel_order&Itemid=125
+    [METHOD] => SetExpressCheckout
+)
+-- 11.19.14 20:18:12 --
+Fail at step 0 :Connection failure - error code : 10002 , error message : Security header is not valid-- 11.19.14 20:18:13 --
+Array
+(
+    [USER] => spy67-facilitator_api1.ya.ru
+    [PWD] => 4EYW5ZAXPEHXR7D2
+    [SIGNATURE] => AgmcL-qCFGoervDfFHJIL6G1bUWpA.nXbiaGzBmvIYra81ZyUVfLcykP
+    [VERSION] => 119
+    [PAYMENTREQUEST_0_PAYMENTACTION] => Sale
+    [SOLUTIONTYPE] => Sole
+    [LANDINGPAGE] => Billing
+    [PAYMENTREQUEST_0_AMT] => 1000
+    [PAYMENTREQUEST_0_CURRENCYCODE] => RUB
+    [RETURNURL] => http://localhost/sweettaste/index.php?option=com_hikashop&ctrl=checkout&task=notify&notif_payment=paypalexpress&tmpl=component&Itemid=125
+    [CANCELURL] => http://localhost/sweettaste/index.php?option=com_hikashop&ctrl=order&task=cancel_order&Itemid=125
+    [METHOD] => SetExpressCheckout
+)

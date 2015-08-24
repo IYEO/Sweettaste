@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE install PUBLIC "-//Joomla! 3/0//DTD template 1.0//EN" "http://www.joomla.org/xml/dtd/3.0/template-install.dtd">
+<extension version="3.0" type="template" client="site">
+	<name>sweettaste</name>
+	<version>3.3</version>
+	<creationDate>17 september 2014</creationDate>
+	<author>YEO</author>
+	<authorEmail>spy67@ya.ru</authorEmail>	
+	<copyright>Sweettaste</copyright>
+	<description>Sweettaste</description>
+	<files>
+		<folder>css</folder>
+		<folder>fonts</folder>
+		<folder>html</folder>
+		<folder>images</folder>
+		<folder>js</folder>
+		<filename>index.php</filename>		
+		<filename>templateDetails.xml</filename>
+	</files>
+	<positions>
+		<position>navbar</position>
+		<position>search</position>
+		<position>about</position>
+		<position>logo</position>
+		<position>cart</position>
+		<position>content</position>
+		<position>footer</position>
+		<position>slogin</position>		
+	</positions>
+</extension>
