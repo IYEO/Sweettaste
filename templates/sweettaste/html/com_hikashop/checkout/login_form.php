@@ -54,14 +54,14 @@ if(!HIKASHOP_RESPONSIVE) {
     </div>
 	<?php if(JPluginHelper::isEnabled('system', 'remember')) : ?>
 	    <div class="checkbox">
-        <label>
-          <input type="checkbox" id="remember" name="remember" value="yes"> <?php echo JText::_('HIKA_REMEMBER_ME') ?>
-        </label>
-      </div>	
+                <label>
+                    <input type="checkbox" id="remember" name="remember" value="yes"> <?php echo JText::_('HIKA_REMEMBER_ME') ?>
+                </label>
+            </div>	
 	<?php endif; ?>	
 	<div class="row">
         <div class="form-group">
-            <div class="col-md-6">
+            <div class="col-md-6 col-lg-9">
                 <?php
                     $pos = "slogin";
                     $modules =& JModuleHelper::getModules($pos);
@@ -70,7 +70,7 @@ if(!HIKASHOP_RESPONSIVE) {
                     }
                 ?>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6 col-lg-3">
                 <?php                    
                     echo $this->cart->displayButton(JText::_('JLOGIN'),'login',@$this->params,'',' hikashopSubmitForm(\'hikashop_checkout_form\'); return false;', NULL, NULL, NULL, 'btn btn-primary btn-lg pull-right');
                     //echo $this->cart->displayButton(JText::_('JLOGIN'),'login',@$this->params, '',' hikashopSubmitForm(\'hikashop_checkout_form\'); return false;', 'type="submit"', NULL, NULL, 'btn btn-primary btn-lg pull-right validate');
