@@ -751,38 +751,34 @@ function hikashopCheckChangeForm(type, form) {
 			// check password
 				if(typeof(varform.elements['data[register][password]']) != 'undefined' && typeof(varform.elements['data[register][password2]']) != 'undefined') {
 					passwd = varform.elements['data[register][password]'];
-					passwd2 = varform.elements['data[register][password2]'];
+					passwd2 = varform.elements['data[register][password2]'];                                        
 					if(passwd.value != passwd2.value) {
-						/*passwd = jQuery(passwd);
-						passwd2 = jQuery(passwd2);*/
-												
-						if (jQuery(passwd).parent().parent().hasClass("has-success")) jQuery(passwd).parent().parent().removeClass("has-success");
-						jQuery(passwd).parent().parent().addClass("has-error");
+						if (jQuery(passwd).closest("div.form-group").hasClass("has-success")) jQuery(passwd).closest("div.form-group").removeClass("has-success");
+						if (!jQuery(passwd).closest("div.form-group").hasClass("has-error")) jQuery(passwd).closest("div.form-group").addClass("has-error");
 						
-						if (jQuery(passwd2).parent().parent().hasClass("has-success")) jQuery(passwd2).parent().parent().removeClass("has-success");
-						jQuery(passwd2).parent().parent().addClass("has-error");						
+						if (jQuery(passwd2).closest("div.form-group").hasClass("has-success")) jQuery(passwd2).closest("div.form-group").removeClass("has-success");
+						if (!jQuery(passwd2).closest("div.form-group").hasClass("has-error")) jQuery(passwd2).closest("div.form-group").addClass("has-error");
 						
-						jQuery(passwd2).attr("data-toggle", "tooltip").attr("data-placement", "bottom");
-						
+						if (!jQuery(passwd2).attr("data-toggle")) jQuery(passwd2).attr("data-toggle", "tooltip").attr("data-placement", "bottom");						
 						jQuery(passwd2).tooltip({animation: true, title: hikashopFieldsJs['password_different'], delay: {show: "200", "hide": 100}});
 						jQuery(passwd2).tooltip("show");
 						return false;
 					} else {
-						if (jQuery(passwd).parent().parent().hasClass("has-error")) {
-							jQuery(passwd).parent().parent().removeClass("has-error");
-							jQuery(passwd).parent().parent().addClass("has-success");
+						if (jQuery(passwd).closest("div.form-group").hasClass("has-error")) {
+							jQuery(passwd).closest("div.form-group").removeClass("has-error");
+							jQuery(passwd).closest("div.form-group").addClass("has-success");
 						}
-						if (jQuery(passwd2).parent().parent().hasClass("has-error")) {
-							jQuery(passwd2).parent().parent().removeClass("has-error");
-							jQuery(passwd2).parent().parent().addClass("has-success");
+						if (jQuery(passwd2).closest("div.form-group").hasClass("has-error")) {
+							jQuery(passwd2).closest("div.form-group").removeClass("has-error");
+							jQuery(passwd2).closest("div.form-group").addClass("has-success");
 						}
 						
-						if (jQuery(passwd).hasAttr("data-toggle")) {
-							jQuery(passwd).tooltip("destroy");						
+						/*if (jQuery(passwd).attr("data-toggle")) {
+							jQuery(passwd).tooltip("destroy");
 							jQuery(passwd).removeAttr("data-toggle data-placement data-original-title");
-						}
+						}*/
 						
-						if (jQuery(passwd2).hasAttr("data-toggle")) {
+						if (jQuery(passwd2).attr("data-toggle")) {
 							jQuery(passwd2).tooltip("destroy");
 							jQuery(passwd2).removeAttr("data-toggle data-placement data-original-title");
 						}
@@ -883,8 +879,8 @@ function hikashopCheckField(elementToCheck, type, i, elementName, form) {
 	
 	if(!isValid) {
 		window.Oby.addClass(elementToCheck, 'invalid');
-		if (jQuery(elementToCheck).parent().parent().hasClass("has-success")) jQuery(elementToCheck).parent().parent().removeClass("has-success");
-		if (!jQuery(elementToCheck).parent().parent().hasClass("has-error")) jQuery(elementToCheck).parent().parent().addClass("has-error");
+		if (jQuery(elementToCheck).closest("div.form-group").hasClass("has-success")) jQuery(elementToCheck).closest("div.form-group").removeClass("has-success");
+		if (!jQuery(elementToCheck).closest("div.form-group").hasClass("has-error")) jQuery(elementToCheck).closest("div.form-group").addClass("has-error");
 		
 		if (!jQuery(elementToCheck).attr("data-toggle"))
 			jQuery(elementToCheck).attr("data-toggle", "tooltip").attr("data-placement", "bottom");
@@ -907,9 +903,9 @@ function hikashopCheckField(elementToCheck, type, i, elementName, form) {
 	} else {
 		window.Oby.removeClass(elementToCheck, 'invalid');
 		
-		if (jQuery(elementToCheck).parent().parent().hasClass("has-error")) {
-			jQuery(elementToCheck).parent().parent().removeClass("has-error");
-			jQuery(elementToCheck).parent().parent().addClass("has-success");
+		if (jQuery(elementToCheck).closest("div.form-group").hasClass("has-error")) {
+			jQuery(elementToCheck).closest("div.form-group").removeClass("has-error");
+			jQuery(elementToCheck).closest("div.form-group").addClass("has-success");
 		}		
 		
 		jQuery(elementToCheck).tooltip("destroy");

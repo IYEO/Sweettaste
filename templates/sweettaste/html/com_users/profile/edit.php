@@ -9,6 +9,9 @@
 
 defined('_JEXEC') or die;
 
+//$this->form->reset( true ); // reset the form xml loaded by the view
+$this->form->loadFile( dirname(__FILE__) . DS . "profile.xml"); // load in our own version of profile.xml
+
 JHtml::_('behavior.keepalive');
 JHtml::_('behavior.formvalidator');
 JHtml::_('formbehavior.chosen', 'select');
@@ -52,7 +55,7 @@ $lang->load('plg_user_profile', JPATH_ADMINISTRATOR);
 			<?php // If the fieldset has a label set, display it as the legend. ?>
 			<?php if (isset($fieldset->label)) : ?>
 			<legend>
-				<?php echo JText::_($fieldset->label); ?>
+                            <?php echo JText::_($fieldset->label); ?>
 			</legend>
 			<?php endif;?>
 			<?php // Iterate through the fields in the set and display them. ?>
@@ -61,8 +64,10 @@ $lang->load('plg_user_profile', JPATH_ADMINISTRATOR);
 				<?php if ($field->hidden) : ?>
 					<?php echo $field->input; ?>
 				<?php else : ?>
-					<div class="form-group">						
-                                            <?php echo $field->label; 
+					<div class="form-group">
+                                            <?php 
+                                            $field->labelclass = $field->labelclass . ' control-label';
+                                            echo $field->label;
                                             $field->class = $field->class.' form-control';
                                             ?>
                                             <?php if (!$field->required && $field->type != 'Spacer') : ?>
@@ -71,8 +76,8 @@ $lang->load('plg_user_profile', JPATH_ADMINISTRATOR);
 
                                             <?php if ($field->fieldname == 'password1') : ?>
                                                     <?php // Disables autocomplete ?> <input type="text" style="display:none">
-                                            <?php endif; ?>
-                                            <?php echo $field->input; ?>						
+                                            <?php endif; ?>                                            
+                                            <?php echo $field->input; ?>
 					</div>
 				<?php endif;?>
 			<?php endforeach;?>
@@ -84,7 +89,7 @@ $lang->load('plg_user_profile', JPATH_ADMINISTRATOR);
 		<fieldset>
 			<legend><?php echo JText::_('COM_USERS_PROFILE_TWO_FACTOR_AUTH'); ?></legend>
 
-			<div class="control-group">
+			<div class="form-group">
 				<div class="control-label">
 					<label id="jform_twofactor_method-lbl" for="jform_twofactor_method" class="hasTooltip"
 						   title="<strong><?php echo JText::_('COM_USERS_PROFILE_TWOFACTOR_LABEL'); ?></strong><br /><?php echo JText::_('COM_USERS_PROFILE_TWOFACTOR_DESC'); ?>">
@@ -127,13 +132,11 @@ $lang->load('plg_user_profile', JPATH_ADMINISTRATOR);
 		</fieldset>
 	<?php endif; ?>
 
-		<div class="control-group">
-			<div class="controls">
-				<button type="submit" class="btn btn-primary validate"><span><?php echo JText::_('JSUBMIT'); ?></span></button>
-				<a class="btn" href="<?php echo JRoute::_(''); ?>" title="<?php echo JText::_('JCANCEL'); ?>"><?php echo JText::_('JCANCEL'); ?></a>
-				<input type="hidden" name="option" value="com_users" />
-				<input type="hidden" name="task" value="profile.save" />
-			</div>
+		<div class="form-group">			
+                    <button type="submit" class="btn btn-lg btn-primary validate"><span><?php echo JText::_('JSUBMIT'); ?></span></button>
+                    <a class="btn btn-lg btn-primary" href="<?php echo JRoute::_(''); ?>" title="<?php echo JText::_('JCANCEL'); ?>"><?php echo JText::_('JCANCEL'); ?></a>
+                    <input type="hidden" name="option" value="com_users" />
+                    <input type="hidden" name="task" value="profile.save" />			
 		</div>
 		<?php echo JHtml::_('form.token'); ?>
 	</form>

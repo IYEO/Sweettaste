@@ -31,10 +31,10 @@ if(!HIKASHOP_RESPONSIVE) {
     }
 ?>
     <div class="form-group">
-        <label for="username"><?php echo JText::_('HIKA_USERNAME') ?></label>
+        <label class="control-label" for="username"><?php echo JText::_('HIKA_USERNAME') ?></label>
         <span class="star">*</span>
         <div id="com-form-login-username" class="input-group">
-            <span class="input-group-addon"><span class="glyphicon glyphicon-user"></span></span>                
+            <span class="input-group-addon"><span class="glyphicon glyphicon-user"></span></span>
             <input name="username" id="username" type="text" class="form-control required" size="18" placeholder="<?php echo JText::_('HIKA_USERNAME')?>"/>
             <span class="input-group-addon">
                 <a title="<?php echo JText::_('HIKA_FORGOT_YOUR_USERNAME'); ?>" href="<?php echo JRoute::_( $remind ); ?>"><span class="glyphicon glyphicon-question-sign"></span></a>                
@@ -42,7 +42,7 @@ if(!HIKASHOP_RESPONSIVE) {
         </div>
     </div>
     <div class="form-group">
-        <label for="passwd"><?php echo JText::_('HIKA_PASSWORD') ?></label>
+        <label class="control-label" for="passwd"><?php echo JText::_('HIKA_PASSWORD') ?></label>
         <span class="star">*</span>
         <div id="com-form-login-password" class="input-group">        
             <span class="input-group-addon"><span class="glyphicon glyphicon-lock"></span></span>        

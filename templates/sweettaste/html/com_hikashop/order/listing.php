@@ -7,7 +7,7 @@
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
-?><div id="hikashop_order_listing">
+?><div id="hikashop_order_listing" class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
 <fieldset>
 	<div class="header hikashop_header_title"><h1><?php echo JText::_('ORDERS');?></h1></div>
 	<div class="toolbar hikashop_header_buttons" id="toolbar" style="float: right;">

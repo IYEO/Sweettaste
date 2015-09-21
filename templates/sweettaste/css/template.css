@@ -1432,7 +1432,7 @@ dd {
 @media (min-width: 768px) {
   .dl-horizontal dt {
     float: left;
-    width: 160px;
+    width: 230px;
     clear: left;
     text-align: right;
     overflow: hidden;
@@ -1440,7 +1440,7 @@ dd {
     white-space: nowrap;
   }
   .dl-horizontal dd {
-    margin-left: 180px;
+    margin-left: 250px;
   }
 }
 abbr[title],
@@ -3927,7 +3927,7 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
 .nav-pills > li.active > a:hover,
 .nav-pills > li.active > a:focus {
   color: #ffffff;
-  background-color: #0000ff;
+  background-color: blue;
 }
 .nav-stacked > li {
   float: none;

@@ -18,8 +18,8 @@ if (is_object($menu)) {
             JHtml::stylesheet($this->baseurl . 'templates/' . $this->template . '/css/template.css');
             JHtml::_('jquery.framework');
             JHtml::script('bootstrap.min.js', false, true);
-            JHtml::script('com_hikashop/hikashop.js', false, true);            
-            //JFactory::getDocument()->addScriptVersion($this->baseurl . 'templates/' . $this->template . '/js/com_hikashop/hikashop.js','v=241');
+            //JHtml::script('com_hikashop/hikashop.js', false, true);            
+            JFactory::getDocument()->addScriptVersion($this->baseurl . 'templates/' . $this->template . '/js/com_hikashop/hikashop.js','v=251');
             ?>            
 	</head>
 	<body <?php echo $pageclass ? 'class='.htmlspecialchars($pageclass) : ''; ?>>

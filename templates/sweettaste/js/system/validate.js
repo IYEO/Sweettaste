@@ -27,8 +27,8 @@ var JFormValidator = function() {
 				$label.addClass("invalid").attr("aria-invalid", "true")
 			}*/
 						
-			if ($el.parent().parent().hasClass("has-success")) $el.parent().parent().removeClass("has-success");
-			$el.parent().parent().addClass("has-error");
+			if ($el.closest("div.form-group").hasClass("has-success")) $el.closest("div.form-group").removeClass("has-success");
+			$el.closest("div.form-group").addClass("has-error");
 			
 			/*$el.attr("aria-invalid", "true");
 			if ($label) {
@@ -41,9 +41,9 @@ var JFormValidator = function() {
 				$label.removeClass("invalid").attr("aria-invalid", "false")
 			}*/
 			
-			if ($el.parent().parent().hasClass("has-error")) {
-				$el.parent().parent().removeClass("has-error");
-				$el.parent().parent().addClass("has-success");
+			if ($el.closest("div.form-group").hasClass("has-error")) {
+				$el.closest("div.form-group").removeClass("has-error");
+				$el.closest("div.form-group").addClass("has-success");
 			}
 			
 			/*$el.attr("aria-invalid", "false");
@@ -91,7 +91,7 @@ var JFormValidator = function() {
 		handleResponse(true, $el);
 		return true
 	}, isValid = function(form) {
-            var fields, valid = true, message, /*error,*/ label, invalid = [], i, l;
+            var fields, valid = true, message, error, label, invalid = [], i, l;
             // Validate form fields
             fields = jQuery(form).find('input, textarea, select, fieldset');
             for (i = 0, l = fields.length; i < l; i++) {
@@ -111,11 +111,11 @@ var JFormValidator = function() {
                         jQuery('[data-toggle="tooltip"]').tooltip();
                     });                    
                     message = Joomla.JText._('JLIB_FORM_FIELD_INVALID');
-                    //error = {"error": []};
+                    error = {"error": []};
                     for (i = invalid.length - 1; i >= 0; i--) {
                         label = jQuery(invalid[i]).data("label");
                         if (label) {
-                            //error.error.push(message + label.text().replace("*", ""));
+                            error.error.push(message + label.text().replace("*", ""));
                             jQuery(invalid[i]).attr("data-toggle", "tooltip").attr("data-placement", "bottom");
                             jQuery(invalid[i]).tooltip({container: "body", animation: true, title: message + label.text().replace("*", ""), delay: {show: "200", "hide": 100}});
                         }                        

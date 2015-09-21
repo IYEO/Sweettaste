@@ -642,7 +642,7 @@ background: linear-gradient(top, #ffffff, #f8f8f8);}
 	width: 48px !important;
 }
 
-#hikashop_cpanel_title h1{color:#555; font-size:16px; font-weight:bold}
+#hikashop_cpanel_title h1{color:#555; font-size:22px; font-weight:bold}
 #hikashop_cpanel_title fieldset{border:none; border-bottom:1px solid #ddd }
 
 .hikashop_cpanel_button_description{
@@ -2272,58 +2272,12 @@ p.jRatingInfos span.maxRate {
 
 
 
-#hikashop_cart_listing, #hikashop_affiliate_main, #hikashop_address_listing, #hikashop_order_listing{margin:0px; padding:0px;}
+#hikashop_cart_listing, #hikashop_affiliate_main, #hikashop_address_listing {margin:0px; padding:0px;}
 #hikashop_carts_listing .header, #hikashop_affiliate_main .header, #hikashop_address_listing .header, #hikashop_order_listing .header{margin:0px}
-#hikashop_carts_listing .header h1, #hikashop_affiliate_main .header h1, #hikashop_address_listing .header h1, #hikashop_order_listing .header h1{margin:30px 0 0 0; color:#555; font-weight:bold; font-size:15px; padding:0px}
+#hikashop_carts_listing .header h1, #hikashop_affiliate_main .header h1, #hikashop_address_listing .header h1, #hikashop_order_listing .header h1{margin:30px 0 0 0; color:#555; font-weight:bold; font-size:22px; padding:0px}
 #hikashop_carts_listing fieldset, #hikashop_affiliate_main fieldset, #hikashop_address_listing fieldset, #hikashop_order_listing fieldset{border-bottom:1px solid #ddd; margin-bottom:30px}
 #hikashop_carts_listing div.toolbar a, #hikashop_affiliate_main div.toolbar a, #hikashop_address_listing div.toolbar a, #hikashop_order_listing div.toolbar a{border:none; text-decoration:none; padding:5px}
 #hikashop_carts_listing div.toolbar a:hover, #hikashop_affiliate_main div.toolbar a:hover, #hikashop_address_listing div.toolbar a:hover, #hikashop_order_listing div.toolbar a:hover{color:#2C8296}
-
-
-
-
-
-#member-profile fieldset{border:1px solid #ddd; border-radius:3px; padding:10px; margin-bottom:10px}
-#member-profile legend{font-weight:bold; font-size:12px; color:#333; margin:0px 5px; padding:0px 5px}
-#member-profile input, #member-profile select{padding:4px; margin-bottom:5px}
-#member-profile .validate, #member-profile a{-moz-border-bottom-colors: none;
-	-moz-border-left-colors: none;
-	-moz-border-right-colors: none;
-	-moz-border-top-colors: none;
-	background-color: #F5F5F5;
-	background-image: linear-gradient(to bottom, #FFFFFF, #EEEEEE);
-	background-repeat: repeat-x;
-	border-color: #EEEEEE #DDDDDD #DDDDDD #EEEEEE;
-	border-image: none;
-	border-radius: 3px 3px 3px 3px;
-	border-style: solid;
-	border-width: 1px;
-	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2) inset, 0 1px 2px rgba(0, 0, 0, 0.05);
-	color: #777777;
-	cursor: pointer;
-	display: inline-block;
-	line-height: 18px;
-	padding: 3px 8px;
-	text-align: center;
-	text-decoration: none;}
-
-#member-profile .validate:hover, #member-profile a:hover{
--moz-border-bottom-colors: none;
-	-moz-border-left-colors: none;
-	-moz-border-right-colors: none;
-	-moz-border-top-colors: none;
-	background-color: #F5F5F5;
-	background-image: linear-gradient(to bottom, #FFFFFF, #DDDDDD);
-	background-repeat: repeat-x;
-	border-color: #EEEEEE #DDDDDD #DDDDDD #EEEEEE;
-	border-image: none;
-	border-style: solid;
-	border-width: 1px;
-	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2) inset, 0 1px 2px rgba(0, 0, 0, 0.05);
-	color: #777777;
-	cursor: pointer;
-	display: inline-block;
-	outline: medium none;}
 
 
 .hikashop_address_listing_item_details{border:1px solid #ddd; padding:10px; border-radius:3px; color:#666}
