@@ -25,27 +25,36 @@ defined('_JEXEC') or die('Restricted access');
 	</div>
 </fieldset>
 <div class="iframedoc" id="iframedoc"></div>
-<form action="<?php echo hikashop_completeLink('order'); ?>" method="post"  name="adminForm" id="adminForm">
-	<table class="hikashop_no_border">
-		<tr>
-			<td width="100%">
-				<?php echo JText::_( 'FILTER' ); ?>:
-				<input type="text" name="search" id="hikashop_search" value="<?php echo $this->escape($this->pageInfo->search);?>" class="inputbox" onchange="document.adminForm.submit();" />
-				<button class="btn" onclick="this.form.submit();"><?php echo JText::_( 'GO' ); ?></button>
-				<button class="btn" onclick="document.getElementById('hikashop_search').value='';this.form.submit();"><?php echo JText::_( 'RESET' ); ?></button>
-			</td>
-		</tr>
-	</table>
-	<?php global $Itemid; ?>
-	<input type="hidden" name="Itemid" value="<?php echo $Itemid; ?>"/>
-	<input type="hidden" name="option" value="<?php echo HIKASHOP_COMPONENT; ?>" />
-	<input type="hidden" name="task" value="" />
-	<input type="hidden" name="ctrl" value="<?php echo JRequest::getCmd('ctrl'); ?>" />
-	<input type="hidden" name="boxchecked" value="0" />
-	<input type="hidden" name="filter_order" value="<?php echo $this->pageInfo->filter->order->value; ?>" />
-	<input type="hidden" name="filter_order_Dir" value="<?php echo $this->pageInfo->filter->order->dir; ?>" />
-	<?php echo JHTML::_( 'form.token' ); ?>
-</form>
+<div class="col-xs-12 col-sm-12 col-md-12 col-lg-6">
+    <form action="<?php echo hikashop_completeLink('order'); ?>" method="post"  name="adminForm" id="adminForm">    
+        <div class="form-group">            
+            <div class="col-xs-12 col-sm-2 col-md-2 col-lg-3">
+                <p class="form-control-static"><?php echo JText::_( 'FILTER' ); ?>:</p>
+            </div>
+            <div class="col-xs-12 col-sm-10 col-md-10 col-lg-9">
+                <div class="input-group">            
+                    <span class="input-group-btn">
+                        <button class="btn btn-primary" type="button" title="<?php echo JText::_( 'RESET' ); ?>" onclick="document.getElementById('hikashop_search').value='';this.form.submit();"><span class="glyphicon glyphicon-remove"></span></button>
+                    </span>
+                    <input type="text" name="search" id="hikashop_search" value="<?php echo $this->escape($this->pageInfo->search);?>" class="form-control" onchange="document.adminForm.submit();" />
+                    <span class="input-group-btn">
+                        <button class="btn btn-primary" type="button" title="<?php echo JText::_( 'GO' ); ?>" onclick="this.form.submit();"><span class="glyphicon glyphicon-filter"></span></button>
+                    </span>        
+                </div>
+            </div>        
+        </div>
+
+        <?php global $Itemid; ?>
+        <input type="hidden" name="Itemid" value="<?php echo $Itemid; ?>"/>
+        <input type="hidden" name="option" value="<?php echo HIKASHOP_COMPONENT; ?>" />
+        <input type="hidden" name="task" value="" />
+        <input type="hidden" name="ctrl" value="<?php echo JRequest::getCmd('ctrl'); ?>" />
+        <input type="hidden" name="boxchecked" value="0" />
+        <input type="hidden" name="filter_order" value="<?php echo $this->pageInfo->filter->order->value; ?>" />
+        <input type="hidden" name="filter_order_Dir" value="<?php echo $this->pageInfo->filter->order->dir; ?>" />
+        <?php echo JHTML::_( 'form.token' ); ?>
+    </form>
+</div>    
 	<table id="hikashop_order_listing" class="hikashop_orders adminlist table table-striped table-hover" cellpadding="1">
 		<thead>
 			<tr>

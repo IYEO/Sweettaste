@@ -16,7 +16,7 @@ if(!empty($Itemid)){
 }
 $config = hikashop_config();
 ?>
-<div id="hikashop_order_main">
+<div id="hikashop_order_main" class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
 <fieldset>
 	<div class="header hikashop_header_title">
 		<h1>
