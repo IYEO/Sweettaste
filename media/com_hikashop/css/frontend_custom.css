@@ -478,11 +478,6 @@ a.hikashop_compare_button, a.hikashop_compare_button:hover{
 	text-align:center;
 }
 
-.hikashop_address_listing_div{
-	width: 300px ;
-	margin-left: auto ;
-	margin-right: auto ;
-}
 .hikashop_address_listing_table{
 	width:100%;
 }
@@ -718,7 +713,7 @@ div.toolbar span {
 	background-position: 0% 0%;
 }
 div.toolbar a {
-	border:1px solid #FBFBFB;
+	border:none;
 	cursor:pointer;
 	display:block;
 	float:left;
@@ -2272,7 +2267,7 @@ p.jRatingInfos span.maxRate {
 
 
 
-#hikashop_cart_listing, #hikashop_affiliate_main, #hikashop_address_listing {margin:0px; padding:0px;}
+#hikashop_cart_listing, #hikashop_affiliate_main {margin:0px; padding:0px;}
 #hikashop_carts_listing .header, #hikashop_affiliate_main .header, #hikashop_address_listing .header, #hikashop_order_listing .header{margin:0px}
 #hikashop_carts_listing .header h1, #hikashop_affiliate_main .header h1, #hikashop_address_listing .header h1, #hikashop_order_listing .header h1{margin:30px 0 0 0; color:#555; font-weight:bold; font-size:22px; padding:0px}
 #hikashop_carts_listing fieldset, #hikashop_affiliate_main fieldset, #hikashop_address_listing fieldset, #hikashop_order_listing fieldset{border-bottom:1px solid #ddd; margin-bottom:20px}
@@ -2309,11 +2304,8 @@ p.jRatingInfos span.maxRate {
 #hikashop_order_listing table {border-collapse:collapse}
 
 #hikashop_order_main fieldset{border:none}
-#hikashop_order_main fieldset h1{color:#555; font-weight:bold; font-size:14px; padding-bottom:4px; border-bottom: 1px solid #ddd;}
-#hikashop_order_main .hikashop_order_left_part{border:1px solid #ddd; border-radius:3px; padding:10px;}
-#hikashop_order_main .hikashop_order_right_part{float: right; margin-right: 10px; padding-top: 10px;}
+#hikashop_order_main fieldset h1{color:#555; font-weight:bold; font-size:22px; padding-bottom:4px; border-bottom: 1px solid #ddd;}
 
-#hikashop_order_main #adminForm fieldset{border:1px solid #ddd; border-radius:3px; padding:15px;}
 #hikashop_order_main #adminForm legend{font-weight:bold; font-size:14px; color:#555; margin:0px 5px; padding:0px 5px}
 #htmlfieldset_products table{border-collapse:collapse}
 #htmlfieldset_products th{color:#555; font-weight:bold; font-size:12px; border-bottom:1px solid #ddd; padding:5px 10px; text-align:left}
@@ -2323,9 +2315,9 @@ p.jRatingInfos span.maxRate {
 #htmlfieldset_products a{text-decoration:none; color:#555}
 #htmlfieldset_products a:hover{text-decoration:none; color:#FFCF08}
 #htmlfieldset_products .row0:hover, #htmlfieldset_products .row1:hover{background-color:#f8f8f8}
-#htmlfieldset_products .hikashop_order_item_total_value, #htmlfieldset_products .hikashop_order_subtotal_value, #htmlfieldset_products .hikashop_order_shipping_value{color:#FFCF08; font-style:italic;}
+#htmlfieldset_products .hikashop_order_item_total_value, #htmlfieldset_products .hikashop_order_subtotal_value, #htmlfieldset_products .hikashop_order_shipping_value{font-style:italic;}
 #htmlfieldset_products .hikashop_order_total_title{font-weight:bold; color:#555}
-#htmlfieldset_products .hikashop_order_total_value{font-weight:bold; color:#FFCF08; font-style:italic;}
+#htmlfieldset_products .hikashop_order_total_value{font-weight:bold; font-style:italic;}
 
 .hikashop_order_tax_value{color:#FFCF08; font-style:italic}
 
