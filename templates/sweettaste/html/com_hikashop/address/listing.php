@@ -14,19 +14,16 @@ defined('_JEXEC') or die('Restricted access');
 	<div class="toolbar hikashop_header_buttons" id="toolbar" >
 		<table>
 			<tr>
-				<td><?php
-					echo $this->popup->display(
-						'<span class="icon-32-new" title="'. JText::_('HIKA_NEW').'"></span>'. JText::_('HIKA_NEW'),
-						'HIKA_NEW',
-						hikashop_completeLink('address&task=add',true),
-						'hikashop_new_address_popup',
-						760, 480, '', '', 'link'
-					);
-				?></td>
 				<td>
-					<a href="<?php echo hikashop_completeLink('user');?>" >
-						<span class="icon-32-back" title="<?php echo JText::_('HIKA_BACK'); ?>"></span> <?php echo JText::_('HIKA_BACK'); ?>
-					</a>
+                                    <a href="<?php echo hikashop_completeLink('address&task=add'); ?>">
+                                        <span class="icon-32-new" title="<?php echo JText::_('HIKA_NEW'); ?>"></span>
+                                        <?php echo JText::_('HIKA_NEW'); ?>
+                                    </a>
+                                </td>
+				<td>
+                                    <a href="<?php echo hikashop_completeLink('user');?>" >
+                                        <span class="icon-32-back" title="<?php echo JText::_('HIKA_BACK'); ?>"></span> <?php echo JText::_('HIKA_BACK'); ?>
+                                    </a>
 				</td>
 			</tr>
 		</table>
@@ -60,14 +57,12 @@ defined('_JEXEC') or die('Restricted access');
                         } ?> onclick="this.form.submit();"/>
 
                         <div class="pull-right" style="font-size: 18px">
-                            <a href="<?php echo hikashop_completeLink('address&task=delete&address_id='.$address->address_id.'&'.$token.'=1&Itemid='.$Itemid);?>" title="<?php echo JText::_('HIKA_DELETE'); ?>"><span class="glyphicon glyphicon-trash" title="<?php echo JText::_('HIKA_DELETE'); ?>"></span></a>
-                            <?php echo $this->popup->display(
-                                '<span class="glyphicon glyphicon-pencil" title="'. JText::_('HIKA_EDIT').'"></span>',
-                                'HIKA_EDIT',
-                                hikashop_completeLink('address&task=edit&address_id='.$address->address_id.'&Itemid='.$Itemid, true),
-                                'hikashop_edit_address_popup_'.$address->address_id,
-                                760, 480, '', '', 'link'
-                            ); ?>
+                            <a href="<?php echo hikashop_completeLink('address&task=delete&address_id='.$address->address_id.'&'.$token.'=1&Itemid='.$Itemid);?>" title="<?php echo JText::_('HIKA_DELETE'); ?>">
+                                <span class="glyphicon glyphicon-trash" title="<?php echo JText::_('HIKA_DELETE'); ?>"></span>
+                            </a>
+                            <a href="<?php echo hikashop_completeLink('address&task=edit&address_id='.$address->address_id.'&Itemid='.$Itemid, true); ?>">
+                                <span class="glyphicon glyphicon-pencil" title="<?php echo JText::_('HIKA_EDIT'); ?>"></span>
+                            </a>                            
                         </div>
                     </div>
                     <div class="panel-body">
