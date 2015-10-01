@@ -6,16 +6,10 @@
  * @copyright	(C) 2010-2014 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
-defined('_JEXEC') or die('Restricted access');
+defined('_JEXEC') or die('Restricted access'); ?>
 
-/*$document = JFactory::getDocument();
-$document->addStyleSheet(JUri::base() . 'templates/' . $template . '/css/template.css');*/
-JHtml::stylesheet(JUri::base() . 'templates/' . $template . '/css/template.css');
-JHtml::_('jquery.framework');
-JHtml::script('bootstrap.min.js', false, true);?>
-
-<div id="hikashop_address_form_span_iframe" class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-    <form action="<?php echo hikashop_completeLink('address&task=save'); ?>" method="post" name="hikashop_address_form" enctype="multipart/form-data" class="form-validate">
+<div id="hikashop_address_form_span_iframe" class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-6 col-lg-offset-3">
+    <form action="<?php echo hikashop_completeLink('address&task=save'); ?>" method="post" name="hikashop_address_form" enctype="multipart/form-data" class="form-validate well">
 		
 <?php
     foreach($this->extraFields['address'] as $fieldName => $oneExtraField) { ?>
@@ -61,8 +55,7 @@ JHtml::script('bootstrap.min.js', false, true);?>
 <?php
 	}
 	echo JHTML::_( 'form.token' );
-	echo $this->cart->displayButton(JText::_('OK'),'ok',$this->params,hikashop_completeLink('address&task=save'),'if(hikashopCheckChangeForm(\'address\',\'hikashop_address_form\')) document.forms[\'hikashop_address_form\'].submit(); return false;');
+	echo $this->cart->displayButton(JText::_('OK'),'ok',$this->params,hikashop_completeLink('address&task=save'),'if(hikashopCheckChangeForm(\'address\',\'hikashop_address_form\')) document.forms[\'hikashop_address_form\'].submit(); return false;', NULL, NULL, NULL, "btn btn-primary btn-lg");
 ?>
 	</form>
 </div>
-<div class="clear_both"></div>

@@ -60,7 +60,7 @@ defined('_JEXEC') or die('Restricted access');
                             <a href="<?php echo hikashop_completeLink('address&task=delete&address_id='.$address->address_id.'&'.$token.'=1&Itemid='.$Itemid);?>" title="<?php echo JText::_('HIKA_DELETE'); ?>">
                                 <span class="glyphicon glyphicon-trash" title="<?php echo JText::_('HIKA_DELETE'); ?>"></span>
                             </a>
-                            <a href="<?php echo hikashop_completeLink('address&task=edit&address_id='.$address->address_id.'&Itemid='.$Itemid, true); ?>">
+                            <a href="<?php echo hikashop_completeLink('address&task=edit&address_id='.$address->address_id.'&Itemid='.$Itemid); ?>">
                                 <span class="glyphicon glyphicon-pencil" title="<?php echo JText::_('HIKA_EDIT'); ?>"></span>
                             </a>                            
                         </div>
