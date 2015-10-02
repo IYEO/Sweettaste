@@ -14,7 +14,7 @@ defined('_JEXEC') or die('Restricted access'); ?>
 <?php
     foreach($this->extraFields['address'] as $fieldName => $oneExtraField) { ?>
         <div class="form-group hikashop_address_<?php echo $fieldName;?>_line" id="hikashop_address_<?php echo $oneExtraField->field_namekey; ?>">
-            <?php echo $this->fieldsClass->getFieldName($oneExtraField);
+            <?php echo $this->fieldsClass->getFieldName($oneExtraField, true);
                 $onWhat='onchange'; if($oneExtraField->field_type=='radio') $onWhat='onclick';
                 echo $this->fieldsClass->display(
                         $oneExtraField,
@@ -54,8 +54,13 @@ defined('_JEXEC') or die('Restricted access'); ?>
 		<input type="hidden" name="address_id" value="<?php echo (int)@$this->address->address_id;?>"/>
 <?php
 	}
-	echo JHTML::_( 'form.token' );
-	echo $this->cart->displayButton(JText::_('OK'),'ok',$this->params,hikashop_completeLink('address&task=save'),'if(hikashopCheckChangeForm(\'address\',\'hikashop_address_form\')) document.forms[\'hikashop_address_form\'].submit(); return false;', NULL, NULL, NULL, "btn btn-primary btn-lg");
-?>
+            echo JHTML::_( 'form.token' ); ?>
+                <div class="help-block">
+                    <span class="glyphicon glyphicon-asterisk"></span><?php echo JText::_('REQUIRED_FIELDS_HELP_TEXT')?>
+                </div>
+            <div class="form-group text-right">
+                <?php	echo $this->cart->displayButton(JText::_('OK'),'ok',$this->params,hikashop_completeLink('address&task=save'),'if(hikashopCheckChangeForm(\'address\',\'hikashop_address_form\')) document.forms[\'hikashop_address_form\'].submit(); return false;', NULL, NULL, NULL, "btn btn-lg btn-primary"); ?>
+                <a class="btn btn-lg btn-primary" href="<?php echo JRoute::_(Juri::base() . 'index.php/menu/profile/address/'); ?>" title="<?php echo JText::_('JCANCEL'); ?>"><?php echo JText::_('JCANCEL'); ?></a>
+            </div>
 	</form>
 </div>

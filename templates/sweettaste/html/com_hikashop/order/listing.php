@@ -14,11 +14,9 @@ defined('_JEXEC') or die('Restricted access');
 		<table class="hikashop_no_border">
 			<tr>
 				<td>
-					<a onclick="javascript:submitbutton('cancel'); return false;" href="#" >
-						<span class="icon-32-back" title="<?php echo JText::_('HIKA_BACK'); ?>">
-						</span>
-						<?php echo JText::_('HIKA_BACK'); ?>
-					</a>
+                                    <a href="<?php echo hikashop_completeLink('');?>" >
+                                        <span class="icon-32-back" title="<?php echo JText::_('HIKA_BACK'); ?>"></span> <?php echo JText::_('HIKA_BACK'); ?>
+                                    </a>
 				</td>
 			</tr>
 		</table>

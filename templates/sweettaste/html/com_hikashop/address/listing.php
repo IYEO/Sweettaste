@@ -21,7 +21,7 @@ defined('_JEXEC') or die('Restricted access');
                                     </a>
                                 </td>
 				<td>
-                                    <a href="<?php echo hikashop_completeLink('user');?>" >
+                                    <a href="<?php echo hikashop_completeLink('');?>" >
                                         <span class="icon-32-back" title="<?php echo JText::_('HIKA_BACK'); ?>"></span> <?php echo JText::_('HIKA_BACK'); ?>
                                     </a>
 				</td>
@@ -85,4 +85,3 @@ defined('_JEXEC') or die('Restricted access');
 }
 ?>
 </div>
-<div class="clear_both"></div>

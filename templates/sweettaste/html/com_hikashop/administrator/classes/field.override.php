@@ -23,7 +23,7 @@ class hikashopFieldClassOverride extends hikashopFieldClass {
 			return $this->trans($field->field_realname);
 		$required = '';
 		if($requiredDisplay && !empty($field->field_required))
-			$required = '<span class="hikashop_field_required_label">*</span>';
+			$required = '<span> *</span>';
 		return '<label for="'.$this->prefix.$field->field_namekey.$this->suffix.'" class="control-label">'.$this->trans($field->field_realname).$required.'</label>';
 	}
 
