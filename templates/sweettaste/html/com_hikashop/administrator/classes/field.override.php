@@ -64,7 +64,7 @@ class hikashopTextOverride extends hikashopText{
 			$js = 'onfocus="if(this.value == \''.$value.'\') this.value = \'\';" onblur="if(this.value==\'\') this.value=\''.$value.'\';"';
 		}
 		$buffInput = '<input class="'.$this->class.'" id="'.$this->prefix.@$field->field_namekey.$this->suffix.'" '.$size.' '.$js.' '.$options.' type="'.$this->type.'" name="'.$map.'" value="'.$value.'"';
-		if(!empty($field->field_required) && !empty($field->registration_page))
+		if(!empty($field->field_required))
 			$buffInput.=' aria-required="true" required="required" />';
 		else
 			$buffInput .= ' />';
