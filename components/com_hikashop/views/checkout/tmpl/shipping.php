@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -243,14 +243,14 @@ if(!HIKASHOP_RESPONSIVE) { ?>
 
 	if(HIKASHOP_RESPONSIVE) {
 ?>
-<script>
+<script type="text/javascript">
 (function($){
-	jQuery("#hikashop_shipping_methods .hika-radio input[checked=checked]").each(function() {
-		jQuery("label[for=" + jQuery(this).attr('id') + "]").addClass('active btn-primary');
+	$("#hikashop_shipping_methods .hika-radio input:checked").each(function() {
+		$("label[for=" + jQuery(this).attr('id') + "]").addClass('active btn-primary');
 	});
-	jQuery("#hikashop_shipping_methods .hika-radio input").change(function() {
-		jQuery(this).parents('div.hika-radio').find('label.active').removeClass('active btn-primary');
-		jQuery("label[for=" + jQuery(this).attr('id') + "]").addClass('active btn-primary');
+	$("#hikashop_shipping_methods .hika-radio input").change(function() {
+		$(this).parents('div.hika-radio').find('label.active').removeClass('active btn-primary');
+		$("label[for=" + jQuery(this).attr('id') + "]").addClass('active btn-primary');
 	});
 })(jQuery);
 </script>

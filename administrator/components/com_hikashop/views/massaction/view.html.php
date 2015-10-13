@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -25,6 +25,21 @@ class MassactionViewMassaction extends hikashopView{
 
 	function listing(){
 		$app = JFactory::getApplication();
+
+		$enabled = JPluginHelper::isEnabled('system', 'hikashopmassaction');
+		if(!$enabled){
+			if(HIKASHOP_J25)
+				$query = 'UPDATE '.hikashop_table('extensions',false).' SET enabled = 1 WHERE type = "plugin" AND element = "hikashopmassaction" AND folder = "system";';
+			else
+				$query = 'UPDATE '.hikashop_table('plugins',false).' SET published = 1 WHERE element = "hikashopmassaction" AND folder = "system";';
+
+			$db = JFactory::getDBO();
+			$db->setQuery($query);
+			$success = $db->query();
+			if($success)
+				$app->enqueueMessage(JText::_('HIKA_MASSACTION_SYSTEM_PLUGIN_PUBLISHED'));
+		}
+
 		$pageInfo = new stdClass();
 		$pageInfo->filter = new stdClass();
 		$pageInfo->filter->order = new stdClass();

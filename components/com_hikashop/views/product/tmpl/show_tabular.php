@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -289,16 +289,16 @@ if($status_vote == "comment" || $status_vote == "two" || $status_vote == "both" 
 	window.hikashop.ready( function(){
 		var selectedTab = hkjQuery( "#selected_tab" ).val();
 		hkjQuery("#hikashop_tabs_div").children("div").css("display","none");
-		hkjQuery( "#"+selectedTab+"_li" ).addClass("hikashop_tabs_li_selected");
+		hkjQuery("#"+selectedTab+"_li").addClass("hikashop_tabs_li_selected");
 		hkjQuery("#"+selectedTab).css("display","inherit");
-		hkjQuery( "#hikashop_tabs_div" ).children().children().click(function(){
+		hkjQuery("#hikashop_tabs_div .hikashop_tabs_ul li").click(function(){
 			var currentLi = hkjQuery(this).attr("id");
 			var currentDiv = currentLi.replace("_li","");
 			hkjQuery("#hikashop_tabs_div").children("div").css("display","none");
 			hkjQuery("#hikashop_tabs_div").children("form").children("div").css("display","none");
 			hkjQuery("#"+currentDiv).css("display","inherit");
-			hkjQuery( ".hikashop_tabs_li_selected" ).removeClass("hikashop_tabs_li_selected");
-			hkjQuery( "#"+currentLi ).addClass("hikashop_tabs_li_selected");
+			hkjQuery(".hikashop_tabs_li_selected" ).removeClass("hikashop_tabs_li_selected");
+			hkjQuery("#"+currentLi).addClass("hikashop_tabs_li_selected");
 		});
 	});
 </script>

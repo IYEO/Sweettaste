@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -62,11 +62,46 @@ if(!empty($this->orderInfos->full_total->prices[0]) && bccomp($this->orderInfos-
 					<span class="hikashop_checkout_payment_name"><?php echo $method->payment_name;?></span></label>
 					<span class="hikashop_checkout_payment_cost">
 <?php
-				if($method->payment_price != "0"){
-					echo $this->currencyHelper->format($method->payment_price,$this->full_total->prices[0]->price_currency_id);
+
+				if(bccomp($method->payment_price,0,5) === 0) {
+					$price_text = JText::_('FREE_PAYMENT');
+				} else {
+					$pt = (int)$this->params->get('price_with_tax');
+
+					$price_text = JText::_('PRICE_BEGINNING');
+					$price_text .= '<span class="hikashop_checkout_payment_price">';
+					if($pt){
+						$price_text .= $this->currencyHelper->format($method->payment_price_with_tax,$method->payment_params->payment_currency);
+					}
+					if($pt == 2)
+						$price_text .= JText::_('PRICE_BEFORE_TAX');
+
+					if($pt == 2 || $pt == 0)
+						$price_text .= $this->currencyHelper->format($method->payment_price,$method->payment_params->payment_currency);
+
+					if($pt == 2)
+						$price_text .= JText::_('PRICE_AFTER_TAX');
+
+					if($this->params->get('show_original_price') && isset($method->payment_price_orig) && bccomp($method->payment_price_orig, 0, 5)) {
+						$price_text .= JText::_('PRICE_BEFORE_ORIG');
+						if($pt > 0)
+							$price_text .= $this->currencyHelper->format($method->payment_price_orig_with_tax, $method->payment_currency_orig);
+
+						if($pt == 2)
+							$price_text .= JText::_('PRICE_BEFORE_TAX');
+
+						if($pt == 2 || $pt == 0)
+							$price_text .= $this->currencyHelper->format($method->payment_price_orig, $method->payment_currency_orig);
+
+						if($pt == 2)
+							$price_text .= JText::_('PRICE_AFTER_TAX');
+
+						$price_text .= JText::_('PRICE_AFTER_ORIG');
+					}
+					$price_text .= '</span> ';
+					$price_text .= JText::_('PRICE_END');
 				}
-				else
-					echo JText::_('FREE_PAYMENT');
+				echo $price_text;
 ?>
 					</span>
 <?php
@@ -117,26 +152,62 @@ if(!empty($this->orderInfos->full_total->prices[0]) && bccomp($this->orderInfos-
 					<label class="btn btn-radio" for="radio_<?php echo $method->payment_type.'_'.$method->payment_id;?>"><?php echo $method->payment_name;?></label>
 					<span class="hikashop_checkout_payment_cost">
 <?php
-	if($method->payment_price != "0")
-		echo $this->currencyHelper->format($method->payment_price,$this->full_total->prices[0]->price_currency_id);
-	else
-		echo JText::_('FREE_PAYMENT');
+		if(bccomp($method->payment_price,0,5) === 0) {
+			$price_text = JText::_('FREE_PAYMENT');
+		} else {
+			$pt = (int)$this->params->get('price_with_tax');
+
+			$price_text = JText::_('PRICE_BEGINNING');
+			$price_text .= '<span class="hikashop_checkout_payment_price">';
+			if($pt > 0)
+				$price_text .= $this->currencyHelper->format($method->payment_price_with_tax,$method->payment_params->payment_currency);
+
+			if($pt == 2)
+				$price_text .= JText::_('PRICE_BEFORE_TAX');
+
+			if($pt == 2 || $pt == 0)
+				$price_text .= $this->currencyHelper->format($method->payment_price,$method->payment_params->payment_currency);
+
+			if($pt == 2)
+				$price_text .= JText::_('PRICE_AFTER_TAX');
+
+			if($this->params->get('show_original_price') && isset($method->payment_price_orig) && bccomp($method->payment_price_orig, 0, 5)) {
+				$price_text .= JText::_('PRICE_BEFORE_ORIG');
+				if($pt > 0)
+					$price_text .= $this->currencyHelper->format($method->payment_price_orig_with_tax, $method->payment_currency_orig);
+
+				if($pt == 2)
+					$price_text .= JText::_('PRICE_BEFORE_TAX');
+
+				if($pt == 2 || $pt == 0)
+					$price_text .= $this->currencyHelper->format($method->payment_price_orig, $method->payment_currency_orig);
+
+				if($pt == 2)
+					$price_text .= JText::_('PRICE_AFTER_TAX');
+
+				$price_text .= JText::_('PRICE_AFTER_ORIG');
+			}
+			$price_text .= '</span> ';
+			$price_text .= JText::_('PRICE_END');
+		}
+		echo $price_text;
+
 ?>
 					</span>
 					<span class="hikashop_checkout_payment_image">
 <?php
-				if(!empty($method->payment_images)){
-					$images = explode(',',$method->payment_images);
-					if(!empty($images)){
-						foreach($images as $image){
-							if(!empty($this->images_payment[$image])){
+		if(!empty($method->payment_images)){
+			$images = explode(',',$method->payment_images);
+			if(!empty($images)){
+				foreach($images as $image){
+					if(!empty($this->images_payment[$image])){
 ?>
 						<img src="<?php echo HIKASHOP_IMAGES .'payment/'. $this->images_payment[$image];?>" alt=""/>
 <?php
-							}
-						}
 					}
 				}
+			}
+		}
 ?>
 					</span>
 					<div class="hikashop_checkout_payment_description"><?php echo $method->payment_description;?></div>
@@ -155,14 +226,14 @@ if(!empty($this->orderInfos->full_total->prices[0]) && bccomp($this->orderInfos-
 ?>
 		</table>
 	</div>
-<script>
+<script type="text/javascript">
 (function($){
-	jQuery("#hikashop_payment_methods .hika-radio input[checked=checked]").each(function() {
-		jQuery("label[for=" + jQuery(this).attr('id') + "]").addClass('active btn-primary');
+	$("#hikashop_payment_methods .hika-radio input:checked").each(function() {
+		$("label[for=" + jQuery(this).attr('id') + "]").addClass('active btn-primary');
 	});
-	jQuery("#hikashop_payment_methods .hika-radio input").change(function() {
-		jQuery(this).parents('div.hika-radio').find('label.active').removeClass('active btn-primary');
-		jQuery("label[for=" + jQuery(this).attr('id') + "]").addClass('active btn-primary');
+	$("#hikashop_payment_methods .hika-radio input").change(function() {
+		$(this).parents('div.hika-radio').find('label.active').removeClass('active btn-primary');
+		$("label[for=" + jQuery(this).attr('id') + "]").addClass('active btn-primary');
 	});
 })(jQuery);
 </script>

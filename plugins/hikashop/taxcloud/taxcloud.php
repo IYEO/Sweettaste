@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -308,6 +308,10 @@ class plgHikaShopTaxcloud extends JPlugin {
 	public function onAfterOrderCreate(&$order,&$send_email){
 		if($order->order_type!='sale')
 			return;
+
+		$app = JFactory::getApplication();
+		if($app->isAdmin())
+			return;
 		$this->lookupAfterOrderCreate($order);
 	}
 
@@ -410,12 +414,15 @@ class plgHikaShopTaxcloud extends JPlugin {
 		$db = JFactory::getDBO();
 		if(!empty($ids)){
 			$product_query = 'SELECT product_id, product_taxability_code FROM ' . hikashop_table('product') . ' WHERE product_id IN (' . implode(',', $ids) . ') AND product_access=\'all\' AND product_published=1 AND product_type=\'main\'';
+			$db->setQuery($product_query);
+			$products = $db->loadObjectList();
 		}
-		$db->setQuery($product_query);
-		$products = $db->loadObjectList();
+
 		$tics= array();
-		foreach($products as $product){//associating the tics with the right productIDs
-			$tics[$product->product_id]=$product->product_taxability_code;
+		if(!empty($products)){
+			foreach($products as $product){//associating the tics with the right productIDs
+				$tics[$product->product_id]=$product->product_taxability_code;
+			}
 		}
 
 		$i = 0;
@@ -511,6 +518,8 @@ class plgHikaShopTaxcloud extends JPlugin {
 
 
 	public function onProductFormDisplay(&$product, &$html) {
+		if($product->product_type == 'variant')
+			return false;
 		$db = JFactory::getDBO();
 		if(!HIKASHOP_J25) {
 			$tmp = $db->getTableFields(hikashop_table('product'));
@@ -520,9 +529,8 @@ class plgHikaShopTaxcloud extends JPlugin {
 			$current = $db->getTableColumns(hikashop_table('product'));
 		}
 		if(!isset($current['product_taxability_code'])) {
-			$query = 'ALTER IGNORE TABLE `'.hikashop_table('product').'` ADD COLUMN `product_taxability_code` INT(10) NOT NULL DEFAULT 0';
-			$db->setQuery($query);
-			$db->query();
+			$databaseHelper = hikashop_get('helper.database');
+			$databaseHelper->addColumns('product','`product_taxability_code` INT(10) NOT NULL DEFAULT 0');
 		}
 
 		$doc = JFactory::getDocument();

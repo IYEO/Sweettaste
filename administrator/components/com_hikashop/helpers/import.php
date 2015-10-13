@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -526,6 +526,8 @@ class hikashopImportHelper
 				$app = JFactory::getApplication();
 				$app->enqueueMessage('The product '.@$product->product_code.' should have an empty value instead of the value '.$product->product_parent_id.' in the field product_parent_id as it is a main product (not a variant) and thus doesn\'t have any parent.','error');
 			}
+		}else{
+			$product->product_tax_id = 0;
 		}
 
 		if(!isset($product->product_tax_id) || strlen($product->product_tax_id)<1){
@@ -674,6 +676,9 @@ class hikashopImportHelper
 				if(substr($file,0,7)=='http://'||substr($file,0,8)=='https://'){
 					$parts = explode('/',$file);
 					$name = array_pop($parts);
+					$name = explode('?',$name);
+					$name = array_shift($name);
+					$name = urldecode($name);
 					if(!file_exists($this->uploadFolder.$name)){
 						$data = @file_get_contents($file);
 						if(empty($data) && !empty($this->default_file)){
@@ -713,14 +718,19 @@ class hikashopImportHelper
 				if(substr($image,0,7)=='http://'||substr($image,0,8)=='https://'){
 					$parts = explode('/',$image);
 					$name = array_pop($parts);
+					$name = explode('?',$name);
+					$name = array_shift($name);
+					$name = urldecode($name);
 					if(!file_exists($this->uploadFolder.$name)){
-						JFile::write($this->uploadFolder.$name,file_get_contents($image));
+						$content = file_get_contents($image);
+						JFile::write($this->uploadFolder.$name,$content);
 					}else{
 						$size = $this->getSizeFile($image);
 						if($size!=filesize($this->uploadFolder.$name)){
 							$name=$size.'_'.$name;
 							if(!file_exists($this->uploadFolder.$name)){
-								JFile::write($this->uploadFolder.$name,file_get_contents($image));
+								$content = file_get_contents($image);
+								JFile::write($this->uploadFolder.$name,$content);
 							}
 						}
 					}
@@ -1054,7 +1064,7 @@ class hikashopImportHelper
 	}
 
 	function getSizeFile($url) {
-		if (substr($url,0,4)=='http') {
+		if (substr($url,0,4) == 'http') {
 			$x = array_change_key_case(get_headers($url, 1),CASE_LOWER);
 			if ( strcasecmp($x[0], 'HTTP/1.1 200 OK') != 0 ) { $x = $x['content-length'][1]; }
 			else { $x = $x['content-length']; }
@@ -1291,14 +1301,15 @@ class hikashopImportHelper
 	function _insertRelated(&$products,$type='related'){
 		$values = array();
 		$totalValid=0;
-		$insert = 'INSERT IGNORE INTO '.hikashop_table('product_related').' (`product_related_id`,`product_related_type`,`product_id`) VALUES (';
+		$insert = 'INSERT IGNORE INTO '.hikashop_table('product_related').' (`product_related_id`,`product_related_type`,`product_id`,`product_related_ordering`) VALUES (';
 		$ids=array();
 
 		foreach($products as $product){
 			if(!isset($product->$type) && empty($product->hikashop_update)){
 				if(@$product->product_type!='variant' && !empty($this->template->$type)){
+					$i = 0;
 					foreach($this->template->$type as $id){
-						$value = array((int)$id,$this->db->Quote($type),$product->product_id);
+						$value = array((int)$id,$this->db->Quote($type),$product->product_id,$i);
 						$values[] = implode(',',$value);
 						$totalValid++;
 						if( $totalValid && $totalValid%$this->perBatch == 0){
@@ -1307,15 +1318,17 @@ class hikashopImportHelper
 							$totalValid=0;
 							$values=array();
 						}
+						$i++;
 					}
 				}
 			}elseif(isset($product->$type)&&is_array($product->$type)){
 				$ids[] = (int)$product->product_id;
+				$i = 0;
 				foreach($product->$type as $k => $id){
 					if(!empty($id)){
 						$id = $this->_getRelated($id);
 						$product->{$type}[$k] = $id;
-						$value = array((int)$id,$this->db->Quote($type),$product->product_id);
+						$value = array((int)$id,$this->db->Quote($type),$product->product_id,$i);
 						$values[] = implode(',',$value);
 						$totalValid++;
 					}
@@ -1332,6 +1345,7 @@ class hikashopImportHelper
 						$totalValid=0;
 						$values=array();
 					}
+					$i++;
 				}
 			}
 		}
@@ -1772,7 +1786,7 @@ class hikashopImportHelper
 					if($product->product_type!=$type || empty($codes[$product->product_code])) continue;
 					$line = array();
 					foreach($all_fields as $field){
-						if(!isset($product->$field) && !empty($product->product_id) && isset($already[$product->product_id])){
+						if(!isset($product->$field) && !empty($product->product_id) && isset($already[$product->product_id]) && is_object($already[$product->product_id])){
 							$product->$field = $already[$product->product_id]->$field;
 						}
 						if($field=='product_id'){

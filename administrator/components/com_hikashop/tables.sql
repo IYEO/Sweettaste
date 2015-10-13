@@ -61,11 +61,11 @@ CREATE TABLE IF NOT EXISTS `#__hikashop_cart` (
 	`user_id` int(10) unsigned NOT NULL DEFAULT '0',
 	`session_id` varchar(255) NOT NULL,
 	`cart_modified` int(10) unsigned NOT NULL DEFAULT '0',
-	`cart_coupon` varchar(255) NOT NULL,
+	`cart_coupon` varchar(255) NOT NULL DEFAULT '',
 	`cart_type` varchar(25) NOT NULL DEFAULT 'cart',
 	`cart_current` int(11) NOT NULL DEFAULT '0',
 	`cart_share` varchar(255) NOT NULL DEFAULT 'nobody',
-	`cart_name` varchar(50) NOT NULL,
+	`cart_name` varchar(50) NOT NULL DEFAULT '',
 	`cart_params` text NOT NULL DEFAULT '',
 	PRIMARY KEY (`cart_id`),
 	KEY `user_id` (`user_id`),
@@ -186,6 +186,7 @@ CREATE TABLE IF NOT EXISTS `#__hikashop_discount` (
 	`discount_coupon_nodoubling` tinyint(4) DEFAULT NULL,
 	`discount_coupon_product_only` tinyint(4) DEFAULT NULL,
 	`discount_affiliate` int(10) NOT NULL DEFAULT '0',
+	`discount_site_id` VARCHAR( 255 ) NULL DEFAULT '',
 	PRIMARY KEY (`discount_id`),
 	UNIQUE KEY `discount_code` (`discount_code`)
 ) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
@@ -196,6 +197,27 @@ CREATE TABLE IF NOT EXISTS `#__hikashop_download` (
 	`file_pos` int(10) NOT NULL DEFAULT '1',
 	`download_number` int(11) NOT NULL DEFAULT '1',
 	PRIMARY KEY (`file_id`,`order_id`,`file_pos`)
+) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
+
+CREATE TABLE IF NOT EXISTS `#__hikashop_email_log` (
+	`email_log_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+	`email_log_sender_email` varchar(255) NOT NULL DEFAULT '',
+	`email_log_sender_name` varchar(255) NOT NULL DEFAULT '',
+	`email_log_recipient_email` varchar(255) NOT NULL DEFAULT '',
+	`email_log_recipient_name` varchar(255) NOT NULL DEFAULT '',
+	`email_log_reply_email` varchar(255) NOT NULL DEFAULT '',
+	`email_log_reply_name` varchar(255) NOT NULL DEFAULT '',
+	`email_log_cc_email` varchar(255) NOT NULL DEFAULT '',
+	`email_log_bcc_email` varchar(255) NOT NULL DEFAULT '',
+	`email_log_subject` text NOT NULL,
+	`email_log_altbody` text NOT NULL,
+	`email_log_body` text NOT NULL,
+	`email_log_name` varchar(255) NOT NULL DEFAULT '',
+	`email_log_ref_id` varchar(255) NOT NULL DEFAULT '',
+	`email_log_params` text NOT NULL,
+	`email_log_date` int(10) NOT NULL ,
+	`email_log_published` tinyint(3) unsigned NOT NULL DEFAULT '1',
+	PRIMARY KEY (`email_log_id`)
 ) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
 
 CREATE TABLE IF NOT EXISTS `#__hikashop_entry` (
@@ -250,7 +272,7 @@ CREATE TABLE IF NOT EXISTS `#__hikashop_filter` (
 	`filter_namekey` varchar(50) NOT NULL,
 	`filter_published` tinyint(3) unsigned NOT NULL DEFAULT '1',
 	`filter_type` varchar(50) DEFAULT NULL,
-	`filter_category_id` int(10) unsigned NOT NULL,
+	`filter_category_id` VARCHAR(255) NOT NULL,
 	`filter_ordering` smallint(5) unsigned DEFAULT '99',
 	`filter_options` text,
 	`filter_data` text NOT NULL,
@@ -360,6 +382,7 @@ CREATE TABLE IF NOT EXISTS `#__hikashop_order` (
 	`order_payment_id` varchar(255) NOT NULL DEFAULT '',
 	`order_payment_method` varchar(255) NOT NULL DEFAULT '',
 	`order_payment_price` decimal(17,5) NOT NULL DEFAULT '0.00000',
+	`order_payment_tax` decimal(17,5) NOT NULL DEFAULT '0.00000',
 	`order_payment_params` text NOT NULL DEFAULT '',
 	`order_shipping_id` varchar(255) NOT NULL DEFAULT '',
 	`order_shipping_method` varchar(255) NOT NULL DEFAULT '',

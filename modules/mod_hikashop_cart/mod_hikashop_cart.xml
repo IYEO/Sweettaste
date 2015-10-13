@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="module" version="2.5" method="upgrade">
 	<name>Hikashop Cart Module</name>
-	<creationDate>26 juillet 2015</creationDate>
-	<version>2.5.0</version>
+	<creationDate>12 octobre 2015</creationDate>
+	<version>2.6.0</version>
 	<author>Hikari Software</author>
 	<authorEmail>dev@hikashop.com</authorEmail>
 	<authorUrl>http://www.hikashop.com</authorUrl>
@@ -15,7 +15,7 @@
 		<folder>tmpl</folder>
 	</files>
 	<params addpath="/components/com_hikashop/params">
-		<param name="hikashopmodule" type="hikashopmodule" default="module" label="hikashop" description="HikaShop options" />
+		<param name="hikashopcartmodule" type="hikashopmodule" default="module" label="hikashop" description="HikaShop options" />
 		<param name="moduleclass_sfx" type="text" default="" label="Module Class Suffix" description="PARAMMODULECLASSSUFFIX" />
 	</params>
 	<config>
@@ -26,7 +26,14 @@
 					type="text"
 					label="COM_MODULES_FIELD_MODULECLASS_SFX_LABEL"
 					description="COM_MODULES_FIELD_MODULECLASS_SFX_DESC" />
-				<field id="hikashopmodule" name="hikashopmodule" type="hikashopmodule" label="hikashop" description="HikaShop options" />
+			</fieldset>
+			<fieldset name="hk_options" label="Hikashop Options">
+				<field
+					id="hikashopmodule"
+					name="hikashopcartmodule"
+					type="hikashopmodule"
+					label="hikashop"
+					description="HikaShop options" />
 			</fieldset>
 		</fields>
 	</config>

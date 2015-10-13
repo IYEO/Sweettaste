@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -38,8 +38,52 @@ class CategoryViewCategory extends HikaShopView {
 		$pageInfo->limit = new stdClass();
 		$catData = null;
 		$database = JFactory::getDBO();
-		$content_type = $this->params->get('content_type');
 		$defaultParams = $config->get('default_params');
+		if(empty($defaultParams['links_on_main_categories']))
+			$defaultParams['links_on_main_categories']=1;
+
+		$params = array(
+			'limit' => '',
+			'order_dir' => 'inherit',
+			'margin' => '',
+			'border_visible' => '-1',
+			'div_item_layout_type' => 'inherit',
+			'text_center' => '-1',
+			'columns' => '',
+			'number_of_products' => '-1',
+			'background_color' => '',
+			'link_to_product_page' => '-1',
+			'only_if_products' => '-1',
+			'child_display_type' => 'inherit',
+			'child_limit' => '',
+			'links_on_main_categories' => '-1',
+			'layout_type' => 'inherit'
+		);
+
+		$data = $this->params->get('data',new stdClass());
+
+		if(isset($data->hk_category) && is_object($data->hk_category)){
+			$categoryId = (int)$this->params->get('category', 0);
+			if($categoryId > 0) {
+				$categoryClass = hikashop_get('class.category');
+				$cat = $categoryClass->get($categoryId);
+				if($cat->category_type == 'manufacturer')
+					$this->params->set('content_type', 'manufacturer');
+			}
+			if(!empty($data->hk_category->category))
+				$this->params->set('selectparentlisting', (int)$data->hk_category->category);
+		}
+
+		foreach($params as $k => $v) {
+			if($this->params->get($k, $v) == $v)
+				$this->params->set($k, @$defaultParams[$k]);
+		}
+
+		if( (int)$this->params->get('limit') == 0 ) {
+			$this->params->set('limit', 1);
+		}
+
+		$content_type = $this->params->get('content_type');
 		if($content_type=='manufacturer'){
 			$category_type = 'manufacturer';
 			$id = JRequest::getInt("cid");
@@ -49,56 +93,6 @@ class CategoryViewCategory extends HikaShopView {
 			$this->params->set('selectparentlisting',$new_id);
 		}else{
 			$category_type = 'product';
-		}
-
-		if($this->params->get('limit','')==''){
-			$this->params->set('limit',@$defaultParams['limit']);
-		}
-		if($this->params->get('order_dir','inherit')=='inherit'){
-			$this->params->set('order_dir',@$defaultParams['order_dir']);
-		}
-		if( (int)$this->params->get('limit') == 0 ) {
-			$this->params->set('limit', 1);
-		}
-		if($this->params->get('margin','')==''){
-			$this->params->set('margin',@$defaultParams['margin']);
-		}
-		if($this->params->get('border_visible','-1')=='-1'){
-			$this->params->set('border_visible',@$defaultParams['border_visible']);
-		}
-		if($this->params->get('div_item_layout_type','inherit')=='inherit'){
-			$this->params->set('div_item_layout_type',@$defaultParams['div_item_layout_type']);
-		}
-		if($this->params->get('text_center','-1')=='-1'){
-			$this->params->set('text_center',@$defaultParams['text_center']);
-		}
-		if($this->params->get('columns','')==''){
-			$this->params->set('columns',@$defaultParams['columns']);
-		}
-		if($this->params->get('number_of_products','-1')=='-1'){
-			$this->params->set('number_of_products',@$defaultParams['number_of_products']);
-		}
-		if($this->params->get('background_color','')==''){
-			$this->params->set('background_color',@$defaultParams['background_color']);
-		}
-		if($this->params->get('link_to_product_page','-1')=='-1'){
-			$this->params->set('link_to_product_page',@$defaultParams['link_to_product_page']);
-		}
-		if($this->params->get('only_if_products','-1')=='-1'){
-			$this->params->set('only_if_products',@$defaultParams['only_if_products']);
-		}
-		if($this->params->get('child_display_type','inherit')=='inherit'){
-			$this->params->set('child_display_type',@$defaultParams['child_display_type']);
-		}
-		if($this->params->get('child_limit','')==''){
-			$this->params->set('child_limit',@$defaultParams['child_limit']);
-		}
-		if($this->params->get('links_on_main_categories','-1')=='-1'){
-			if(empty($defaultParams['links_on_main_categories']))$defaultParams['links_on_main_categories']=1;
-			$this->params->set('links_on_main_categories',@$defaultParams['links_on_main_categories']);
-		}
-		if($this->params->get('layout_type','inherit')=='inherit'){
-			$this->params->set('layout_type',@$defaultParams['layout_type']);
 		}
 
 		if($this->params->get('content_synchronize')){

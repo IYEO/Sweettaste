@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -25,6 +25,7 @@ class MenuViewMenu extends hikashopView{
 		if(method_exists($this,$function)) $this->$function();
 
 		$plugin = JPluginHelper::getPlugin('system', 'hikashopaffiliate');
+		$emailPlugin = JPluginHelper::getPlugin('hikashop', 'email_history');
 
 		$menus = array(
 			'system' => array(
@@ -102,7 +103,7 @@ class MenuViewMenu extends hikashopView{
 					),
 					array(
 						'name' => JText::_('EMAILS'),
-						'check' => 'ctrl=email',
+						'check' => array('ctrl' => 'email'),
 						'acl' => 'email',
 						'url' => hikashop_completeLink('email'),
 						'icon' => 'icon-16-email',
@@ -229,7 +230,16 @@ class MenuViewMenu extends hikashopView{
 						'icon' => 'icon-16-wishlist',
 						'url' => hikashop_completeLink('waitlist'),
 						'display' => hikashop_level(1) && $config->get('product_waitlist', 1)
-					)
+					),
+					array(
+						'name' => JText::_('EMAIL_HISTORY'),
+						'check' => array('ctrl'=>'email_log'),
+						'acl' => 'email_log',
+						'icon' => 'icon-16-email',
+						'url' => hikashop_completeLink('email_log'),
+						'display' => (!empty($emailPlugin) && hikashop_level(2)),
+						),
+
 				)
 			),
 			'orders' => array(
@@ -335,14 +345,16 @@ class MenuViewMenu extends hikashopView{
 						'check' => 'ctrl=menus',
 						'acl' => 'menus',
 						'icon' => 'icon-16-menu',
-						'url' => hikashop_completeLink('menus')
+						'url' => hikashop_completeLink('menus'),
+						'display' => !HIKASHOP_J30
 					),
 					array(
 						'name' => JText::_('CONTENT_MODULES'),
 						'check' => 'ctrl=modules',
 						'acl' => 'modules',
 						'icon' => 'icon-16-module',
-						'url' => hikashop_completeLink('modules')
+						'url' => hikashop_completeLink('modules'),
+						'display' => !HIKASHOP_J30
 					),
 					array(
 						'name' => JText::_('FIELDS'),

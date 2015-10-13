@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -219,12 +219,8 @@ class plgHikashopshippingUSPS extends hikashopShippingPlugin
 
 			$package = $this->getOrderPackage($order, array('weight_unit' => 'oz', 'volume_unit' => 'in', 'required_dimensions' => array('w','x','y','z')));
 
-			if(isset($package[0])){
-				$package['w'] = $package[0]['w'];
-				$package['x'] = $package[0]['x'];
-				$package['y'] = $package[0]['y'];
-				$package['z'] = $package[0]['z'];
-			}
+			if(isset($package[0]))
+				$package = $package[0];
 
 			$max_weight = 1120;
 			if($package['w'] > $max_weight) {
@@ -287,6 +283,14 @@ class plgHikashopshippingUSPS extends hikashopShippingPlugin
 				$rates = $this->array_sort($rates, 'shipping_price', 'usps', SORT_ASC);
 
 			$i = 0;
+
+			if(empty($rates)) {
+				$messages['no_shipping_quotes'] = 'Failed to obtain shipping quotes.';
+				$cache_messages['no_shipping_quotes'] = 'Failed to obtain shipping quotes.';
+				$this->setShippingCache($order, null, $cache_messages);
+
+				return true;
+			}
 			foreach($rates as $finalRate) {
 				$finalRate->shipping_ordering .= '_' . $i++;
 				$usable_rates[$finalRate->shipping_id] = $finalRate;
@@ -304,8 +308,8 @@ class plgHikashopshippingUSPS extends hikashopShippingPlugin
 		return true;
 	}
 
-	function addRate(&$rates,$type,$parcel,&$rate,$currency, $isInternational){
-		$parcel->Service_Type=$type;
+	function addRate(&$rates, $type, $parcel, &$rate, $currency, $isInternational) {
+		$parcel->Service_Type = $type;
 		$app = JFactory::getApplication();
 
 		$usps_user_id = $rate->shipping_params->usps_user_id;
@@ -449,7 +453,6 @@ class plgHikashopshippingUSPS extends hikashopShippingPlugin
 			}
 
 			if(empty($usps_rates)) {
-				$app->enqueueMessage( 'Failed to obtain shipping quotes.') ;
 				$responseError = true;
 			}
 		}
@@ -611,233 +614,38 @@ class plgHikashopshippingUSPS extends hikashopShippingPlugin
 	}
 
 	function USPS_Country_List() {
-		$countryList = array(
-'AF' => 'Afghanistan',
-'AL' => 'Albania',
-'AX' => 'Aland Island (Finland)',
-'DZ' => 'Algeria',
-'AD' => 'Andorra',
-'AO' => 'Angola',
-'AI' => 'Anguilla',
-'AG' => 'Antigua and Barbuda',
-'AR' => 'Argentina',
-'AM' => 'Armenia',
-'AW' => 'Aruba',
-'AU' => 'Australia',
-'AT' => 'Austria',
-'AZ' => 'Azerbaijan',
-'BC' => 'Canada',
-'BS' => 'Bahamas',
-'BH' => 'Bahrain',
-'BD' => 'Bangladesh',
-'BB' => 'Barbados',
-'BY' => 'Belarus',
-'BE' => 'Belgium',
-'BZ' => 'Belize',
-'BJ' => 'Benin',
-'BM' => 'Bermuda',
-'BT' => 'Bhutan',
-'BO' => 'Bolivia',
-'BA' => 'Bosnia-Herzegovina',
-'BW' => 'Botswana',
-'BR' => 'Brazil',
-'VG' => 'British Virgin Islands',
-'BN' => 'Brunei Darussalam',
-'BG' => 'Bulgaria',
-'BF' => 'Burkina Faso',
-'MM' => 'Burma',
-'BI' => 'Burundi',
-'KH' => 'Cambodia',
-'CM' => 'Cameroon',
-'CA' => 'Canada',
-'CV' => 'Cape Verde',
-'KY' => 'Cayman Islands',
-'CF' => 'Central African Republic',
-'TD' => 'Chad',
-'CL' => 'Chile',
-'CN' => 'China',
-'CX' => 'Christmas Island (Australia)',
-'CC' => 'Cocos Island (Australia)',
-'CO' => 'Colombia',
-'KM' => 'Comoros',
-'CG' => 'Congo, Republic of the',
-'CD' => 'Congo, Democratic Republic of the',
-'CK' => 'Cook Islands (New Zealand)',
-'CR' => 'Costa Rica',
-'CI' => 'Cote d Ivoire (Ivory Coast)',
-'HR' => 'Croatia',
-'CU' => 'Cuba',
-'CY' => 'Cyprus',
-'CZ' => 'Czech Republic',
-'DK' => 'Denmark',
-'DJ' => 'Djibouti',
-'DM' => 'Dominica',
-'DO' => 'Dominican Republic',
-'EC' => 'Ecuador',
-'EG' => 'Egypt',
-'SV' => 'El Salvador',
-'GQ' => 'Equatorial Guinea',
-'ER' => 'Eritrea',
-'EE' => 'Estonia',
-'ET' => 'Ethiopia',
-'FK' => 'Falkland Islands',
-'FO' => 'Faroe Islands',
-'FJ' => 'Fiji',
-'FI' => 'Finland',
-'FR' => 'France',
-'FX' => 'France',
-'GF' => 'French Guiana',
-'PF' => 'French Polynesia',
-'GA' => 'Gabon',
-'GM' => 'Gambia',
-'GE' => 'Georgia, Republic of',
-'DE' => 'Germany',
-'GH' => 'Ghana',
-'GI' => 'Gibraltar',
-'GB' => 'Great Britain and Northern Ireland',
-'GR' => 'Greece',
-'GL' => 'Greenland',
-'GD' => 'Grenada',
-'GP' => 'Guadeloupe',
-'GT' => 'Guatemala',
-'GN' => 'Guinea',
-'GW' => 'Guinea-Bissau',
-'GY' => 'Guyana',
-'HT' => 'Haiti',
-'HN' => 'Honduras',
-'HK' => 'Hong Kong',
-'HU' => 'Hungary',
-'IS' => 'Iceland',
-'IN' => 'India',
-'ID' => 'Indonesia',
-'IR' => 'Iran',
-'IQ' => 'Iraq',
-'IE' => 'Ireland',
-'IL' => 'Israel',
-'IT' => 'Italy',
-'JM' => 'Jamaica',
-'JP' => 'Japan',
-'JO' => 'Jordan',
-'KZ' => 'Kazakhstan',
-'KE' => 'Kenya',
-'KI' => 'Kiribati',
-'KW' => 'Kuwait',
-'KG' => 'Kyrgyzstan',
-'LA' => 'Laos',
-'LV' => 'Latvia',
-'LB' => 'Lebanon',
-'LS' => 'Lesotho',
-'LR' => 'Liberia',
-'LY' => 'Libya',
-'LI' => 'Liechtenstein',
-'LT' => 'Lithuania',
-'LU' => 'Luxembourg',
-'MO' => 'Macao',
-'MK' => 'Macedonia, Republic of',
-'MG' => 'Madagascar',
-'MW' => 'Malawi',
-'MY' => 'Malaysia',
-'MV' => 'Maldives',
-'ML' => 'Mali',
-'MT' => 'Malta',
-'MQ' => 'Martinique',
-'MR' => 'Mauritania',
-'MU' => 'Mauritius',
-'YT' => 'Mayotte (France)',
-'MX' => 'Mexico',
-'FM' => 'Micronesia, Federated States of',
-'MD' => 'Moldova',
-'MC' => 'Monaco (France)',
-'MN' => 'Mongolia',
-'MS' => 'Montserrat',
-'MA' => 'Morocco',
-'MZ' => 'Mozambique',
-'NA' => 'Namibia',
-'NR' => 'Nauru',
-'NP' => 'Nepal',
-'NL' => 'Netherlands',
-'AN' => 'Netherlands Antilles',
-'NC' => 'New Caledonia',
-'NZ' => 'New Zealand',
-'NI' => 'Nicaragua',
-'NE' => 'Niger',
-'NG' => 'Nigeria',
-'KP' => 'North Korea (Korea, Democratic People\'s Republic of)',
-'NO' => 'Norway',
-'OM' => 'Oman',
-'PK' => 'Pakistan',
-'PA' => 'Panama',
-'PG' => 'Papua New Guinea',
-'PY' => 'Paraguay',
-'PE' => 'Peru',
-'PH' => 'Philippines',
-'PN' => 'Pitcairn Island',
-'PL' => 'Poland',
-'PT' => 'Portugal',
-'QA' => 'Qatar',
-'RE' => 'Reunion',
-'RO' => 'Romania',
-'RU' => 'Russia',
-'RW' => 'Rwanda',
-'SH' => 'Saint Helena',
-'KN' => 'Saint Kitts (St. Christopher and Nevis)',
-'LC' => 'Saint Lucia',
-'PM' => 'Saint Pierre and Miquelon',
-'VC' => 'Saint Vincent and the Grenadines',
-'SM' => 'San Marino',
-'ST' => 'Sao Tome and Principe',
-'SA' => 'Saudi Arabia',
-'SN' => 'Senegal',
-'RS' => 'Serbia',
-'SC' => 'Seychelles',
-'SL' => 'Sierra Leone',
-'SG' => 'Singapore',
-'SK' => 'Slovak Republic',
-'SI' => 'Slovenia',
-'SB' => 'Solomon Islands',
-'SO' => 'Somalia',
-'ZA' => 'South Africa',
-'GS' => 'South Georgia (Falkland Islands)',
-'KR' => 'South Korea (Korea, Republic of)',
-'ES' => 'Spain',
-'LK' => 'Sri Lanka',
-'SD' => 'Sudan',
-'SR' => 'Suriname',
-'SZ' => 'Swaziland',
-'SE' => 'Sweden',
-'CH' => 'Switzerland',
-'SY' => 'Syrian Arab Republic',
-'TW' => 'Taiwan',
-'TJ' => 'Tajikistan',
-'TZ' => 'Tanzania',
-'TH' => 'Thailand',
-'TL' => 'East Timor (Indonesia)',
-'TG' => 'Togo',
-'TK' => 'Tokelau (Union) Group (Western Samoa)',
-'TO' => 'Tonga',
-'TT' => 'Trinidad and Tobago',
-'TN' => 'Tunisia',
-'TR' => 'Turkey',
-'TM' => 'Turkmenistan',
-'TC' => 'Turks and Caicos Islands',
-'TV' => 'Tuvalu',
-'UG' => 'Uganda',
-'UA' => 'Ukraine',
-'US' => 'United States',
-'AE' => 'United Arab Emirates',
-'UY' => 'Uruguay',
-'UZ' => 'Uzbekistan',
-'VU' => 'Vanuatu',
-'VA' => 'Vatican City',
-'VE' => 'Venezuela',
-'VN' => 'Vietnam',
-'WF' => 'Wallis and Futuna Islands',
-'WS' => 'Western Samoa',
-'YE' => 'Yemen',
-'ZM' => 'Zambia',
-'ZW' => 'Zimbabwe'
+		return array(
+'AF' => 'Afghanistan', 'AL' => 'Albania', 'AX' => 'Aland Island (Finland)', 'DZ' => 'Algeria', 'AD' => 'Andorra', 'AO' => 'Angola', 'AI' => 'Anguilla', 'AG' => 'Antigua and Barbuda',
+'AR' => 'Argentina', 'AM' => 'Armenia', 'AW' => 'Aruba', 'AU' => 'Australia', 'AT' => 'Austria', 'AZ' => 'Azerbaijan', 'BC' => 'Canada', 'BS' => 'Bahamas', 'BH' => 'Bahrain',
+'BD' => 'Bangladesh', 'BB' => 'Barbados', 'BY' => 'Belarus', 'BE' => 'Belgium', 'BZ' => 'Belize', 'BJ' => 'Benin', 'BM' => 'Bermuda', 'BT' => 'Bhutan', 'BO' => 'Bolivia',
+'BA' => 'Bosnia-Herzegovina', 'BW' => 'Botswana', 'BR' => 'Brazil', 'VG' => 'British Virgin Islands', 'BN' => 'Brunei Darussalam', 'BG' => 'Bulgaria', 'BF' => 'Burkina Faso',
+'MM' => 'Burma', 'BI' => 'Burundi', 'KH' => 'Cambodia', 'CM' => 'Cameroon', 'CA' => 'Canada', 'CV' => 'Cape Verde', 'KY' => 'Cayman Islands', 'CF' => 'Central African Republic',
+'TD' => 'Chad', 'CL' => 'Chile', 'CN' => 'China', 'CX' => 'Christmas Island (Australia)', 'CC' => 'Cocos Island (Australia)', 'CO' => 'Colombia', 'KM' => 'Comoros',
+'CG' => 'Congo, Republic of the', 'CD' => 'Congo, Democratic Republic of the', 'CK' => 'Cook Islands (New Zealand)', 'CR' => 'Costa Rica', 'CI' => 'Cote d Ivoire (Ivory Coast)',
+'HR' => 'Croatia', 'CU' => 'Cuba', 'CY' => 'Cyprus', 'CZ' => 'Czech Republic', 'DK' => 'Denmark', 'DJ' => 'Djibouti', 'DM' => 'Dominica', 'DO' => 'Dominican Republic',
+'EC' => 'Ecuador', 'EG' => 'Egypt', 'SV' => 'El Salvador', 'GQ' => 'Equatorial Guinea', 'ER' => 'Eritrea', 'EE' => 'Estonia', 'ET' => 'Ethiopia', 'FK' => 'Falkland Islands',
+'FO' => 'Faroe Islands', 'FJ' => 'Fiji', 'FI' => 'Finland', 'FR' => 'France', 'FX' => 'France', 'GF' => 'French Guiana', 'PF' => 'French Polynesia', 'GA' => 'Gabon', 'GM' => 'Gambia',
+'GE' => 'Georgia, Republic of', 'DE' => 'Germany', 'GH' => 'Ghana', 'GI' => 'Gibraltar', 'GB' => 'Great Britain and Northern Ireland', 'GR' => 'Greece', 'GL' => 'Greenland',
+'GD' => 'Grenada', 'GP' => 'Guadeloupe', 'GT' => 'Guatemala', 'GN' => 'Guinea', 'GW' => 'Guinea-Bissau', 'GY' => 'Guyana', 'HT' => 'Haiti', 'HN' => 'Honduras', 'HK' => 'Hong Kong',
+'HU' => 'Hungary', 'IS' => 'Iceland', 'IN' => 'India', 'ID' => 'Indonesia', 'IR' => 'Iran', 'IQ' => 'Iraq', 'IE' => 'Ireland', 'IL' => 'Israel', 'IT' => 'Italy', 'JM' => 'Jamaica',
+'JP' => 'Japan', 'JO' => 'Jordan', 'KZ' => 'Kazakhstan', 'KE' => 'Kenya', 'KI' => 'Kiribati', 'KW' => 'Kuwait', 'KG' => 'Kyrgyzstan', 'LA' => 'Laos', 'LV' => 'Latvia',
+'LB' => 'Lebanon', 'LS' => 'Lesotho', 'LR' => 'Liberia', 'LY' => 'Libya', 'LI' => 'Liechtenstein', 'LT' => 'Lithuania', 'LU' => 'Luxembourg', 'MO' => 'Macao',
+'MK' => 'Macedonia, Republic of', 'MG' => 'Madagascar', 'MW' => 'Malawi', 'MY' => 'Malaysia', 'MV' => 'Maldives', 'ML' => 'Mali', 'MT' => 'Malta', 'MQ' => 'Martinique',
+'MR' => 'Mauritania', 'MU' => 'Mauritius', 'YT' => 'Mayotte (France)', 'MX' => 'Mexico', 'FM' => 'Micronesia, Federated States of', 'MD' => 'Moldova', 'MC' => 'Monaco (France)',
+'MN' => 'Mongolia', 'MS' => 'Montserrat', 'MA' => 'Morocco', 'MZ' => 'Mozambique', 'NA' => 'Namibia', 'NR' => 'Nauru', 'NP' => 'Nepal', 'NL' => 'Netherlands',
+'AN' => 'Netherlands Antilles', 'NC' => 'New Caledonia', 'NZ' => 'New Zealand', 'NI' => 'Nicaragua', 'NE' => 'Niger', 'NG' => 'Nigeria',
+'KP' => 'North Korea (Korea, Democratic People\'s Republic of)', 'NO' => 'Norway', 'OM' => 'Oman', 'PK' => 'Pakistan', 'PA' => 'Panama', 'PG' => 'Papua New Guinea', 'PY' => 'Paraguay',
+'PE' => 'Peru', 'PH' => 'Philippines', 'PN' => 'Pitcairn Island', 'PL' => 'Poland', 'PT' => 'Portugal', 'QA' => 'Qatar', 'RE' => 'Reunion', 'RO' => 'Romania', 'RU' => 'Russia',
+'RW' => 'Rwanda', 'SH' => 'Saint Helena',  'KN' => 'Saint Kitts (St. Christopher and Nevis)', 'LC' => 'Saint Lucia', 'PM' => 'Saint Pierre and Miquelon',
+'VC' => 'Saint Vincent and the Grenadines', 'SM' => 'San Marino', 'ST' => 'Sao Tome and Principe', 'SA' => 'Saudi Arabia', 'SN' => 'Senegal', 'RS' => 'Serbia', 'SC' => 'Seychelles',
+'SL' => 'Sierra Leone', 'SG' => 'Singapore', 'SK' => 'Slovak Republic', 'SI' => 'Slovenia', 'SB' => 'Solomon Islands', 'SO' => 'Somalia', 'ZA' => 'South Africa',
+'GS' => 'South Georgia (Falkland Islands)', 'KR' => 'South Korea (Korea, Republic of)', 'ES' => 'Spain', 'LK' => 'Sri Lanka', 'SD' => 'Sudan', 'SR' => 'Suriname', 'SZ' => 'Swaziland',
+'SE' => 'Sweden', 'CH' => 'Switzerland', 'SY' => 'Syrian Arab Republic', 'TW' => 'Taiwan', 'TJ' => 'Tajikistan', 'TZ' => 'Tanzania', 'TH' => 'Thailand',
+'TL' => 'East Timor (Indonesia)', 'TG' => 'Togo', 'TK' => 'Tokelau (Union) Group (Western Samoa)', 'TO' => 'Tonga', 'TT' => 'Trinidad and Tobago', 'TN' => 'Tunisia', 'TR' => 'Turkey',
+'TM' => 'Turkmenistan', 'TC' => 'Turks and Caicos Islands', 'TV' => 'Tuvalu', 'UG' => 'Uganda', 'UA' => 'Ukraine', 'US' => 'United States', 'AE' => 'United Arab Emirates',
+'UY' => 'Uruguay', 'UZ' => 'Uzbekistan', 'VU' => 'Vanuatu', 'VA' => 'Vatican City', 'VE' => 'Venezuela', 'VN' => 'Vietnam', 'WF' => 'Wallis and Futuna Islands',
+'WS' => 'Western Samoa', 'YE' => 'Yemen', 'ZM' => 'Zambia', 'ZW' => 'Zimbabwe'
 		);
-		return $countryList;
 	}
 
 	function xml2array( $xmlObject, $out = array())

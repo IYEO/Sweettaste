@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -78,7 +78,7 @@ class userViewUser extends HikaShopView {
 	function registration(){
 
 		$js ='
-		function hikashopSubmitForm(form)
+		function hikashopSubmitForm(form, action)
 		{
 			var button = document.getElementById(\'login_view_action\'),
 				 currentForm = document.forms[form];
@@ -87,10 +87,19 @@ class userViewUser extends HikaShopView {
 
 			if (form=="hikashop_checkout_form")
 			{
+				if(action && action == "login") {
+					hikashopSubmitFormLog(form,button,currentForm);
+					return false;
+				}
+				if(action && action == "register") {
+					hikashopSubmitFormRegister(form,button,currentForm);
+					return false;
+				}
+
 				var registrationMethod = currentForm.elements["data[register][registration_method]"];
 				if (registrationMethod)
 				{
-					if (registrationMethod[0].id=="data[register][registration_method]login" && registrationMethod[0].checked)
+					if (registrationMethod[0].id == "data[register][registration_method]login" && registrationMethod[0].checked)
 						hikashopSubmitFormLog(form,button,currentForm);
 					else
 						hikashopSubmitFormRegister(form,button,currentForm);
@@ -115,18 +124,15 @@ class userViewUser extends HikaShopView {
 					el = d.getElementById("address_lastname");
 					if(el) lastnameValue = el.value;
 
-					if (usernameValue!="" && passwdValue!="") {
+					if (usernameValue != "" && passwdValue != "") {
 						hikashopSubmitFormLog(form,button,currentForm);
-					} else if (usernameValue!="" ||  passwdValue!="") {
-						if (registeremailValue=="" && registeremailconfValue=="" && firstnameValue=="" && lastnameValue=="")
-							hikashopSubmitFormLog(form,button,currentForm);
-						else
-							hikashopSubmitFormRegister(form,button,currentForm);
+					} else if ((usernameValue != "" ||  passwdValue != "") && (registeremailValue == "" && registeremailconfValue == "" && firstnameValue == "" && lastnameValue == "")) {
+						hikashopSubmitFormLog(form,button,currentForm);
 					} else {
 						hikashopSubmitFormRegister(form,button,currentForm);
 					}
 				}
-			} else if (form=="hikashop_registration_form") {
+			} else if(form == "hikashop_registration_form") {
 				hikashopSubmitFormRegister(form,button,currentForm);
 			}
 			return false;
@@ -187,7 +193,6 @@ class userViewUser extends HikaShopView {
 		}
 		$doc->addScriptDeclaration("\n<!--\n".$js."\n//-->\n");
 
-
 		global $Itemid;
 		$url_itemid='';
 		if(!empty($Itemid)){
@@ -221,8 +226,6 @@ class userViewUser extends HikaShopView {
 		$this->assignRef('extraFields',$extraFields);
 		$this->assignRef('user',$user);
 
-
-
 		$simplified_reg = $config->get('simplified_registration',1);
 		$this->assignRef('config',$config);
 		$this->assignRef('simplified_registration',$simplified_reg);
@@ -242,7 +245,6 @@ class userViewUser extends HikaShopView {
 			$fieldsClass->jsToggle($this->extraFields['address'],$address,0);
 			$values['address']=$address;
 		}
-
 
 
 		$fieldsClass->checkFieldsForJS($this->extraFields,$this->requiredFields,$this->validMessages,$values);
@@ -293,8 +295,6 @@ class userViewUser extends HikaShopView {
 			$affiliate = '';
 		}
 		$this->assignRef('affiliate_checked',$affiliate);
-
-
 	}
 
 	function downloads() {

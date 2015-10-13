@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -208,7 +208,7 @@ class CharacteristicViewCharacteristic extends hikashopView {
 		$characteristics = JRequest::getVar( 'cid', array(), '', 'array' );
 		$rows = array();
 		$js="window.top.hikashop.closeBox();";
-		if(!empty($characteristics)){
+		if(!empty($characteristics) && count($characteristics)){
 			JArrayHelper::toInteger($characteristics);
 			$database	= JFactory::getDBO();
 			$query = 'SELECT * FROM '.hikashop_table('characteristic').' WHERE characteristic_id IN ('.implode(',',$characteristics).') OR characteristic_parent_id IN ('.implode(',',$characteristics).') ORDER BY characteristic_ordering ASC, characteristic_value ASC';

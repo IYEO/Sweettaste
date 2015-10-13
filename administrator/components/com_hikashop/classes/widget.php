@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -137,9 +137,9 @@ class hikashopWidgetClass extends hikashopClass {
 				if($deleteRow>=0){
 					unset($widget->widget_params->table[$deleteRow]);
 				}else{
-					$widget->widget_name=$safeHtmlFilter->clean(strip_tags($formData['widget']['widget_name']), 'string');;
+					$widget->widget_name=$safeHtmlFilter->clean(strip_tags($formData['widget']['widget_name']), 'string');
 					$widget->widget_published=(int)$formData['widget']['widget_published'];
-					$widget->widget_access=$safeHtmlFilter->clean(strip_tags($formData['widget']['widget_access']), 'string');;
+					$widget->widget_access=$safeHtmlFilter->clean(strip_tags($formData['widget']['widget_access']), 'string');
 				}
 			}else{
 				if($formData['widget']['widget_params']['periodType'] && isset($formData['widget']['widget_params']['proposedPeriod']) && $formData['widget']['widget_params']['proposedPeriod']=='all'){
@@ -159,10 +159,10 @@ class hikashopWidgetClass extends hikashopClass {
 									$v2 = implode(',',$v2);
 								}
 							}
-							$widget->{$column}->$k2 = $safeHtmlFilter->clean(strip_tags($v2), 'string');;
+							$widget->{$column}->$k2 = $safeHtmlFilter->clean(strip_tags($v2), 'string');
 						}
 					}else{
-						$widget->$column = $safeHtmlFilter->clean(strip_tags($value), 'string');;
+						$widget->$column = $safeHtmlFilter->clean(strip_tags($value), 'string');
 					}
 				}
 			}
@@ -1019,6 +1019,9 @@ class hikashopWidgetClass extends hikashopClass {
 
 					$select.='a.*';
 				}
+				if($widget->widget_params->content == 'orders') {
+					$limit = ' GROUP BY a.order_id' . $limit;
+				}
 				if($csv && ($widget->widget_params->content=='orders' || $widget->widget_params->content=='sales')){
 					$leftjoin[]=' LEFT JOIN #__hikashop_address AS address1 ON a.order_billing_address_id=address1.address_id';
 					$select.=',address1.*';
@@ -1055,7 +1058,7 @@ class hikashopWidgetClass extends hikashopClass {
 							if(!isset($leftjoin['order_product'])){
 								$leftjoin['order_product'] = ' LEFT JOIN '.hikashop_table('order_product').' AS prod ON a.order_id=prod.order_id ';
 							}
-							$sum = 'a.order_full_price+a.order_discount_tax-a.order_shipping_tax-(SELECT SUM(subprod.order_product_tax*subprod.order_product_quantity) FROM '.hikashop_table('order_product').' AS subprod WHERE a.order_id=subprod.order_id)';
+							$sum = 'a.order_full_price+a.order_discount_tax-a.order_shipping_tax-a.order_payment_tax-(SELECT SUM(subprod.order_product_tax*subprod.order_product_quantity) FROM '.hikashop_table('order_product').' AS subprod WHERE a.order_id=subprod.order_id)';
 						}else{
 							if(!isset($leftjoin['order_product'])){
 								$leftjoin['order_product'] = ' LEFT JOIN '.hikashop_table('order_product').' AS prod ON a.order_id=prod.order_id ';
@@ -1520,11 +1523,21 @@ class hikashopWidgetClass extends hikashopClass {
 				if(empty($elements)){
 					$total = new stdClass();
 					$total->Total=0;
+					$total->order_currency_id = hikashop_getCurrency();
 					$elements = array($total);
 				}
 				if($widget->widget_params->content=='sales' || $widget->widget_params->content=='taxes'){
 					$currencyClass = hikashop_get('class.currency');
-					$value=$currencyClass->format($elements[0]->Total,@$elements[0]->order_currency_id);
+					$main_currency = reset($elements);
+					$total = 0;
+					foreach($elements as $element){
+						if($element->order_currency_id!=$main_currency->order_currency_id){
+							$total += $currencyClass->convertUniquePrice($element->Total,$element->order_currency_id, $main_currency->order_currency_id);
+						}else{
+							$total += $element->Total;
+						}
+					}
+					$value=$currencyClass->format($total,$main_currency->order_currency_id);
 				}else{
 					$value=$elements[0]->Total.' '.JText::_('orders');
 				}

@@ -10,14 +10,17 @@
 		<message></message>
 	</layout>
 	<fields name="params" addfieldpath="/components/com_hikashop/fields">
-		<fieldset name="basic" label="HikaShop Options">
-				<field
-						id="options"
-						name="options"
-						type="selectoptions"
-						label="options"
-						description="HikaShop options"
-				/>
+		<fieldset name="basic" label="Products options">
+			<field
+				id="hk_product"
+				name="hk_product"
+				multiple="true"
+				type="selectoptions"
+				menu="product"
+				content="product"
+				label="HikaShop"
+				description="HikaShop options"
+			/>
 		</fieldset>
 	</fields>
 </metadata>

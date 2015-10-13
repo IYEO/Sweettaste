@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -182,7 +182,9 @@ class hikashopBridgePaginationHelper extends JPagination {
 			$limits[] = JHTML::_('select.option', $i);
 		}
 
-		$limits[] = JHTML::_('select.option', '0', JText::_('HIKA_ALL'));
+		$config = hikashop_config();
+		if($config->get('pagination_viewall', 1))
+			$limits[] = JHTML::_('select.option', '0', JText::_('HIKA_ALL'));
 
 		if(version_compare(JVERSION,'3.0','<')){
 			$viewall = $this->_viewall;

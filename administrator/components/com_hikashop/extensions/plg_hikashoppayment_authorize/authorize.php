@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -239,7 +239,8 @@ class plgHikashoppaymentAuthorize extends hikashopPaymentPlugin
 		$config =& hikashop_config();
 		$group = $config->get('group_options',0);
 		foreach($order->cart->products as $product){
-			if($group && $product->order_product_option_parent_id) continue;
+			if($group && !empty($product->order_product_option_parent_id))
+				continue;
 			if(bccomp($product->order_product_tax,0,5)){
 				$tax+=$product->order_product_quantity*round($product->order_product_tax,(int)$this->currency->currency_locale['int_frac_digits']);
 				$has_tax = 'YES';
@@ -250,7 +251,7 @@ class plgHikashoppaymentAuthorize extends hikashopPaymentPlugin
 		}
 
 		if(!empty($order->cart->coupon) && @$order->cart->coupon->discount_value>0){
-			$vars["x_line_item"][]='coupon<|>'.JText::_('HIKASHOP_COUPON').'<|>'.JText::_('HIKASHOP_COUPON').'<|>1<|>'.round($order->cart->coupon->discount_value,(int)$this->currency->currency_locale['int_frac_digits']).'<|>N';
+			$vars["x_line_item"][]='coupon<|>'.JText::_('HIKASHOP_COUPON').'<|>'.JText::_('HIKASHOP_COUPON').'<|>1<|>-'.round($order->cart->coupon->discount_value,(int)$this->currency->currency_locale['int_frac_digits']).'<|>N';
 		}
 		if(!empty($order->order_payment_price)){
 			$vars["x_line_item"][]='payment<|>'.JText::_('HIKASHOP_PAYMENT').'<|>'.JText::_('HIKASHOP_PAYMENT').'<|>1<|>'.round($order->order_payment_price,(int)$this->currency->currency_locale['int_frac_digits']).'<|>N';
@@ -362,7 +363,7 @@ class plgHikashoppaymentAuthorize extends hikashopPaymentPlugin
 		$order_text = "\r\n".JText::sprintf('NOTIFICATION_OF_ORDER_ON_WEBSITE',$dbOrder->order_number,HIKASHOP_LIVE);
 		$order_text .= "\r\n".str_replace('<br/>',"\r\n",JText::sprintf('ACCESS_ORDER_WITH_LINK',$url));
 
-		if (@$vars['x_MD5_Hash']!=$vars['x_MD5_Hash_calculated']) {
+		if (strcasecmp(@$vars['x_MD5_Hash'],$vars['x_MD5_Hash_calculated'])!=0) {
 
 			$email = new stdClass();
 			$email->subject = JText::sprintf('NOTIFICATION_REFUSED_FOR_THE_ORDER','Authorize.net').'invalid response';

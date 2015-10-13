@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -16,7 +16,7 @@ defined('_JEXEC') or die('Restricted access');
 	<br/>
 	<form id="hikashop_paypal_form" name="hikashop_paypal_form" action="<?php echo $this->payment_params->url;?>" method="post">
 		<div id="hikashop_paypal_end_image" class="hikashop_paypal_end_image">
-			<input id="hikashop_paypal_button" type="submit" class="btn btn-primary" value="<?php echo JText::_('PAY_NOW');?>" name="" alt="<?php echo JText::_('PAY_NOW');?>" />
+			<input id="hikashop_paypal_button" type="submit" class="btn btn-primary" value="<?php echo JText::_('PAY_NOW');?>" name="" alt="<?php echo JText::_('PAY_NOW');?>" onclick="document.getElementById('hikashop_paypal_form').submit(); return false;"/>
 		</div>
 		<?php
 			foreach($this->vars as $name => $value ) {

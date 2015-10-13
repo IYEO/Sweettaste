@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -22,7 +22,7 @@ class plgHikashoppaymentPaypalintegralevolution extends hikashopPaymentPlugin {
 		if (parent::onBeforeOrderCreate($order, $do) === true)
 			return true;
 
-		if (empty ($this->payment_params->email)) {
+		if (empty ($this->payment_params->email) && $this->plugin_data->payment_id == $order->order_payment_id) {
 			$this->app->enqueueMessage('Please check your &quot;PayPal&quot; plugin configuration');
 			$do = false;
 		}

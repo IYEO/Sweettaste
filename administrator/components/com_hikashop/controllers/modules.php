@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -16,6 +16,7 @@ class ModulesController extends hikashopController{
 		parent::__construct();
 		$this->display[]='selectmodules';
 		$this->display[]='savemodules';
+		$this->display[]='showoptions';
 	}
 
 	function selectmodules(){
@@ -45,4 +46,15 @@ class ModulesController extends hikashopController{
 		return parent::edit();
 	}
 
+	function showoptions(){
+		$js = '';
+		jimport('joomla.html.parameter');
+		$params = new hikaParameter();
+		$params->set('id',JRequest::getVar('id','product'));
+		$params->set('name',JRequest::getVar('id','product'));
+		$value = unserialize(JRequest::getVar('value'));
+		$value['content_type'] = JRequest::getVar('content_type','product');
+		$params->set('value',$value);
+		echo hikashop_getLayout('modules','options',$params,$js);
+	}
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -52,8 +52,14 @@ class hikashopCategorysubType {
 				$multiTranslation = $translationHelper->isMulti(true);
 			}
 
-			$query = $select.$table;
-			$query .= ' WHERE  a.category_type = \''.$this->type.'\' AND a.category_parent_id!='.$parent.' ORDER BY a.category_ordering ASC';
+			$filters = array(
+				'a.category_type = \''.$this->type.'\'',
+				'a.category_parent_id != '.$parent
+			);
+			if($this->type == 'tax')
+				$filters[] = 'a.category_published = 1';
+
+			$query = $select.$table.' WHERE ('.implode(') AND (',$filters).') ORDER BY a.category_ordering ASC';
 			$db->setQuery($query);
 			if(!$app->isAdmin() && $multiTranslation && class_exists('JFalangDatabase')){
 				$this->categories = $db->loadObjectList('','stdClass',false);

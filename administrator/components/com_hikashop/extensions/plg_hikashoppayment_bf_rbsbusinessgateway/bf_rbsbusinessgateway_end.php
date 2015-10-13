@@ -8,7 +8,7 @@
  * @license		 GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  *
  * In order to configure and use this plug-in you must have a Worldpay Business Gateway account.
- * Worldpay Business Gateway is sometimes refered to as 'Select Junior'. 
+ * Worldpay Business Gateway is sometimes refered to as 'Select Junior'.
  */
 defined('_JEXEC') or die('Restricted access');
 ?>
@@ -35,7 +35,7 @@ defined('_JEXEC') or die('Restricted access');
 			}
 			else {
 				$doc = JFactory::getDocument();
-				$doc->addScriptDeclaration("window.addEvent('domready', function() {document.getElementById('hikashop_rbsworldpay_form').submit();});");
+				$doc->addScriptDeclaration("window.hikashop.ready( function() {document.getElementById('hikashop_rbsworldpay_form').submit();});");
 				JRequest::setVar('noform',1);
 			}
 		?>

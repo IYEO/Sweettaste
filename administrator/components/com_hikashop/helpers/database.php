@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -16,14 +16,50 @@ class hikashopDatabaseHelper {
 		$this->db = JFactory::getDBO();
 	}
 
-	public function checkdb() {
-		$queries = file_get_contents(HIKASHOP_BACK . 'tables.sql');
+	function addColumns($table, $columns) {
+		if(!is_array($columns))
+			$columns = array($columns);
+
+		$query = 'ALTER TABLE `'.hikashop_table($table).'` ADD '.implode(', ADD', $columns).';';
+		$this->db->setQuery($query);
+		$err = false;
+
+		try {
+			$this->db->query();
+		}catch(Exception $e) {
+			$err = true;
+		}
+		if(!$err)
+			return true;
+
+		if($err && count($columns) > 1) {
+
+			foreach($columns as $col) {
+				$query = 'ALTER TABLE `'.hikashop_table($table).'` ADD '.$col.';';
+
+				$this->db->setQuery($query);
+				$err = 0;
+
+				try {
+					$this->db->query();
+				}catch(Exception $e) {
+					$err++;
+				}
+			}
+
+			if($err < count($columns))
+				return true;
+		}
+
+		return false;
+	}
+
+	public function parseTableFile($filename, &$createTable, &$structure) {
+		$queries = file_get_contents($filename);
 		$tables = explode('CREATE TABLE IF NOT EXISTS', $queries);
-		$structure = array();
-		$createTable = array();
 
 		foreach($tables as $oneTable) {
-			$fields = explode("\n\t", $oneTable);
+			$fields = explode("\n\t", trim($oneTable));
 
 			$tableNameTmp = substr($oneTable, strpos($oneTable, '`') + 1, strlen($oneTable) - 1);
 			$tableName = substr($tableNameTmp, 0, strpos($tableNameTmp, '`'));
@@ -31,6 +67,7 @@ class hikashopDatabaseHelper {
 				continue;
 
 			foreach($fields as $oneField) {
+				$oneField = trim($oneField);
 				if(substr($oneField,0,1) != '`' || substr($oneField, strlen($oneField) - 1, strlen($oneField)) != ',')
 					continue;
 
@@ -42,8 +79,14 @@ class hikashopDatabaseHelper {
 				$structure[$tableName][$fieldName] = trim($oneField, ',');
 			}
 
-			$createTable[$tableName] = 'CREATE TABLE IF NOT EXISTS ' . $oneTable;
+			$createTable[$tableName] = 'CREATE TABLE IF NOT EXISTS ' . trim($oneTable);
 		}
+	}
+
+	public function checkdb() {
+		$createTable = array();
+		$structure = array();
+		$this->parseTableFile(HIKASHOP_BACK . 'tables.sql', $createTable, $structure);
 
 		try{
 			$this->db->setQuery("SELECT * FROM #__hikashop_field");
@@ -53,13 +96,12 @@ class hikashopDatabaseHelper {
 			$msg = $e->getMessage();
 		}
 
-
 		$ret = array();
 		ob_start();
 
 		JPluginHelper::importPlugin('hikashop');
 		$dispatcher = JDispatcher::getInstance();
-		$dispatcher->trigger('onHikashopBeforeCheckDB', array(&$createTable, &$custom_fields, &$structure));
+		$dispatcher->trigger('onHikashopBeforeCheckDB', array(&$createTable, &$custom_fields, &$structure, &$this));
 
 		$html = ob_get_clean();
 		if(!empty($html))
@@ -97,6 +139,7 @@ class hikashopDatabaseHelper {
 
 		foreach($tableName as $oneTableName) {
 			$msg = '';
+			$fields2 = null;
 			try{
 				$this->db->setQuery('SHOW COLUMNS FROM ' . $oneTableName);
 				$fields2 = $this->db->loadObjectList();
@@ -264,10 +307,113 @@ class hikashopDatabaseHelper {
 			);
 		}
 
+		$query = 'SELECT characteristic_id FROM `#__hikashop_characteristic`;';
+		try {
+			$this->db->setQuery($query);
+			if(!HIKASHOP_J25){
+				$characteristic_ids = $this->db->loadResultArray();
+			} else {
+				$characteristic_ids = $this->db->loadColumn();
+			}
+			$where = '';
+			if(is_array($characteristic_ids) && count($characteristic_ids)){
+				$where = ' WHERE variant_characteristic_id NOT IN('.implode(',',$characteristic_ids).')';
+			}
+			$query = 'DELETE FROM `#__hikashop_variant`'.$where.';';
+			$this->db->setQuery($query);
+			$result = $this->db->query();
+			if($result){
+				$ret[] = array(
+					'success',
+					'Variants orphan links cleaned'
+				);
+			}
+		} catch(Exception $e) {
+			$ret[] = array(
+				'error',
+				$e->getMessage()
+			);
+		}
+
 		$dispatcher->trigger('onHikashopAfterCheckDB', array(&$ret));
+
+		$config = hikashop_config();
+		$cfgVersion = $config->get( 'version');
+		$manifestVersion  =  $this->getVersion_NumberOnly();
+		if ( version_compare( $manifestVersion, $cfgVersion) > 0) {
+			$query = "UPDATE `#__hikashop_config` SET `config_value` = ".$this->db->Quote($manifestVersion)." WHERE config_namekey = 'version'";
+			$this->db->setQuery($query);
+			$this->db->query();
+		}
 
 		self::$check_results = $ret;
 		return $ret;
+	}
+
+	public function getVersion()
+	{
+		 static $instance;
+
+		 if ( isset( $instance)) { return $instance; }
+
+		 jimport( 'joomla.application.helper');
+		jimport('joomla.filesystem.folder');
+		jimport('joomla.filesystem.file');
+		 $version = "unknown";
+
+		 $folder  = dirname(dirname(__FILE__));
+		 $pattern = '^'
+					 . substr( basename( dirname(dirname(__FILE__)),'.php'), 4)
+					 . '.*'
+					 . '\.xml$'
+					 ;
+		$xmlFilesInDir = JFolder::files( $folder, $pattern);
+		if ( !empty( $xmlFilesInDir)) {
+			foreach ($xmlFilesInDir as $xmlfile) {
+				if ($data = JApplicationHelper::parseXMLInstallFile($folder.DS.$xmlfile)) {
+					if ( isset( $found_version)) {
+						if ( version_compare( $data['version'], $found_version) >= 0) {
+							$found_version = $data['version'];
+						}
+					}
+					else {
+						$found_version = $data['version'];
+					}
+				}
+			}
+			if ( !empty( $found_version)) {
+				$version = $found_version;
+			}
+		}
+		else {
+			$filename = dirname(dirname(__FILE__)) .DS. substr( basename( dirname(dirname(__FILE__)),'.php'), 4).'.xml';
+			if (file_exists($filename) && $data = JApplicationHelper::parseXMLInstallFile($filename)) {
+				if (isset($data['version']) && !empty($data['version'])) {
+					$version = $data['version'];
+				}
+			}
+		}
+
+		$instance = $version;
+		return $instance;
+	}
+
+	public function getVersion_NumberOnly( $verString=null)
+	{
+		 if ( empty( $verString)) {
+				$verString = $this->getVersion();
+		 }
+
+		 if ( preg_match( '#[A-Za-z0-9\.\s]+#i', $verString, $match)) {
+				$result = $match[0];
+		 }
+		 else {
+				$parts = explode( '-', $verString);
+				$result = $parts[0];
+		 }
+
+		 $result = str_replace( ' ', '.', trim( $result));
+		 return $result;
 	}
 
 	public function getCheckResults() {

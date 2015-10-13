@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -185,11 +185,10 @@ class hikashopCartHelper{
 		return $html;
 	}
 
-	function cartCount($add=false){
+	function cartCount($add = false) {
 		static $carts = 0;
-		if($add){
-			$carts=$carts+1;
-		}
+		if($add)
+			$carts++;
 		return $carts;
 	}
 
@@ -219,7 +218,7 @@ class hikashopCartHelper{
 						$popupWidth = $config->get('add_to_cart_popup_width','480');
 						$popupHeight = $config->get('add_to_cart_popup_height','140');
 						echo '<div style="display:none;">'.
-							'<a rel="{handler: \'iframe\',size: {x: '.$popupWidth.', y: '.$popupHeight.'}}" id="hikashop_notice_box_trigger_link" href="'.hikashop_completeLink('checkout&task=notice&cart_type=cart'.$url_itemid,true).'"></a>'.
+							'<a rel="{handler: \'iframe\',size: {x: '.$popupWidth.', y: '.$popupHeight.'}}"  id="hikashop_notice_box_trigger_link" href="'.hikashop_completeLink('checkout&task=notice&cart_type=cart'.$url_itemid,true).'"></a>'.
 							'<a rel="{handler: \'iframe\',size: {x: '.$popupWidth.', y: '.$popupHeight.'}}" id="hikashop_notice_wishlist_box_trigger_link" href="'.hikashop_completeLink('checkout&task=notice&cart_type=wishlist'.$url_itemid,true).'"></a>'.
 							'</div>';
 					}

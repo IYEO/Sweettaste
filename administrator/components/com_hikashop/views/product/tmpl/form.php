@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -12,7 +12,7 @@ defined('_JEXEC') or die('Restricted access');
 	window.productMgr = { cpt:{} };
 	window.hikashop.ready(function(){window.hikashop.dlTitle('adminForm');});
 </script>
-<form action="<?php echo hikashop_completeLink('product');?>" method="post"  name="adminForm" id="adminForm" enctype="multipart/form-data">
+<form action="<?php echo hikashop_completeLink('product');?>" method="post" onsubmit="window.productMgr.prepare();" name="adminForm" id="adminForm" enctype="multipart/form-data">
 	<!-- Product edition header -->
 	<div id="hikashop_product_edition_header" style="<?php if(empty($this->product->characteristics)) echo 'display:none;'; ?>">
 <?php
@@ -27,7 +27,7 @@ defined('_JEXEC') or die('Restricted access');
 		<h3><img src="<?php echo $image_url; ?>" alt="" style="vertical-align:middle;margin-right:5px;"/><?php echo $this->product->product_name; ?></h3>
 		<ul class="hika_tabs" rel="tabs:hikashop_product_edition_tab_">
 			<li class="active"><a href="#product" rel="tab:1" onclick="return window.hikashop.switchTab(this);"><?php echo JText::_('PRODUCT'); ?></a></li>
-			<li><a href="#variants" rel="tab:2" onclick="return window.hikashop.switchTab(this);"><?php echo JText::_('VARIANTS'); ?></a></li>
+			<li><a href="#variants" rel="tab:2" onclick="return window.hikashop.switchTab(this);"><?php echo JText::_('VARIANTS'); ?><span id="hikashop_product_variant_label"></span></a></li>
 		</ul>
 		<div style="clear:both"></div>
 <?php
@@ -124,7 +124,7 @@ defined('_JEXEC') or die('Restricted access');
 			<dd class="hikashop_product_translations"><?php
 		foreach($this->product->translations as $language_id => $translation){
 			$lngName = $this->translationHelper->getFlag($language_id);
-			echo '<div class="hikamarket_multilang_button">' .
+			echo '<div class="hikashop_multilang_button">' .
 				$this->popup->display(
 					$lngName, $lngName,
 					hikashop_completeLink('product&task=edit_translation&product_id=' . @$this->product->product_id.'&language_id='.$language_id, true),
@@ -207,6 +207,9 @@ defined('_JEXEC') or die('Restricted access');
 			echo JText::_('DESCRIPTION');
 		?></div>
 		<?php echo $this->editor->display(); ?>
+<script type="text/javascript">
+window.productMgr.saveProductEditor = function() { <?php echo $this->editor->jsCode(); ?> };
+</script>
 		<div style="clear:both"></div>
 	</div></div>
 <?php } ?>
@@ -269,7 +272,13 @@ defined('_JEXEC') or die('Restricted access');
 		<dl class="hika_options">
 <?php
 	if(hikashop_acl('product/edit/qtyperorder')) { ?>
-			<dt class="hikashop_product_qtyperorder"><label for="data_product__product_min_per_order"><?php echo JText::_('QUANTITY_PER_ORDER'); ?></label></dt>
+			<dt class="hikashop_product_qtyperorder">
+				<label for="data_product__product_min_per_order"><?php echo JText::_('QUANTITY_PER_ORDER'); ?></label>
+<?php
+		if(HIKASHOP_BACK_RESPONSIVE)
+			echo '<div class="hikashop_product_qtyperorder_dt">To</div>';
+?>
+			</dt>
 			<dd class="hikashop_product_qtyperorder">
 				<input type="text" id="data_product__product_min_per_order" name="data[product][product_min_per_order]" value="<?php echo (int)@$this->product->product_min_per_order; ?>" /><?php
 					echo ' <label for="data_product__product_max_per_order" style="font-weight:bold">' . JText::_('HIKA_QTY_RANGE_TO') . '</label> ';
@@ -279,11 +288,28 @@ defined('_JEXEC') or die('Restricted access');
 	}
 
 	if(hikashop_acl('product/edit/salestart')) { ?>
-			<dt class="hikashop_product_salestart"><label for="product_sale_start_img"><?php echo JText::_('PRODUCT_SALE_DATES'); ?></label></dt>
+			<dt class="hikashop_product_salestart">
+				<label for="product_sale_start_img"><?php echo JText::_('PRODUCT_SALE_DATES'); ?></label>
+<?php
+		if(HIKASHOP_BACK_RESPONSIVE)
+			echo '<div class="hikashop_product_salestart_dt">To</div>';
+?>
+			</dt>
 			<dd class="hikashop_product_salestart"><?php
+				if(!HIKASHOP_J30)
+					echo '<div class="calendarj25" style="display: inline; margin-left: 2px">';
+
 				echo JHTML::_('calendar', hikashop_getDate((@$this->product->product_sale_start?@$this->product->product_sale_start:''),'%Y-%m-%d %H:%M'), 'data[product][product_sale_start]','product_sale_start','%Y-%m-%d %H:%M',array('size' => '20'));
+				if(!HIKASHOP_J30)
+					echo '</div>';
+
 				echo ' <label for="product_sale_end_img" class="calendar-separator" style="font-weight:bold">' . JText::_('HIKA_RANGE_TO') . '</label> ';
+
+				if(!HIKASHOP_J30)
+					echo '<div class="calendarj25" style="display: inline; margin-left: 2px">';
 				echo JHTML::_('calendar', hikashop_getDate((@$this->product->product_sale_end?@$this->product->product_sale_end:''),'%Y-%m-%d %H:%M'), 'data[product][product_sale_end]','product_sale_end','%Y-%m-%d %H:%M',array('size' => '20'));
+				if(!HIKASHOP_J30)
+					echo '</div';
 			?></dd>
 <?php
 	}
@@ -558,3 +584,15 @@ defined('_JEXEC') or die('Restricted access');
 	<input type="hidden" name="ctrl" value="product"/>
 	<?php echo JHTML::_('form.token'); ?>
 </form>
+<script type="text/javascript">
+window.productMgr.prepare = function() {
+	var w = window, o = w.Oby;
+	if(w.productMgr.saveProductEditor) {
+		try { w.productMgr.saveProductEditor(); } catch(err){}
+	}
+	if(window.productMgr.saveVariantEditor) {
+		try { window.productMgr.saveVariantEditor(); } catch(err){}
+	}
+	o.fireAjax("syncWysiwygEditors", null);
+};
+</script>

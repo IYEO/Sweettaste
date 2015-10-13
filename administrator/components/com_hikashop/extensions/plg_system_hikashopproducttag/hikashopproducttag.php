@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -67,7 +67,6 @@ class plgSystemHikashopproducttag extends JPlugin {
 			}
 			$pattern='/id="hikashop_product_vote_listing"/';
 			$replacement='id="hikashop_product_vote_listing" itemscope itemtype="http://schema.org/Review"';
-			$product_page_parts[1] = preg_replace($pattern,$replacement,$product_page_parts[1],1);
 
 			if(strpos($product_page_parts[1],'class="hika_comment_listing_empty"')==false){
 				$pattern='/class="ui-corner-all hika_comment_listing"/';
@@ -82,13 +81,18 @@ class plgSystemHikashopproducttag extends JPlugin {
 			$pattern='/class="hika_comment_listing_content"/';
 			$replacement='class="hika_comment_listing_content" itemprop="description"';
 			$product_page_parts[1] = preg_replace($pattern,$replacement,$product_page_parts[1]);
+			$pattern='/class="hika_comment_listing_name"/';
+			$replacement='class="hika_comment_listing_name" itemprop="author" itemscope itemtype="http://schema.org/Person"';
+			$product_page_parts[1] = preg_replace($pattern,$replacement,$product_page_parts[1]);
+
 			$pattern='/class="hikashop_vote_listing_username"/';
-			$replacement='class="hikashop_vote_listing_username" itemprop="author"';
+			$replacement='class="hikashop_vote_listing_username" itemprop="name"';
 			$product_page_parts[1] = preg_replace($pattern,$replacement,$product_page_parts[1]);
 
 			$pattern='/class="hika_vote_listing_username"/';
-			$replacement='class="hika_vote_listing_username" itemprop="author"';
+			$replacement='class="hika_vote_listing_username" itemprop="name"';
 			$product_page_parts[1] = preg_replace($pattern,$replacement,$product_page_parts[1]);
+
 			$pattern='/class="hikashop_product_description_main"/';
 			$replacement='class="hikashop_product_description_main" itemprop="description"';
 			$product_page_parts[1] = preg_replace($pattern,$replacement,$product_page_parts[1],1);
@@ -107,15 +111,22 @@ class plgSystemHikashopproducttag extends JPlugin {
 			$pattern='/class="hikashop_product_length_main"/';
 			$replacement='class="hikashop_product_length_main" itemprop="length"';
 			$product_page_parts[1] = preg_replace($pattern,$replacement,$product_page_parts[1],1);
-
 			$ratemax=JRequest::getVar("nb_max_star");//nbmax
 			$pattern='/(<span\s+class="hikashop_total_vote")/iUs';
-			preg_match('/<input type="hidden" name="hikashop_vote_rating" .* data-rate="(.*)"/U',$product_page_parts[1],$matches);
+			preg_match('/<input type="hidden" class="hikashop_vote_rating".*data-rate="(.*)"/U',$product_page_parts[1],$matches);
 			if(isset($matches[1])){
-				$replacement = '<span style="display:none" itemprop="ratingValue">'.$matches[1].'</span><span style="display:none" itemprop="bestRating">'.$ratemax.'</span>$1 itemprop="reviewCount"';
+				$replacement = '<span style="display:none" itemprop="ratingValue">'.$matches[1].'</span><span style="display:none" itemprop="bestRating">'.$ratemax.'</span><span style="display:none" itemprop="worstRating">1</span>$1';
+				$product_page_parts[1] = preg_replace($pattern,$replacement,$product_page_parts[1],1);
+			}
+			preg_match('/<span class="hikashop_total_vote">.*>(.*)</U',$product_page_parts[1],$matches);
+			if(isset($matches[1])){
+				$replacement = '<span style="display:none" itemprop="reviewCount">'.trim($matches[1]).'</span>$1';
 				$product_page_parts[1] = preg_replace($pattern,$replacement,$product_page_parts[1],1);
 			}
 
+			$pattern='/itemprop="keywords"/';
+			$replacement='';
+			$product_page_parts[1] = preg_replace($pattern,$replacement,$product_page_parts[1],1);
 
 		}
 		foreach($product_page_parts as $parts){

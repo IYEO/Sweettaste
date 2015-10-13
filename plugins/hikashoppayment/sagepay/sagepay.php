@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -211,14 +211,23 @@ class plgHikashoppaymentSagepay extends hikashopPaymentPlugin
 		if(empty($this->payment_params))
 			return false;
 
-		$data = $this->decodeAndDecrypt($_REQUEST['crypt'], $this->payment_params->password);
+		$crypt = null;
+		if(!empty($_REQUEST['crypt']))
+			$crypt = $_REQUEST['crypt'];
+		if(empty($crypt))
+			$crypt = JRequest::getString('crypt', null, 'default', JREQUEST_ALLOWRAW);
+
+		$data = $this->decodeAndDecrypt($crypt, $this->payment_params->password);
+
+		if(empty($this->app))
+			$this->app = JFactory::getApplication();
 
 		$httpsHikashop = HIKASHOP_LIVE;
 		if( $this->payment_params->debug ) {
 			$httpsHikashop = str_replace('https://','http://', HIKASHOP_LIVE);
 		}
 
-		$cancel_url = $httpsHikashop.'index.php?option=com_hikashop&ctrl=order&task=cancel_order'.$this->url_itemid;
+		$cancel_url = $httpsHikashop.'index.php?option=com_hikashop&ctrl=order&task=cancel_order';
 
 		if( strpos($data, 'Status') === false ) {
 			$this->app->enqueueMessage('Error while processing encrypted data');
@@ -234,8 +243,8 @@ class plgHikashoppaymentSagepay extends hikashopPaymentPlugin
 
 		$dbOrder = $this->getOrder($order_id);
 		if(empty($dbOrder)){
-			$app->enqueueMessage('Could not load any order for your notification '.$vars['OrderID']);
-			$app->redirect($cancel_url);
+			$this->app->enqueueMessage('Could not load any order for your notification '.$vars['OrderID']);
+			$this->app->redirect($cancel_url);
 			return false;
 		}
 		if($method_id != $dbOrder->order_payment_id)

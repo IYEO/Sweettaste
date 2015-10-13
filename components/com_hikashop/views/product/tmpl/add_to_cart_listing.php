@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -14,26 +14,32 @@ if($this->config->get('show_quantity_field') < 2) {
 <?php
 }
 
-if(empty($this->row->has_options) && ($this->row->product_quantity==-1 || $this->row->product_quantity>0) && !$this->config->get('catalogue') && ($this->config->get('display_add_to_cart_for_free_products') || !empty($this->row->prices)) ) {
-	$itemFields = $this->fieldsClass->getFields('frontcomp', $this->row, 'item', 'checkout&task=state');
+if(empty($this->row->has_options) && ($this->row->product_quantity == -1 || $this->row->product_quantity > 0) && !$this->config->get('catalogue') && ($this->config->get('display_add_to_cart_for_free_products') || !empty($this->row->prices)) ) {
+	$itemFields = array();
+	if(hikashop_level(2)) {
+		if(isset($this->row->itemFields))
+			$itemFields = $this->row->itemFields;
+		else
+			$itemFields = $this->fieldsClass->getFields('frontcomp', $this->row, 'item', 'checkout&task=state');
+	}
 
 	if(!empty($itemFields) && !$this->params->get('display_custom_item_fields', 0)) {
 		$this->row->has_options = true;
 		$itemFields = array();
 	}
 
-	$null = array();
-	$this->fieldsClass->addJS($null,$null,$null);
-	$this->fieldsClass->jsToggle($itemFields, $this->row, 0);
+	if(!empty($itemFields)) {
+		$null = array();
+		$this->fieldsClass->addJS($null,$null,$null);
+		$this->fieldsClass->jsToggle($itemFields, $this->row, 0);
 
-	$extraFields = array('item' => &$itemFields);
-	$requiredFields = array();
-	$validMessages = array();
-	$values = array('item' => $this->row);
-	$this->fieldsClass->checkFieldsForJS($extraFields, $requiredFields, $validMessages, $values);
-	$this->fieldsClass->addJS($requiredFields, $validMessages, array('item'));
+		$extraFields = array('item' => &$itemFields);
+		$requiredFields = array();
+		$validMessages = array();
+		$values = array('item' => $this->row);
+		$this->fieldsClass->checkFieldsForJS($extraFields, $requiredFields, $validMessages, $values);
+		$this->fieldsClass->addJS($requiredFields, $validMessages, array('item'));
 
-	if($this->params->get('display_custom_item_fields',0) && !empty($itemFields)) {
 ?>
 	<!-- CUSTOM ITEM FIELDS -->
 	<div id="hikashop_product_custom_item_info_for_product_<?php echo $this->row->product_id; ?>" class="hikashop_product_custom_item_info hikashop_product_listing_custom_item">

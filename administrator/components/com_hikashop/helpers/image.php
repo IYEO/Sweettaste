@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -333,10 +333,14 @@ window.hikashop.ready( function() {
 		if(is_string($relativePath))
 			$fullFilename = $relativePath . $filename;
 
-		$clean_filename = JPath::clean(realpath($fullFilename));
-		if((JPATH_ROOT != '') && strpos($clean_filename, JPath::clean(JPATH_ROOT)) !== 0) {
-			if(!defined('MULTISITES_MASTER_ROOT_PATH') || MULTISITES_MASTER_ROOT_PATH == '' || strpos($clean_filename, JPath::clean(MULTISITES_MASTER_ROOT_PATH)) !== 0)
-				return $ret;
+		$clean_filename = $fullFilename;
+		try{
+			$clean_filename = JPath::clean(realpath($fullFilename));
+			if((JPATH_ROOT != '') && strpos($clean_filename, JPath::clean(JPATH_ROOT)) !== 0) {
+				if(!defined('MULTISITES_MASTER_ROOT_PATH') || MULTISITES_MASTER_ROOT_PATH == '' || strpos($clean_filename, JPath::clean(MULTISITES_MASTER_ROOT_PATH)) !== 0)
+					return $ret;
+			}
+		}catch(Exception $e) {
 		}
 
 		if($cachePath !== false && empty($cachePath))

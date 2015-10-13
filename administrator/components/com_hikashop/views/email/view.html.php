@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -41,6 +41,7 @@ class EmailViewEmail extends hikashopView
 			$mail->altbody = '';
 			$mail->preload = '';
 			$mail->mail = $mail_name;
+			$mail->email_log_published = 1;
 		};
 		$tabs = hikashop_get('helper.tabs');
 		$values = new stdClass();
@@ -112,7 +113,7 @@ function submitbutton(pressbutton){
 		$pageInfo->filter->order->dir	= $app->getUserStateFromRequest( $this->paramBase.".filter_order_Dir", 'filter_order_Dir',	'desc',	'word' );
 
 		jimport('joomla.filesystem.file');
-		$mail_folder = HIKASHOP_MEDIA.'mail'.DS;
+		$mail_folder = rtrim( str_replace( '{root}', JPATH_ROOT, $config->get('mail_folder',HIKASHOP_MEDIA.'mail'.DS)), '/\\').DS;
 
 		$files = array(
 			'cron_report',
@@ -125,6 +126,7 @@ function submitbutton(pressbutton){
 			'out_of_stock',
 			'order_cancel',
 			'waitlist_notification',
+			'waitlist_admin_notification',
 			'new_comment',
 			'contact_request',
 			'subscription_eot',
@@ -138,7 +140,6 @@ function submitbutton(pressbutton){
 		if(!empty($plugin_files)) {
 			$files = array_merge($files, $plugin_files);
 		}
-
 
 		$emails = array();
 		foreach($files as $file){

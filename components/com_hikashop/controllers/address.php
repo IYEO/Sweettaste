@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -10,11 +10,11 @@ defined('_JEXEC') or die('Restricted access');
 ?><?php
 class addressController extends hikashopController{
 
-	function __construct($config = array(),$skip=false){
-		parent::__construct($config,$skip);
+	function __construct($config = array(), $skip = false) {
+		parent::__construct($config, $skip);
 		$this->modify_views = array('edit');
 		$this->add = array('add');
-		$this->modify = array('save','setdefault');
+		$this->modify = array('save', 'setdefault');
 		$this->delete = array('delete');
 	}
 

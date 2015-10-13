@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -156,7 +156,7 @@ class TaxViewTax extends hikashopView{
 				$info =& $orders_taxes[$k]->order_tax_info;
 				if(!$info) continue;
 				foreach($info as $k2 => $taxes_info){
-					$tax_amount = $taxes_info->tax_amount+@$taxes_info->tax_amount_for_shipping;
+					$tax_amount = $taxes_info->tax_amount + @$taxes_info->tax_amount_for_shipping + @$taxes_info->tax_amount_for_payment - @$taxes_info->tax_amount_for_coupon;
 					if(!isset($taxes_info->tax_rate)) $taxes_info->tax_rate = $rows[$taxes_info->tax_namekey]->tax_rate;
 					if($taxes_info->tax_rate != 0)
 						$info[$k2]->amount = round($tax_amount/$taxes_info->tax_rate,$currencyClass->getRounding($v->order_currency_id));

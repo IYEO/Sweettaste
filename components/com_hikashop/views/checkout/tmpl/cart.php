@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -174,7 +174,16 @@ $app = JFactory::getApplication();
 												}
 											}
 										}
-										echo '<p class="hikashop_cart_option_name">'.$optionElement->product_name;
+										if(empty($optionElement->variant_name)){
+											if(empty($optionElement->characteristics_text)){
+												$text = $optionElement->product_name;
+											}else{
+												$text = $optionElement->characteristics_text;
+											}
+										}else{
+											$text = $optionElement->variant_name;
+										}
+										echo '<p class="hikashop_cart_option_name">'.$text;
 										if(@$optionElement->prices[0]->price_value_with_tax>0){
 											echo ' ( + ';
 											$this->row=&$optionElement;
@@ -194,8 +203,8 @@ $app = JFactory::getApplication();
 							</td>
 							<td data-title="<?php echo JText::_('CART_PRODUCT_UNIT_PRICE'); ?>" class="hikashop_cart_product_price_value">
 								<?php
-									$this->row=&$row;
-									$this->unit=true;
+									$this->row =& $row;
+									$this->unit = true;
 									echo $this->loadTemplate();
 								?>
 								<?php if(HIKASHOP_RESPONSIVE){ ?><span class="visible-phone"><?php echo JText::_('PER_UNIT'); ?></span><?php } ?>
@@ -213,19 +222,14 @@ $app = JFactory::getApplication();
 											$min_quantity = 1;
 										if($max_quantity == 0)
 											$max_quantity = (int)$min_quantity * 15;
-										?>
-											<select id="hikashop_checkout_quantity_select_<?php echo $row->cart_product_id;?>" onchange="var id = this.id.replace('select_',''); document.getElementById(id).value = this.value;">
-												<?php
-												for($j = $min_quantity; $j <= $max_quantity; $j += $min_quantity){
-													$selected = '';
-													if($j == $row->cart_product_quantity)
-														$selected = 'selected="selected"';
-													echo '<option value="'.$j.'" '.$selected.'>'.$j.'</option>';
-												}
-												?>
-											</select>
-											<input id="hikashop_checkout_quantity_<?php echo $row->cart_product_id;?>" type="hidden" name="item[<?php echo $row->cart_product_id;?>]" value="<?php echo $row->cart_product_quantity; ?>" onchange="var qty_field = document.getElementById('hikashop_checkout_quantity_<?php echo $row->cart_product_id;?>'); if (qty_field){<?php echo $input; ?>}; return true;" />
-										<?php
+										$values = array();
+										if($this->params->get('show_delete',1)){
+											$values[] = JHTML::_('select.option', 0, '0');
+										}
+										for($j = $min_quantity; $j <= $max_quantity; $j += $min_quantity){
+											$values[] = JHTML::_('select.option', $j, $j);
+										}
+										echo JHTML::_('select.genericlist', $values, 'item['.$row->cart_product_id.']', '', 'value', 'text', $row->cart_product_quantity,'hikashop_checkout_quantity_'.$row->cart_product_id);
 									}else{
 										?>
 										<input id="hikashop_checkout_quantity_<?php echo $row->cart_product_id;?>" type="text" name="item[<?php echo $row->cart_product_id;?>]" class="hikashop_product_quantity_field" value="<?php echo $row->cart_product_quantity; ?>" onchange="var qty_field = document.getElementById('hikashop_checkout_quantity_<?php echo $row->cart_product_id;?>'); if (qty_field){<?php echo $input; ?>}; return true;" />

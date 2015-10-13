@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -25,6 +25,9 @@ class hikashopCategoryClass extends hikashopClass {
 	function get($element, $withimage = false) {
 		if(in_array($element, array('product', 'status', 'tax', 'manufacturer')))
 			$this->getMainElement($element);
+
+		if(empty($element))
+			return null;
 
 		if($withimage) {
 			$query = 'SELECT a.*,b.* FROM '.hikashop_table(end($this->tables)).' AS a LEFT JOIN '.hikashop_table('file').' AS b ON a.category_id = b.file_ref_id AND b.file_type = \'category\' WHERE a.category_id = '.(int)$element.' LIMIT 1';
@@ -675,31 +678,34 @@ class hikashopCategoryClass extends hikashopClass {
 		if(isset($results[$key]))
 			return $results[$key];
 
-		$where = '';
-		if($exclude) {
+		$and = '';
+		if(!empty($exclude)) {
 			$el = $this->get($exclude);
 			if($el)
-				$where = ' AND b.category_left >= '.$el->category_left.' AND b.category_right <= '.$el->category_right;
+				$and = ' AND hk_parent.category_left >= '.$el->category_left.' AND hk_parent.category_right <= '.$el->category_right;
 			else
-				$where = ' AND b.category_id != '.(int)$exclude;
+				$and = ' AND hk_parent.category_id != '.(int)$exclude;
 		}
 
 		if(is_array($element)) {
-			$and = ' AND a.category_id IN (';
+			$cats = array();
 			foreach($element as $cat) {
 				if(is_object($cat))
-					$and .= (int)$cat->category_id . ',';
+					$cats[(int)$cat->category_id] = (int)$cat->category_id;
 				else
-					$and .= (int)$cat . ',';
+					$cats[(int)$cat] = (int)$cat;
 			}
-			$and = substr($and, 0, -1) . ') ';
+			$where = ' hk_cat.category_id IN (' . implode(',', $cats) . ') ';
+			unset($cats);
 		} else {
-			$and = ' AND a.category_id = '.(int)$element;
+			$where = ' hk_cat.category_id = '.(int)$element;
 		}
 
-		$query = 'SELECT b.* FROM '.hikashop_table(end($this->tables)).' AS a ' .
-			' LEFT JOIN '.hikashop_table(end($this->tables)).' AS b ON a.category_left >= b.category_left ' .
-			' WHERE b.category_right >= a.category_right ' . $and . $where . ' GROUP BY b.category_id ORDER BY b.category_left';
+		$query = 'SELECT hk_parent.* FROM '.hikashop_table(end($this->tables)).' AS hk_cat ' .
+			' LEFT JOIN '.hikashop_table(end($this->tables)).' AS hk_parent ON (hk_parent.category_left <= hk_cat.category_left AND hk_parent.category_right >= hk_cat.category_right) ' .
+			' WHERE ' . $where . $and .
+			' GROUP BY hk_parent.category_id '.
+			' ORDER BY hk_parent.category_left';
 
 		$this->database->setQuery($query);
 		$results[$key] = $this->database->loadObjectList();
@@ -787,7 +793,7 @@ class hikashopCategoryClass extends hikashopClass {
 		$db = JFactory::getDBO();
 		$app = JFactory::getApplication();
 
-		$category_type = array('product','root','vendor');
+		$category_type = array('product','root','vendor','manufacturer');
 		if(!empty($typeConfig['params']['category_type']))
 			$category_type = $typeConfig['params']['category_type'];
 		if(is_string($category_type))
@@ -799,10 +805,11 @@ class hikashopCategoryClass extends hikashopClass {
 		$depth = (int)@$options['depth'];
 		$start = (int)@$options['start'];
 		$limit = (int)@$options['limit'];
+		$page = (int)@$options['page'];
 		if($depth <= 0)
 			$depth = 1;
 		if($limit <= 0)
-			$limit = 200;
+			$limit = ($typeConfig['mode'] == 'list') ? 10 : 200;
 
 		$category_types = array();
 		foreach($category_type as $t) {
@@ -837,7 +844,7 @@ class hikashopCategoryClass extends hikashopClass {
 			$order = ' ORDER BY c.category_left ASC';
 
 		$query = 'SELECT '.implode(', ', $select) . ' FROM ' . implode(' ', $table) . ' WHERE ' . implode(' AND ', $where).$order;
-		$db->setQuery($query, 0, $limit);
+		$db->setQuery($query, $page, $limit);
 
 		if(!$app->isAdmin() && $multiTranslation && class_exists('JFalangDatabase')) {
 			$categories = $db->loadObjectList('category_id', 'stdClass', false);
@@ -848,8 +855,9 @@ class hikashopCategoryClass extends hikashopClass {
 		}
 
 		if($typeConfig['mode'] == 'list') {
-			if(count($categories) < 200)
+			if(count($categories) < $limit)
 				$fullLoad = true;
+
 			if(!empty($typeConfig['params']['category_type']) && $typeConfig['params']['category_type'] == 'status') {
 				foreach($categories as $category) {
 					if(!empty($category->translation))
@@ -1012,6 +1020,12 @@ class hikashopCategoryClass extends hikashopClass {
 						$parent_categories = $db->loadObjectList('category_id');
 					}
 				}
+
+				$orderedList = array();
+				foreach($value as $v){
+					$orderedList[$v] = $categories[$v];
+				}
+				$categories = $orderedList;
 
 				foreach($categories as $category) {
 					$category->category_name = (!empty($category->translation)) ? $category->translation :  JText::_($category->category_name);

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -52,14 +52,20 @@ class hikashopItemType{
 				if($trans==$val){
 					$trans=$match[1];
 				}
-				$this->values[] = JHTML::_('select.option', $match[1], $trans);
+				$this->values[$match[1]] = JHTML::_('select.option', $match[1], $trans);
 			}
 		}
 		if(version_compare(JVERSION,'1.6.0','>=')){
 			$this->values[] = JHTML::_('select.optgroup', $optGroup);
 		}
-		if(JRequest::getVar('inherit',true) == true)
-			$this->values[] = JHTML::_('select.option', 'inherit',JText::_('HIKA_INHERIT'));
+		if(JRequest::getVar('inherit',true) == true) {
+			$config = hikashop_config();
+			$defaultParams = $config->get('default_params');
+			$default = '';
+			if(isset($defaultParams['div_item_layout_type']))
+				$default = ' ('.$this->values[$defaultParams['div_item_layout_type']]->text.')';
+			$this->values[] = JHTML::_('select.option', 'inherit', JText::_('HIKA_INHERIT').$default);
+		}
 	}
 
 	function load(){

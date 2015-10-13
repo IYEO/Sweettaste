@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -19,10 +19,10 @@ $show_minimal = (!$acls['currency'] && !$acls['quantity'] && !$acls['acl']);
 
 $jms_integration = false;
 if(file_exists(JPATH_ADMINISTRATOR.DS.'components'.DS.'com_multisites'.DS.'helpers'.DS.'utils.php')){
-	include_once( JPATH_ADMINISTRATOR.DS.'components'.DS.'com_multisites'.DS.'helpers'.DS.'utils.php');
-	if ( class_exists( 'MultisitesHelperUtils') && method_exists( 'MultisitesHelperUtils', 'getComboSiteIDs')) {
-		$comboSiteIDs = str_replace('class="inputbox"','class="inputbox chzn-done"',MultisitesHelperUtils::getComboSiteIDs( '', 'price[price_site_id][##]', JText::_( 'SELECT_A_SITE')));
-		$jms_integration = !empty( $comboSiteIDs );
+	include_once(JPATH_ADMINISTRATOR.DS.'components'.DS.'com_multisites'.DS.'helpers'.DS.'utils.php');
+	if(class_exists('MultisitesHelperUtils') && method_exists('MultisitesHelperUtils','getComboSiteIDs')){
+		$comboSiteIDs = str_replace('class="inputbox"','class="inputbox chzn-done"',MultisitesHelperUtils::getComboSiteIDs('','price[price_site_id][##]',JText::_('SELECT_A_SITE')));
+		$jms_integration = !empty($comboSiteIDs);
 	}
 }
 
@@ -142,7 +142,7 @@ if(!empty($this->product->prices)) {
 			</td>
 <?php }
 	if($acls['currency']){ ?>
-			<td class="hika_currency"><?php echo $this->currencyType->display($form_key.'[{id}][price_currency_id]', $this->main_currency_id, ''); ?></td>
+			<td class="hika_currency"><?php echo $this->currencyType->display($form_key.'[{id}][price_currency_id]', $this->main_currency_id, 'class="no-chzn"'); ?></td>
 <?php }
 	if($acls['quantity']){ ?>
 			<td class="hika_qty"><input size="3" type="text" name="<?php echo $form_key; ?>[{id}][price_min_quantity]" value="" /></td>

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -82,8 +82,10 @@ class hikashopEditorHelper {
 		$name = $this->myEditor->get('_name');
 		switch($name) {
 			case 'tinymce':
-				return 'try{ tinymce.remove("#'.str_replace(array('"','\\'),'', $this->name).'"); tinymce.remove("#'.str_replace(array('"','\\'),'', $this->id).'"); ' .
-					' } catch(f){ }';
+				return 'try{ var n = ["'.str_replace(array('"','\\'),'', $this->name).'", "'.str_replace(array('"','\\'),'', $this->id).'"]; '.
+						' if(document.getElementById(n[0])) { tinymce.remove("#"+n[0]); } '.
+						' if(document.getElementById(n[1])) { tinymce.remove("#"+n[1]); } ' .
+					' } catch(f){}';
 		}
 	}
 

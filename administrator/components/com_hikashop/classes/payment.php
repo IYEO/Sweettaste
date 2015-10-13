@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -109,6 +109,7 @@ class hikashopPaymentClass extends hikashopClass{
 
 			$currencyClass = hikashop_get('class.currency');
 			$methods[$k]->payment_price = $currencyClass->round(($price_all * (float)@$method->payment_params->payment_percentage / 100) + @$method->payment_price,$currencyClass->getRounding($currency,true));
+
 			$methods[$k]->ordering = $method->payment_ordering;
 
 			if(!empty($method->ordering) && $max < $method->ordering){
@@ -174,6 +175,39 @@ class hikashopPaymentClass extends hikashopClass{
 		ksort($usable_methods);
 		$this->errors = $errors;
 		return $usable_methods;
+	}
+
+	function computePrice($order, &$payment, $price_all, $payment_price, $currency) {
+		$currencyClass = hikashop_get('class.currency');
+		$zone_id = hikashop_getZone('shipping');
+		$payment->payment_currency_id = $currency;
+		if ( !empty( $payment->payment_params->payment_algorithm) && $payment->payment_params->payment_algorithm == 'realcost') {
+			if ( !empty( $payment->payment_params->payment_tax_id) && @$order->full_total->prices[0]->price_value != @$order->full_total->prices[0]->price_value_with_tax) {
+				$payment_price_with_tax = $currencyClass->getTaxedPrice( $payment_price,$zone_id, $payment->payment_params->payment_tax_id);
+				$payment_percentage = ((float)@$payment->payment_params->payment_percentage / 100);
+				$payment_percentage_with_tax = $currencyClass->getTaxedPrice( $payment_percentage,$zone_id, $payment->payment_params->payment_tax_id);
+			} else {
+				$payment_price_with_tax = $payment_price;
+				$payment_percentage_with_tax = ((float)@$payment->payment_params->payment_percentage / 100);
+			}
+			$payment_checkout = ($price_all + $payment_price_with_tax) / (1- $payment_percentage_with_tax);
+			$payment->payment_price_with_tax = $currencyClass->round( $payment_checkout - $price_all,$currencyClass->getRounding( $currency, true));
+			$payment->payment_price = $currencyClass->getUntaxedPrice( $payment->payment_price_with_tax,$zone_id, $payment->payment_params->payment_tax_id);
+			$payment->payment_tax = $payment->payment_price_with_tax - $payment->payment_price;
+
+			return $payment->payment_price;
+		} else {
+			$payment->payment_price = $currencyClass->round(($price_all * (float)@$payment->payment_params->payment_percentage / 100) + $payment_price,$currencyClass->getRounding( $currency, true));
+
+			if ( !empty( $payment->payment_params->payment_tax_id) && isset($order->full_total->prices[0]->price_value_without_payment_with_tax)) {
+				$payment->payment_price_with_tax = $currencyClass->getTaxedPrice( $payment->payment_price,$zone_id, $payment->payment_params->payment_tax_id);
+				$payment->payment_tax = $payment->payment_price_with_tax - $payment->payment_price;
+
+				return $payment->payment_price_with_tax;
+			}
+		}
+
+		return $payment->payment_price;
 	}
 
 	function get($id, $default = '') {

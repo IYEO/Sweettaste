@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -25,6 +25,7 @@ class plgHikashoppaymentPaypalpro extends hikashopPaymentPlugin
 		'instant_capture' => array('Instant Capture', 'boolean','0'),
 		'ask_ccv' => array('Ask CCV', 'boolean','1'),
 		'details' => array('SEND_DETAILS_OF_ORDER', 'boolean','1'),
+		'send_order_id' => array('Send order id', 'boolean','0'),
 		'send_notification' => array('ORDER_NOTIFICATION', 'boolean','0'),
 		'debug' => array('DEBUG', 'boolean','0'),
 		'cancel_url' => array('CANCEL_URL', 'input'),
@@ -70,6 +71,14 @@ class plgHikashoppaymentPaypalpro extends hikashopPaymentPlugin
 			'ZIP' => @$order->cart->billing_address->address_post_code,
 			'BUTTONSOURCE' => 'HikariSoftware_Cart_DP'
 		);
+
+		if(@$this->payment_params->send_order_id){
+			$database = JFactory::getDBO();
+			$database->setQuery('SELECT MAX(order_id) FROM #__hikashop_order;');
+			$max = (int)$database->loadResult();
+			$vars['INVNUM'] = $max+1;
+		}
+
 		if(!empty($order->cart->billing_address->address_street2)){
 			$vars['STREET2'] = substr($order->cart->billing_address->address_street2,0,99);
 		}
@@ -79,7 +88,11 @@ class plgHikashoppaymentPaypalpro extends hikashopPaymentPlugin
 			$vars['SHIPTOSTREET'] = @$order->cart->shipping_address->address_street;
 			$vars['SHIPTOSTREET2'] = @$order->cart->shipping_address->address_street2;
 			$vars['SHIPTOCITY'] = @$order->cart->shipping_address->address_city;
-			$vars['SHIPTOSTATE'] = @$order->cart->shipping_address->address_state->zone_name;
+			if(in_array(@$order->cart->shipping_address->address_country->zone_code_2, array('US'))){
+				$vars['SHIPTOSTATE'] = @$order->cart->shipping_address->address_state->zone_code_3;
+			}else{
+				$vars['SHIPTOSTATE'] = @$order->cart->shipping_address->address_state->zone_name;
+			}
 			$vars['SHIPTOCOUNTRY'] = @$order->cart->shipping_address->address_country->zone_code_2;
 			$vars['SHIPTOZIP'] = @$order->cart->shipping_address->address_post_code;
 			$vars['SHIPTOPHONENUM'] = @$order->cart->shipping_address->address_phone;
@@ -95,32 +108,32 @@ class plgHikashoppaymentPaypalpro extends hikashopPaymentPlugin
 			foreach($order->cart->products as $product){
 				if($group && $product->order_product_option_parent_id) continue;
 				if($product->order_product_quantity<1) continue;
-				$vars["L_NAME".$i]=substr(strip_tags($product->order_product_name),0,127);
-				$vars["L_NUMBER".$i]=$product->order_product_code;
-				$vars["L_AMT".$i]=round($product->order_product_price,(int)$this->currency->currency_locale['int_frac_digits']);
-				$vars["L_QTY".$i]=$product->order_product_quantity;
-				$vars["L_TAXAMT".$i]=round($product->order_product_tax,(int)$this->currency->currency_locale['int_frac_digits']);
-				$tax+=round($product->order_product_tax,(int)$this->currency->currency_locale['int_frac_digits'])*$product->order_product_quantity;
+				$vars["L_NAME".$i] = substr(strip_tags($product->order_product_name),0,127);
+				$vars["L_NUMBER".$i] = $product->order_product_code;
+				$vars["L_AMT".$i] = round($product->order_product_price,(int)$this->currency->currency_locale['int_frac_digits']);
+				$vars["L_QTY".$i] = $product->order_product_quantity;
+				$vars["L_TAXAMT".$i] = round($product->order_product_tax,(int)$this->currency->currency_locale['int_frac_digits']);
+				$tax += round($product->order_product_tax,(int)$this->currency->currency_locale['int_frac_digits'])*$product->order_product_quantity;
 				$i++;
 			}
 			if(bccomp($tax,0,5)){
-				$vars['TAXAMT']=round($tax+$order->order_shipping_tax-$order->order_discount_tax,(int)$this->currency->currency_locale['int_frac_digits']);
+				$vars['TAXAMT'] = round($tax+$order->order_shipping_tax+$order->order_payment_tax-$order->order_discount_tax,(int)$this->currency->currency_locale['int_frac_digits']);
 			}
 			if(!empty($order->cart->coupon)){
-				$vars["SHIPDISCAMT"]==round($order->order_discount_price,(int)$this->currency->currency_locale['int_frac_digits']);
+				$vars["SHIPDISCAMT"] = round($order->order_discount_price,(int)$this->currency->currency_locale['int_frac_digits']);
 			}
 
 			if(!empty($order->order_payment_price) && bccomp($order->order_payment_price,0,5)){
-				$vars["L_NAME".$i]=JText::_('HIKASHOP_PAYMENT');
-				$vars["L_NUMBER".$i]='payment';
-				$vars["L_AMT".$i]=round($order->order_payment_price,(int)$this->currency->currency_locale['int_frac_digits']);
-				$vars["L_QTY".$i]=1;
-				$vars["L_TAXAMT".$i]=0;
+				$vars["L_NAME".$i] = JText::_('HIKASHOP_PAYMENT');
+				$vars["L_NUMBER".$i] = 'payment';
+				$vars["L_AMT".$i] = round($order->order_payment_price-$order->order_payment_tax,(int)$this->currency->currency_locale['int_frac_digits']);
+				$vars["L_QTY".$i] = 1;
+				$vars["L_TAXAMT".$i] = round($order->order_payment_tax,(int)$this->currency->currency_locale['int_frac_digits']);
 				$i++;
 			}
 
 			if(!empty($order->order_shipping_price) && bccomp($order->order_shipping_price,0,5)){
-				$vars['SHIPPINGAMT']=round($order->order_shipping_price,(int)$this->currency->currency_locale['int_frac_digits']);
+				$vars['SHIPPINGAMT'] = round($order->order_shipping_price,(int)$this->currency->currency_locale['int_frac_digits']);
 			}
 			$vars['ITEMAMT']=$vars['AMT']-(@$vars['TAXAMT']+@$vars['SHIPPINGAMT']);
 		}

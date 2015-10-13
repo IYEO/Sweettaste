@@ -1,6 +1,6 @@
 /**
- * Opload v 1.0.0
- * Copyright (c) 2010-2014 Jerome Glatigny
+ * Opload v 1.0.1
+ * Copyright (c) 2010-2015 Jerome Glatigny
  */
 (function () {
 	window.oploaders = {};
@@ -67,7 +67,13 @@
 				}, false);
 
 				t.dropArea.addEventListener("drop", function (evt) {
-					t.traverseFiles(evt.dataTransfer.files);
+					if(evt.dataTransfer.files) {
+						t.traverseFiles(evt.dataTransfer.files);
+					} else {
+						var url = evt.dataTransfer.getData('URL');
+						if(url && t.callbacks && t.callbacks.source)
+							t.callbacks.source(url, evt);
+					}
 					this.className = "opload-drop-zone";
 					evt.preventDefault();
 					evt.stopPropagation();
@@ -162,10 +168,10 @@
 					entry.uploadThumb = entry.div.childNodes[0].childNodes[c];
 			}
 
-			// If the file is an image and the web browser supports FileReader,
-			// present a preview in the file list
+			// If the file is an image and the web browser supports FileReader, present a preview in the file list
+			// but only if the file is smaller than 4MB
 			//
-			if (typeof FileReader !== "undefined" && (/image/i).test(file.type)) {
+			if(typeof(FileReader) !== "undefined" && (/image/i).test(file.type) && file.size < 4194304) {
 				var img = document.createElement("img");
 				if(entry.uploadThumb)
 					entry.uploadThumb.appendChild(img);
@@ -178,9 +184,21 @@
 				reader.readAsDataURL(file);
 			}
 
+			entry.slices = 0;
+			if(typeof(file.slice) !== 'undefined' || typeof(file.slice) !== 'undefined' || typeof(file.mozSlice) !== 'undefined') {
+				entry.chunk_size = 1048576; // 1MB
+				if(t.options.maxPostSize && t.options.maxPostSize > 102400) // 100KB
+					entry.chunk_size = t.options.maxPostSize;
+				if(t.options.chunckSize && t.options.chunckSize > 102400) // 100KB
+					entry.chunk_size = t.options.chunckSize;
+				entry.slices = Math.ceil(file.size / entry.chunk_size);
+				entry.index = 0;
+			} else if(t.options.maxPostSize && t.options.maxPostSize < t.options.maxSize)
+				t.options.maxSize = t.options.maxPostSize;
+
 			//
 			//
-			if(t.options.maxSize !== undefined && t.options.maxSize > 0 && file.size > this.options.maxSize) {
+			if(t.options.maxSize !== undefined && t.options.maxSize > 0 && file.size > t.options.maxSize) {
 				entry.div.childNodes[0].className += ' oploadError';
 				entry.status = 1;
 				entry.progressBar.style.width = '100%';
@@ -195,20 +213,76 @@
 				return false;
 			}
 
+			t.initXHR(entry, file);
+
+			// Set appropriate headers / Does not work good with all browsers
+			// entry.xhr.setRequestHeader("Content-Type", "multipart/form-data");
+
+			var fd = new FormData();
+			if(t.data) {
+				for(var k in t.data) {
+					if(t.data[k] && t.data.hasOwnProperty(k))
+						fd.append(k, t.data[k]);
+				}
+			}
+			if(entry.slices > 1) {
+				var chunk = null;
+				if(file.slice)
+					chunk = file.slice(0, entry.chunk_size);
+				else if(file.webkitSlice)
+					chunk = file.webkitSlice(0, entry.chunk_size);
+				else if(file.mozSlice)
+					chunk = file.mozSlice(0, entry.chunk_size);
+
+				fd.append(file.name, chunk, file.name);
+				fd.append('filename', file.name);
+				fd.append('slice', 0);
+				fd.append('slice_size', entry.chunk_size);
+				fd.append('slices', entry.slices);
+				fd.append('slices_size', file.size);
+			} else
+				fd.append(file.name, file);
+
+			var send = true;
+			if(t.options.nbFiles && t.options.nbFiles > 1) {
+				var cpt = 0;
+				for(var i = t.files.length - 1; i >= 0; i--) {
+					if(t.files[i].status == 0)
+						cpt++;
+				}
+				send = cpt < t.options.nbFiles;
+			}
+			if(send) {
+				// Send the file (doh)
+				entry.xhr.send(fd);
+				entry.status = 0;
+			} else {
+				entry.fd = fd;
+				entry.status = -1;
+			}
+
+			t.files[entryId] = entry;
+			t.fileList.appendChild(entry.div);
+		},
+		initXHR: function(entry, file) {
+			var t = this;
+
 			// Uploading - for Firefox, Google Chrome and Safari
 			entry.xhr = new XMLHttpRequest();
 
 			// Update progress bar
 			entry.xhr.upload.addEventListener("progress", function (evt) {
-				if (evt.lengthComputable) {
-					var p = (evt.loaded / evt.total) * 100 + "%";
-					if(entry.progressBar)
-						entry.progressBar.style.width = p;
-					if(entry.progressPercentage)
-						entry.progressPercentage.innerHTML = p;
-				} else {
-					// No data to calculate on
-				}
+				// No data to calculate on
+				if(evt.lengthComputable)
+					return;
+
+				var p = Math.round((evt.loaded / evt.total) * 100) + "%";
+				if(entry.slices > 1)
+					p = Math.round((100 / entry.slices) * (entry.index + (evt.loaded / evt.total))) + "%";
+				if(entry.progressBar)
+					entry.progressBar.style.width = p;
+				if(entry.progressPercentage)
+					entry.progressPercentage.innerHTML = p;
 			}, false);
 
 			// File uploaded
@@ -216,42 +290,96 @@
 				var response = true;
 				if(!entry.xhr.responseText || entry.xhr.responseText.length == 0 || entry.xhr.responseText == '0')
 					response = false;
-				if(t.callbacks && t.callbacks.done) {
+
+				try {
+					var tmp = JSON.parse(entry.xhr.responseText);
+					response = tmp;
+				} catch(e) { }
+				if(t.callbacks && t.callbacks.done)
 					response = t.callbacks.done(entry);
+
+				// Send the next slice if required
+				if(response && !response.error && entry.slices > 1 && (entry.index + 1) < entry.slices) {
+					entry.index++;
+
+					var p = Math.round((100 / entry.slices) * entry.index) + "%";
+					if(entry.progressBar)
+						entry.progressBar.style.width = p;
+					if(entry.progressPercentage)
+						entry.progressPercentage.innerHTML = p;
+
+					entry.file_name = file.name;
+					if(response && response.name)
+						entry.file_name = response.name;
+
+					// Handle upload resume
+					if(response && response.resume && response.slice && response.slice > entry.index && response.slice < entry.slices)
+						entry.index = response.slice;
+
+					t.sendFile(entry, file, t.data);
+					return;
 				}
+				t.sendNextFile();
+				// Update the progress bar
 				if(entry.progressBar) {
-					if(response)
+					if(response && !response.error)
 						entry.div.childNodes[0].className += ' oploadFinish';
 					else
 						entry.div.childNodes[0].className += ' oploadError';
+
+					if(response && response.error && entry.progressPercentage)
+						entry.progressPercentage.innerHTML = ' Error: ' + response.error;
+
 					entry.progressBar.style.width = '100%';
 					window.Oby.removeClass(entry.progressBar, 'active');
 				}
 				if(entry.progressPercentage)
-					entry.progressPercentage.innerText = '100%';
+					entry.progressPercentage.innerHTML = '100%';
 				entry.status = 1;
 			}, false);
 
 			entry.xhr.open("POST", t.url, true);
-
-			// Set appropriate headers / Does not work good with all browsers
-			// entry.xhr.setRequestHeader("Content-Type", "multipart/form-data");
-
-			formData = new FormData();
-			if(t.data) {
-				for(var k in t.data) {
-					if(t.data[k] && t.data.hasOwnProperty(k))
-						formData.append(k, t.data[k]);
+		},
+		sendFile: function(entry, file, data) {
+			var t = this, fd = new FormData();
+			if(data) {
+				for(var k in data) {
+					if(data[k] && data.hasOwnProperty(k))
+						fd.append(k, data[k]);
 				}
 			}
-			formData.append(file.name, file);
 
-			// Send the file (doh)
-			entry.xhr.send(formData);
-			entry.status = 0;
+			var chunk = null,
+				start = entry.chunk_size * entry.index;
+			if(file.slice)
+				chunk = file.slice(start, start + entry.chunk_size);
+			else if(file.webkitSlice)
+				chunk = file.webkitSlice(start, start + entry.chunk_size);
+			else if(file.mozSlice)
+				chunk = file.mozSlice(start, start + entry.chunk_size);
 
-			t.files[entryId] = entry;
-			t.fileList.appendChild(entry.div);
+			fd.append(entry.file_name, chunk, entry.file_name);
+			fd.append('filename', entry.file_name);
+			fd.append('slice', entry.index);
+			fd.append('slice_size', entry.chunk_size);
+			fd.append('slices', entry.slices);
+			fd.append('slices_size', file.size);
+
+			t.initXHR(entry, file);
+			entry.xhr.send(fd);
+		},
+		sendNextFile: function() {
+			var t = this;
+			if(!t.options.nbFiles || t.options.nbFiles < 1)
+				return;
+
+			for(var i = 0; i < t.files.length; i++) {
+				if(t.files[i] && t.files[i].fd && t.files[i].status == -1) {
+					t.files[i].xhr.send(t.files[i].fd);
+					t.files[i].status = 0;
+					break;
+				}
+			}
 		},
 		uploadFallback: function(input) {
 			var gen = function(html) {
@@ -402,12 +530,14 @@
 			return false;
 		}
 	};
-	window.opload = opload;
+	opload.version = 20150811;
+	if(!window.opload || window.opload.version < opload.version)
+		window.opload = opload;
 })();
 
 /**
  * HikaShop Opload bridge
- * Copyright (c) 2013-2014 Obsidev S.A.R.L.
+ * Copyright (c) 2013-2015 Obsidev S.A.R.L.
  */
 (function() {
 	var hkUploaderList = [];
@@ -462,6 +592,7 @@
 				data:t.formData,
 				forceDrop:true,
 				maxSize:t.options.maxSize,
+				maxPostSize:t.options.maxPostSize || t.options.maxSize || 2097152, // 2MB
 				maxFilenameSize: t.options.maxFilenameSize,
 				truncateBegin: t.options.truncateBegin,
 				truncateEnd: t.options.truncateEnd,
@@ -480,16 +611,20 @@
 						if(response == false)
 							return false;
 
+						if(response.partial || response.error)
+							return response;
+
+						if((response.name || response.type) && !response[0])
+							response = [ response ];
+
 						for(var i = 0; i < response.length; i++) {
-							if(t.mode == 'single') {
-								var r = response[i], dest = d.getElementById(t.id+'_content');
-								if(r.html && r.html.length > 0) {
-									dest.innerHTML = r.html;
-									var empty = d.getElementById(t.id+'_empty');
-									if(empty) empty.style.display = 'none';
-								}
+							var r = response[i];
+							if(t.mode == 'single' && r.html && r.html.length > 0) {
+								var dest = d.getElementById(t.id+'_content');
+								if(dest) dest.innerHTML = r.html;
+								var empty = d.getElementById(t.id+'_empty');
+								if(empty) empty.style.display = 'none';
 							} else if(t.mode == 'listImg') {
-								var r = response[i];
 								if(t.options['imgClasses'] && t.options['imgClasses'][1]) {
 									var dest = hkjQuery('#'+t.id+'_content'), myData = document.createElement('li'), className = '';
 									className = t.options['imgClasses'][1];
@@ -500,20 +635,20 @@
 									hkjQuery(myData).addClass(className).html(r.html).appendTo( dest );
 									hkjQuery('#'+t.id+'_empty').hide();
 								}
-							} else if(t.mode == 'list') {
-								var r = response[i];
-								if(r.html && r.html.length > 0) {
-									var dest = d.getElementById(t.id+'_content'), myData = document.createElement('div');
-									hkjQuery(myData).html(r.html).appendTo( dest );
-									hkjQuery('#'+t.id+'_empty').hide();
-								}
+							} else if(t.mode == 'list' && r.html && r.html.length > 0) {
+								var dest = d.getElementById(t.id+'_content'), myData = document.createElement('div');
+								hkjQuery(myData).html(r.html).appendTo( dest );
+								hkjQuery('#'+t.id+'_empty').hide();
 							}
 						}
 						setTimeout(function(){
 							if(entry && entry.id !== undefined)
 								window.oploaders[t.id].cancel(null, entry.id);
 						}, 1000);
-						return true;
+
+						if(typeof(response) == 'object' && response[0])
+							return response[0];
+						return response;
 					}
 				}
 			});

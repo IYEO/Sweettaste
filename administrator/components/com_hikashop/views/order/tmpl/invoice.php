@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -238,7 +238,8 @@ defined('_JEXEC') or die('Restricted access');
 									} ?>
 								</td>
 							</tr>
-							<?php $taxes = round($this->order->order_subtotal-$this->order->order_subtotal_no_vat+$this->order->order_shipping_tax-$this->order->order_discount_tax,$this->currencyHelper->getRounding($this->order->order_currency_id,true));
+							<?php
+								$taxes = round($this->order->order_subtotal - $this->order->order_subtotal_no_vat + $this->order->order_shipping_tax + $this->order->order_payment_tax - $this->order->order_discount_tax,$this->currencyHelper->getRounding($this->order->order_currency_id,true));
 
 								if($this->order->order_discount_price != 0){ ?>
 							<tr>
@@ -305,7 +306,7 @@ defined('_JEXEC') or die('Restricted access');
 								<?php }
 								}
 
-								if($this->order->order_payment_price!=0){ ?>
+								if($this->order->order_payment_price != 0 || ($this->config->get('price_with_tax') && $this->order->order_payment_tax != 0)){ ?>
 							<tr>
 								<td colspan="<?php echo $colspan; ?>">
 								</td>
@@ -315,7 +316,13 @@ defined('_JEXEC') or die('Restricted access');
 									</label>
 								</td>
 								<td>
-									<?php echo $this->currencyHelper->format($this->order->order_payment_price,$this->order->order_currency_id); ?>
+									<?php
+									if($this->config->get('price_with_tax')) {
+										echo $this->currencyHelper->format($this->order->order_payment_price, $this->order->order_currency_id);
+									} else {
+										echo $this->currencyHelper->format($this->order->order_payment_price - @$this->order->order_payment_tax, $this->order->order_currency_id);
+									}
+									?>
 								</td>
 							</tr>
 							<?php }

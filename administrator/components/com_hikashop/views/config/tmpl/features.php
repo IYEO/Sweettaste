@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -399,6 +399,14 @@ if(hikashop_level(2)&&$affiliate_active) {
 											</tr>
 											<tr>
 												<td class="key">
+													<?php echo JText::_('REMOVE_ID_IN_CART_URLS'); ?>
+												</td>
+												<td>
+													<?php echo JHTML::_('hikaselect.booleanlist', "config[sef_cart_remove_id]",'',$this->config->get('sef_cart_remove_id',0)); ?>
+												</td>
+											</tr>
+											<tr>
+												<td class="key">
 													<?php echo JText::_('ALIAS_AUTO_FILL'); ?>
 												</td>
 												<td>
@@ -430,6 +438,22 @@ if(hikashop_level(2)&&$affiliate_active) {
 												</td>
 												<td>
 													<input class="inputbox" type="text" id="prod_sef" name="config[product_sef_name]" value="<?php echo $this->config->get('product_sef_name', 'product'); ?>" onchange="checkSEF(this,document.getElementById('cat_sef').value,'<?php echo $this->config->get('product_sef_name', 'category'); ?>');">
+												</td>
+											</tr>
+											<tr id="sef_checkout_name" <?php echo $sefOptions; ?>>
+												<td class="key">
+													<?php echo JText::_('CART_SEF_NAME'); ?>
+												</td>
+												<td>
+													<input class="inputbox" type="text" id="prod_sef" name="config[cart_sef_name]" value="<?php echo $this->config->get('cart_sef_name', 'cart'); ?>">
+												</td>
+											</tr>
+											<tr id="sef_checkout_name" <?php echo $sefOptions; ?>>
+												<td class="key">
+													<?php echo JText::_('WISHLIST_SEF_NAME'); ?>
+												</td>
+												<td>
+													<input class="inputbox" type="text" id="prod_sef" name="config[wishlist_sef_name]" value="<?php echo $this->config->get('wishlist_sef_name', 'wishlist'); ?>">
 												</td>
 											</tr>
 											<tr id="sef_checkout_name" <?php echo $sefOptions; ?>>

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -9,7 +9,7 @@
 defined('_JEXEC') or die('Restricted access');
 ?><?php
 class plgHikashoppaymentPayuindia extends hikashopPaymentPlugin {
-	var $accepted_currencies = array ('INR');
+	var $accepted_currencies = array('INR');
 
 	var $multiple = true;
 	var $name = 'payuindia';
@@ -21,6 +21,7 @@ class plgHikashoppaymentPayuindia extends hikashopPaymentPlugin {
 			'test' => 'HIKA_TEST',
 			'production' => 'HIKA_PRODUCTION',
 		)),
+		'paisa' =>  array('PayUMoney', 'boolean','0'),
 		'debug' => array('DEBUG', 'boolean','0'),
 		'cancel_url' => array('CANCEL_URL', 'input'),
 		'return_url' => array('RETURN_URL', 'input'),
@@ -69,7 +70,10 @@ class plgHikashoppaymentPayuindia extends hikashopPaymentPlugin {
 			'amount' => round($order->cart->full_total->prices[0]->price_value_with_tax, (int)$this->currency->currency_locale['int_frac_digits'])
 		);
 
-		$vars['HASH'] = $this->get_hash($vars, $this->payment_params->salt);
+		$vars['hash'] = $this->get_hash($vars, $this->payment_params->salt);
+
+		if(@$this->payment_params->paisa)
+			$vars['service_provider'] = 'payu_paisa';
 
 		if($this->payment_params->environnement == 'test')
 			$this->payment_params->url = 'https://test.payu.in/_payment';

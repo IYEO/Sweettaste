@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -286,9 +286,11 @@ class orderController extends hikashopController{
 					$payment->payment_params=unserialize($payment->payment_params);
 				}
 				$full_price_without_payment = $order->order_full_price-$order->order_payment_price;
-				$new_payment_price = ($full_price_without_payment * (float)@$payment->payment_params->payment_percentage / 100) + @$payment->payment_price;
+				$new_payment = $payment;
+				$new_payment_price = $paymentClass->computePrice( $order, $new_payment, $full_price_without_payment, @$payment->payment_price, hikashop_getCurrency());
+				$new_payment_tax = @$new_payment->payment_tax;
 				$updateOrder->order_payment_price = $new_payment_price;
-				$updateOrder->order_full_price = $full_price_without_payment+$new_payment_price;
+				$updateOrder->order_full_price = $full_price_without_payment+$new_payment_price+$new_payment_tax;
 				$updateOrder->history = new stdClass();
 				$updateOrder->history->history_payment_id = $payment_id;
 				$updateOrder->history->history_payment_method = $payment_method;

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -150,10 +150,6 @@ class OrderViewOrder extends hikashopView{
 		$js = "window.hikashop.ready( function() {setTimeout(function(){window.focus();window.print();setTimeout(function(){hikashop.closeBox();}, 1000);},1000);});";
 		$doc = JFactory::getDocument();
 		$doc->addScriptDeclaration("\n<!--\n".$js."\n//-->\n");
-		if(!HIKASHOP_J30)
-			JHTML::_('behavior.mootools');
-		else
-			JHTML::_('behavior.framework');
 	}
 
 	function &_order($type){

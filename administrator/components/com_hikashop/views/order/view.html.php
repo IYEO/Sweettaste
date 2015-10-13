@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -58,7 +58,7 @@ class OrderViewOrder extends hikashopView{
 		$pageInfo->filter->filter_start = $app->getUserStateFromRequest($this->paramBase.".filter_start",'filter_start','','string');
 		$pageInfo->filter->filter_product = JRequest::getInt('filter_product',0);
 		$database = JFactory::getDBO();
-		$tables = '';
+		$tables = array();
 		$filters = array('b.order_type=\'sale\'');
 
 		if(is_array($pageInfo->filter->filter_status) && count($pageInfo->filter->filter_status) == 1) {
@@ -135,7 +135,7 @@ class OrderViewOrder extends hikashopView{
 		if(hikashop_level(2))
 			JPluginHelper::getPlugin('system', 'hikashopaffiliate');
 		$dispatcher = JDispatcher::getInstance();
-		$dispatcher->trigger('onBeforeOrderListing', array($this->paramBase, &$extrafilters, &$pageInfo, &$filters));
+		$dispatcher->trigger('onBeforeOrderListing', array($this->paramBase, &$extrafilters, &$pageInfo, &$filters, &$tables, &$searchMap));
 		$this->assignRef('extrafilters',$extrafilters);
 
 		if(!empty($pageInfo->search)){
@@ -144,8 +144,9 @@ class OrderViewOrder extends hikashopView{
 			$filters[] =  $filter;
 		}
 		if(!empty($pageInfo->filter->filter_product)){
-			$tables = ' INNER JOIN '.hikashop_table('order_product').' AS d ON b.order_id = d.order_id INNER JOIN '.hikashop_table('product').' AS e ON (e.product_id = d.product_id OR (e.product_parent_id > 0 AND e.product_parent_id = d.product_id))';
-			$filters[] = 'e.product_id = '.(int)$pageInfo->filter->filter_product.' OR e.product_parent_id = '.(int)$pageInfo->filter->filter_product;
+			$tables['order_product'] = 'INNER JOIN '.hikashop_table('order_product').' AS order_product ON b.order_id = order_product.order_id ';
+			$tables['product'] = 'INNER JOIN '.hikashop_table('product').' AS product ON (product.product_id = order_product.product_id OR (product.product_parent_id > 0 AND product.product_parent_id = order_product.product_id))';
+			$filters[] = 'product.product_id = '.(int)$pageInfo->filter->filter_product.' OR product.product_parent_id = '.(int)$pageInfo->filter->filter_product;
 		}
 		$order = '';
 		if(!empty($pageInfo->filter->order->value)){
@@ -156,7 +157,7 @@ class OrderViewOrder extends hikashopView{
 		}else{
 			$filters = '';
 		}
-		$query = ' FROM '.hikashop_table('order').' AS b LEFT JOIN '.hikashop_table('address').' AS d ON b.order_billing_address_id=d.address_id LEFT JOIN '.hikashop_table('user').' AS a ON b.order_user_id=a.user_id LEFT JOIN '.hikashop_table('users',false).' AS c ON a.user_cms_id=c.id '.$tables.$filters.$order;
+		$query = ' FROM '.hikashop_table('order').' AS b LEFT JOIN '.hikashop_table('address').' AS d ON b.order_billing_address_id=d.address_id LEFT JOIN '.hikashop_table('user').' AS a ON b.order_user_id=a.user_id LEFT JOIN '.hikashop_table('users',false).' AS c ON a.user_cms_id=c.id '.implode(' ', $tables).' '.$filters.$order;
 		$database->setQuery('SELECT a.*,b.*,c.*,IFNULL(c.name,CONCAT_WS(\' \',d.address_firstname,d.address_middle_name,d.address_lastname)) AS hikashop_name '.$query,(int)$pageInfo->limit->start,(int)$pageInfo->limit->value);
 		$rows = $database->loadObjectList();
 
@@ -174,12 +175,8 @@ class OrderViewOrder extends hikashopView{
 		$config =& hikashop_config();
 		$manage = hikashop_isAllowed($config->get('acl_order_manage','all'));
 		$this->assignRef('manage',$manage);
-		$exportIcon = 'archive';
-		if(HIKASHOP_J30) {
-			$exportIcon = 'export';
-		}
 		$this->toolbar = array(
-			array('name' => 'custom', 'icon' => $exportIcon, 'alt' => JText::_('HIKA_EXPORT'), 'task' => 'export', 'check' => false),
+			array('name' => 'export'),
 			array('name' => 'custom', 'icon' => 'copy', 'alt' => JText::_('HIKA_COPY'), 'task' => 'copy', 'display' => $manage),
 			array('name' => 'link', 'icon' => 'new', 'alt' => JText::_('HIKA_NEW'),'url' => hikashop_completeLink('order&task=neworder'),'display' => $manage),
 			array('name'=> 'editList', 'display' => $manage),
@@ -455,8 +452,10 @@ class OrderViewOrder extends hikashopView{
 		if(!empty($order->order_tax_info)){
 			foreach($order->order_tax_info as $tax){
 				if(isset($tax->tax_amount_for_shipping)){
-					$order->order_shipping_tax_namekey=$tax->tax_namekey;
-					break;
+					$order->order_shipping_tax_namekey = $tax->tax_namekey;
+				}
+				if(isset($tax->tax_amount_for_payment)){
+					$order->order_payment_tax_namekey = $tax->tax_namekey;
 				}
 			}
 		}
@@ -700,7 +699,7 @@ class OrderViewOrder extends hikashopView{
 				$order->order_full_tax += round($product->order_product_quantity * $product->order_product_tax, 2);
 			}
 			foreach($rows as $k => $row){
-				$rows[$k]->order_full_tax += $row->order_shipping_tax - $row->order_discount_tax;
+				$rows[$k]->order_full_tax += $row->order_shipping_tax + $row->order_payment_tax - $row->order_discount_tax;
 			}
 		}
 		$dispatcher->trigger('onBeforeOrderExport', array(&$rows, &$this));
@@ -1074,6 +1073,20 @@ class OrderViewOrder extends hikashopView{
 		$pluginsShipping = hikashop_get('type.plugins');
 		$pluginsShipping->type = 'shipping';
 		$this->assignRef('shippingPlugins', $pluginsShipping);
+
+		if(!empty($this->order->order_tax_info)){
+			foreach($this->order->order_tax_info as $tax){
+				if(isset($tax->tax_amount_for_shipping)){
+					$this->order->order_shipping_tax_namekey = $tax->tax_namekey;
+				}
+				if(isset($tax->tax_amount_for_coupon)){
+					$this->order->order_discount_tax_namekey = $tax->tax_namekey;
+				}
+				if(isset($tax->tax_amount_for_payment)){
+					$this->order->order_payment_tax_namekey = $tax->tax_namekey;
+				}
+			}
+		}
 	}
 
 	public function show_additional($tpl = null) {

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -91,7 +91,7 @@ var data_'.$id.' = ' . $this->getData($values, $allBtn, $min) . ';
 			e.value = "all";
 			treeObj.chk(1,1,false,false);
 		} else {
-			e.value = ","+v.join(",")+",";
+			e.value = "," + v.join(",") + ",";
 			treeObj.config.tricheckbox = true;
 			treeObj.chk(1,2,false,false);
 			treeObj.config.tricheckbox = false;
@@ -185,7 +185,7 @@ window.aclMgr.updateJoomlaAcl = function(el,id,tree_id) {
 		} else if( v.length > w.aclMgr.cpt[tree_id]) {
 			e.value = "all";
 		} else {
-			e.value = ","+v.join(",")+",";
+			e.value = "," + v.join(",") + ",";
 		}
 	};
 

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -62,6 +62,17 @@ defined('_JEXEC') or die('Restricted access');
 					</td>
 					<td>
 						<input type="text" name="data[order][order_payment_price]" value="<?php echo $this->element->order_payment_price; ?>" />
+					</td>
+				</tr>
+				<tr>
+					<td class="key">
+						<label for="data[order][order_payment_tax]">
+							<?php echo JText::_( 'VAT' ); ?>
+						</label>
+					</td>
+					<td>
+						<input type="text" name="data[order][order_payment_tax]" value="<?php echo @$this->element->order_payment_tax; ?>" />
+						<?php echo $this->ratesType->display( "data[order][order_payment_tax_namekey]" , @$this->element->order_payment_tax_namekey ); ?>
 					</td>
 				</tr>
 				<?php

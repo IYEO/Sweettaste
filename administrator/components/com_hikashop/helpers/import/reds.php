@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -313,14 +313,11 @@ class hikashopImportredsHelper extends hikashopImportHelper
 			$this->db->setQuery("CREATE TABLE IF NOT EXISTS `#__hikashop_reds_cat` (`reds_cat_id` INT(11) unsigned NOT NULL AUTO_INCREMENT, `reds_id` int(11) unsigned NOT NULL DEFAULT '0', `hk_id` int(11) unsigned NOT NULL DEFAULT '0', `category_type` varchar(255) NULL, PRIMARY KEY (`reds_cat_id`)) ENGINE=MyISAM");
 			$this->db->query();
 
-			$this->db->setQuery('ALTER IGNORE TABLE `#__hikashop_address` ADD `address_reds_order_info_id` INT(11) NULL');
-			$this->db->query();
-			$this->db->setQuery('ALTER IGNORE TABLE `#__hikashop_order` ADD `order_reds_id` INT(11) NULL');
-			$this->db->query();
-			$this->db->setQuery('ALTER IGNORE TABLE `#__hikashop_order` ADD INDEX ( `order_reds_id` )');
-			$this->db->query();
-			$this->db->setQuery('ALTER IGNORE TABLE `#__hikashop_taxation` ADD `tax_reds_id` INT(11) NULL');
-			$this->db->query();
+			$databaseHelper = hikashop_get('helper.database');
+			$databaseHelper->addColumns('address','`address_reds_order_info_id` INT(11) NULL');
+			$databaseHelper->addColumns('order','`order_reds_id` INT(11) NULL');
+			$databaseHelper->addColumns('order','INDEX ( `order_reds_id` )');
+			$databaseHelper->addColumns('taxation','`tax_reds_id` INT(11) NULL');
 
 			echo '<p '.$this->pmarginstyle.'><span'.$this->bullstyle.'>&#149;</span> All table created</p>';
 

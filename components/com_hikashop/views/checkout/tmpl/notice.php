@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -12,7 +12,9 @@ $doc = JFactory::getDocument();
 $doc->setMetaData( 'robots', 'noindex' );
 $app = JFactory::getApplication();
 $wishlist_id = $app->getUserState( HIKASHOP_COMPONENT.'.wishlist_id','0');
-$cart_type = $app->getUserState( HIKASHOP_COMPONENT.'.popup_cart_type','cart');
+$cart_type = JRequest::getVar('cart_type','');
+if(empty($cart_type))
+    $cart_type = $app->getUserState( HIKASHOP_COMPONENT.'.popup_cart_type','cart');
 $app->setUserState( HIKASHOP_COMPONENT.'.popup_cart_type','cart');
 ?>
 <script type="text/javascript">

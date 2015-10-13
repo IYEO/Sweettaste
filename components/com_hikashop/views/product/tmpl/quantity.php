@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -56,6 +56,8 @@ if(!$this->config->get('ajax_add_to_cart', 0) || ($this->config->get('show_quant
 	}
 }
 
+$showFree = ($this->config->get('display_add_to_wishlist_for_free_products', 1) || (!$this->config->get('display_add_to_wishlist_for_free_products', 1) && $this->row->prices[0]->price_value != '0'));
+
 if($end_date && $end_date < time()) {
 ?>
 	<span class="hikashop_product_sale_end">
@@ -100,7 +102,7 @@ if($end_date && $end_date < time()) {
 				$btnType = 'wish';
 			}
 
-			if(hikashop_level(1) && $this->params->get('add_to_wishlist') && $wishlistEnabled && !$hideForGuest && $this->config->get('display_add_to_wishlist_for_free_products', 1)) {
+			if(hikashop_level(1) && $this->params->get('add_to_wishlist') && $wishlistEnabled && !$hideForGuest && $showFree) {
 				echo '<div id="hikashop_add_wishlist">' .
 					$this->cart->displayButton(JText::_('ADD_TO_WISHLIST'), $btnType, $this->params, $url, $wishlistAjax, '', $max, $min, '', false) .
 					'</div>';
@@ -132,7 +134,7 @@ if($end_date && $end_date < time()) {
 				$btnType = 'wish';
 			}
 
-			if(hikashop_level(1) && $this->params->get('add_to_wishlist') && $wishlistEnabled && !$hideForGuest && $this->config->get('display_add_to_wishlist_for_free_products','1')){
+			if(hikashop_level(1) && $this->params->get('add_to_wishlist') && $wishlistEnabled && !$hideForGuest && $showFree){
 				echo '<div id="hikashop_add_wishlist">' .
 					$this->cart->displayButton(JText::_('ADD_TO_WISHLIST'), $btnType, $this->params, $url, $wishlistAjax, '', $max, $min, '', false) .
 					'</div>';
@@ -155,7 +157,7 @@ if($end_date && $end_date < time()) {
 			echo $this->cart->displayButton(JText::_('ADD_ME_WAITLIST'), 'add_waitlist', $params, hikashop_completeLink('product&task=waitlist&cid='.$this->row->product_id.$url_itemid), 'window.location=\''.str_replace("'","\'",hikashop_completeLink('product&task=waitlist&cid='.$this->row->product_id.$url_itemid)).'\';return false;');
 		}
 
-		if(hikashop_level(1) && $this->params->get('add_to_wishlist')  && $wishlistEnabled && !$hideForGuest && $this->config->get('display_add_to_wishlist_for_free_products', 1)) {
+		if(hikashop_level(1) && $this->params->get('add_to_wishlist')  && $wishlistEnabled && !$hideForGuest && $showFree) {
 			if(!empty($this->row->has_options)) {
 				if($this->params->get('add_to_cart', 1))
 					echo $this->cart->displayButton(JText::_('CHOOSE_OPTIONS'),'choose_options',$this->params,hikashop_contentLink('product&task=show&product_id='.$this->row->product_id.'&name='.$this->row->alias.$url_itemid.$this->category_pathway,$this->row),'window.location = \''.str_replace("'","\'",hikashop_contentLink('product&task=show&product_id='.$this->row->product_id.'&name='.$this->row->alias.$url_itemid.$this->category_pathway,$this->row)).'\';return false;','');
@@ -169,7 +171,7 @@ if($end_date && $end_date < time()) {
 ?>
 	</div>
 <?php
-} elseif(hikashop_level(1) && $wishlistEnabled && $this->params->get('add_to_wishlist', 1) && $this->config->get('display_add_to_wishlist_for_free_products', 1) && !$hideForGuest && !$this->config->get('display_add_to_cart_for_free_products')) {
+} elseif(hikashop_level(1) && $wishlistEnabled && $this->params->get('add_to_wishlist', 1) && $showFree && !$hideForGuest && !$this->config->get('display_add_to_cart_for_free_products')) {
 	if(!empty($this->row->has_options)) {
 		if($this->params->get('add_to_cart', 1))
 			echo $this->cart->displayButton(JText::_('CHOOSE_OPTIONS'), 'choose_options', $this->params, hikashop_contentLink('product&task=show&product_id='.$this->row->product_id.'&name='.$this->row->alias.$url_itemid.$this->category_pathway,$this->row),'window.location = \''.str_replace("'","\'",hikashop_contentLink('product&task=show&product_id='.$this->row->product_id.'&name='.$this->row->alias.$url_itemid.$this->category_pathway,$this->row)).'\';return false;', '');

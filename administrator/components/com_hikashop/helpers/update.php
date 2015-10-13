@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -68,6 +68,7 @@ class hikashopUpdateHelper{
 			,'plg_hikashop_acymailing' => array('HikaShop trigger for AcyMailing filters',0,1)
 			,'plg_hikashop_datafeed' => array('Hikashop Products Cron Update Plugin',0,0)
 			,'plg_hikashop_datepickerfield' => array('Hikashop Date Picker Plugin',0,0)
+			,'plg_hikashop_email_history' => array('Hikashop Email History Plugin',0,1)
 			,'plg_hikashop_google_products' => array('Hikashop Google Products Plugin',0,1)
 			,'plg_hikashop_group' => array('HikaShop group plugin',0,1)
 			,'plg_hikashop_history' => array('HikaShop order history plugin',0,1)
@@ -151,7 +152,8 @@ class hikashopUpdateHelper{
 			,'plg_hikashoppayment_westernunion' => array('HikaShop Western Union payment plugin',0,0)
 			,'plg_hikashoppayment_westpacapi' => array('HikaShop WestPac API payment plugin',0,0)
 			,'plg_hikashoppayment_worldnettps' => array('HikaShop WorldNetTPS payment plugin',0,0)
-			,'plg_hikashopshipping_aupost' => array('HikaShop Australia Post shipping plugin',0,0)
+			,'plg_hikashopshipping_aupost' => array('HikaShop Australia Post shipping plugin (deprecated)',0,0)
+			,'plg_hikashopshipping_aupost2' => array('HikaShop Australia Post shipping plugin V2',0,0)
 			,'plg_hikashopshipping_canadapost' => array('HikaShop Canada Post shipping plugin',0,0)
 			,'plg_hikashopshipping_canpar' => array('HikaShop CANPAR shipping plugin',0,0)
 			,'plg_hikashopshipping_envoimoinscher' => array('HikaShop EnvoiMoinsCher shipping plugin',0,0)
@@ -159,7 +161,7 @@ class hikashopUpdateHelper{
 			,'plg_hikashopshipping_manual' => array('HikaShop manual shipping plugin',0,0)
 			,'plg_hikashopshipping_ups' => array('HikaShop UPS shipping plugin',0,0)
 			,'plg_hikashopshipping_usps' => array('HikaShop USPS shipping plugin',0,0)
-			,'plg_quickicons_hikashop' => array('HikaShop Quickicon plugin',0,1)
+			,'plg_quickicon_hikashop' => array('HikaShop Quickicon plugin',0,1)
 			,'plg_search_hikashop_categories' => array('HikaShop categories search plugin',0,1)
 			,'plg_search_hikashop_products' => array('HikaShop products search plugin',0,1)
 			,'plg_system_custom_price' => array('HikaShop Donation plugin',0,0)
@@ -472,8 +474,14 @@ class hikashopUpdateHelper{
 			$srcFolder = HIKASHOP_BACK.'translations'.DS;
 			$files = JFolder::files($srcFolder);
 			if(!empty($files)){
+				$db = JFactory::getDBO();
+				$query = 'SHOW TABLES LIKE '.$db->Quote($db->getPrefix().substr(hikashop_table('jf_content',false),3));
+				$db->setQuery($query);
+				$table = $db->loadResult();
+				$type = (!empty($table)) ? 'jf' : null;
+
 				foreach($files as $file){
-					if($force || !file_exists($dstFolder.$file)) JFile::copy($srcFolder.$file,$dstFolder.$file);
+					$this->processJoomfishFile($file, $srcFolder.$file, $dstFolder.$file, $force, $type);
 				}
 			}
 		}
@@ -482,12 +490,98 @@ class hikashopUpdateHelper{
 			$srcFolder = HIKASHOP_BACK.'falang'.DS;
 			$files = JFolder::files($srcFolder);
 			if(!empty($files)){
+				$db = JFactory::getDBO();
+				$query = 'SHOW TABLES LIKE '.$db->Quote($db->getPrefix().substr(hikashop_table('falang_content',false),3));
+				$db->setQuery($query);
+				$table = $db->loadResult();
+				$type = (!empty($table)) ? 'falang' : null;
+
 				foreach($files as $file){
-					if($force || !file_exists($dstFolder.$file)) JFile::copy($srcFolder.$file,$dstFolder.$file);
+					$this->processJoomfishFile($file, $srcFolder.$file, $dstFolder.$file, $force, $type);
 				}
 			}
 		}
 		return true;
+	}
+
+	function processJoomfishFile($file, $source, $destination, $force=true, $type='falang') {
+		$types = array(
+			'hikashop_product.xml' => array(
+				'type' => 'product',
+				'name' => 'Product %s'
+			)
+		);
+		if(empty($types[$file])) {
+			if($force || !file_exists($destination))
+				JFile::copy($source, $destination);
+			return;
+		}
+
+		static $custom_fields = array();
+		$db = JFactory::getDBO();
+
+		if(!isset($custom_fields[$file])) {
+			$query = 'SELECT * FROM '.hikashop_table('field').' WHERE field_table = ' . $db->Quote($types[$file]['type']); // $types[$file]['type']
+			$db->setQuery($query);
+			$custom_fields[$file] = $db->loadObjectList('field_namekey');
+		}
+		$fields = $custom_fields[$file];
+
+		if(empty($fields)) {
+			JFile::copy($source, $destination);
+			return;
+		}
+
+		$xml = simplexml_load_file($source);
+
+		$unpublish = array();
+		$publish = array();
+		foreach($fields as $fieldName => $oneExtraField) {
+			if(!empty($oneExtraField->field_options) && is_string($oneExtraField->field_options))
+				$oneExtraField->field_options = unserialize($oneExtraField->field_options);
+			if(empty($oneExtraField->field_options['translatable'])){
+				$unpublish[] = $fieldName;
+				continue;
+			}else{
+				$publish[] = $fieldName;
+			}
+
+			$fieldTitle = JText::sprintf($types[$file]['name'], $fieldName);
+			if($oneExtraField->field_type == 'textarea' || $oneExtraField->field_type == 'text') {
+				$field = $xml->reference->table->addChild('field', $fieldTitle);
+				$field->addAttribute('type', 'text');
+				$field->addAttribute('name', $fieldName);
+				$field->addAttribute('length', '255');
+				$field->addAttribute('maxlength', '255');
+				$field->addAttribute('translate', '1');
+			}
+			if($oneExtraField->field_type == 'wysiwyg') {
+				$field = $xml->reference->table->addChild('field', $fieldTitle);
+				$field->addAttribute('type', 'htmltext');
+				$field->addAttribute('name', $fieldName);
+				$field->addAttribute('translate', '1');
+			}
+		}
+
+		if(!empty($unpublish) && !empty($type)){
+
+			foreach($unpublish as $k => $v){
+				$unpublish[$k] = $db->Quote($v);
+			}
+			$db->setQuery('UPDATE #__'.$type.'_content SET published=0 WHERE reference_field IN ('.implode(',',$unpublish).') AND reference_table='.$db->Quote('hikashop_'.$types[$file]['type']));
+			$db->query();
+		}
+
+		if(!empty($publish) && !empty($type)){
+
+			foreach($publish as $k => $v){
+				$publish[$k] = $db->Quote($v);
+			}
+			$db->setQuery('UPDATE #__'.$type.'_content SET published=1 WHERE reference_field IN ('.implode(',',$publish).') AND reference_table='.$db->Quote('hikashop_'.$types[$file]['type']));
+			$db->query();
+		}
+
+		$xml->asXML($destination);
 	}
 
 	function addUpdateSite(){

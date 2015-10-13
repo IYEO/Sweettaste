@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -320,12 +320,17 @@ class hikashopMassactionClass extends hikashopClass{
 									$element->order_shipping_tax = new stdClass();
 									$element->order_shipping_tax->value = $tmpValue;
 								}
+								if(!isset($element->order_payment_tax->value)){
+									$tmpValue = (int)$element->order_payment_tax;
+									$element->order_payment_tax = new stdClass();
+									$element->order_payment_tax->value = $tmpValue;
+								}
 								if(!isset($element->order_discount_tax->value)){
 									$tmpValue = (int)$element->order_discount_tax;
 									$element->order_discount_tax = new stdClass();
 									$element->order_discount_tax->value = $tmpValue;
 								}
-								$element->order_full_tax->value += (int)$element->order_shipping_tax->value - (int)$element->order_discount_tax->value;
+								$element->order_full_tax->value += (int)$element->order_shipping_tax->value + (int)$element->order_payment_tax->value - (int)$element->order_discount_tax->value;
 								$element->order_full_tax->currency = $element->order_currency_id;
 								foreach($element->order_product as $product){
 									if(isset($product->order_product_quantity) && isset($product->order_product_tax)){
@@ -386,6 +391,7 @@ class hikashopMassactionClass extends hikashopClass{
 			'order_discount_price'=>'order_currency_id',
 			'order_shipping_price'=>'order_currency_id',
 			'order_shipping_tax'=>'order_currency_id',
+			'order_payment_tax'=>'order_currency_id',
 			'order_discount_tax'=>'order_currency_id',
 			'order_payment_price'=>'order_currency_id',
 			'price_value'=>'price_currency_id',
@@ -1766,16 +1772,23 @@ class hikashopMassactionClass extends hikashopClass{
 		elseif($action['operation'] == 'string'){$value = $db->quote($action['value']);}
 		elseif($action['operation'] == 'operation'){
 			$symbols = array('%','+','-','/','*','(',')');
-			$string = str_replace($symbols,'',$action['value']);
-			$string = preg_replace('/[0-9]/i', '',$string);
-			$strings = explode('.',$string);
+			$string = str_replace($symbols,'||',$action['value']);
 
+			$entry = array();
+			$entries = explode('||',$string);
+			foreach($entries as $entry){
+				$data = explode('.',$entry);
+				if(!isset($data[1]))
+					continue;
+				$strings[]['table'] = $data[0];
+				$strings[]['column'] = $data[1];
+			}
 			$type = 'table';
 			if(!empty($mainFields)){
 				foreach($strings as $string){
-					if(!empty($string) && $type == 'table'){
-						if(!in_array($string, $possibleTables)){
-							$app->enqueueMessage(JText::sprintf('TABLE_NOT_EXIST',$string));
+					if(isset($string['table']) && $type == 'table'){
+						if(!in_array($string['table'], $possibleTables)){
+							$app->enqueueMessage(JText::sprintf('TABLE_NOT_EXIST',$string['table']));
 							$queryTables = '';
 							continue;
 						}
@@ -1783,25 +1796,36 @@ class hikashopMassactionClass extends hikashopClass{
 							$queryTables[] = 'hk_'.$string;
 						}
 						$type = 'column';
-					}elseif(!empty($string) && $type == 'column'){
+					}elseif(isset($string['column']) && $type == 'column'){
 						$colKey = array();
 						foreach($mainFields as $key => $field){
 							$colKey[] = $key;
 						}
-						if(!in_array($string, $colKey)){
-							$app->enqueueMessage(JText::sprintf('COLUMN_NOT_EXIST',$string));
+						if(!in_array($string['column'], $colKey)){
+							$app->enqueueMessage(JText::sprintf('COLUMN_NOT_EXIST',$string['column']));
 							$queryTables = '';
 						}
 						$type = 'table';
 					}
 				}
 			}
+
 			if(!preg_match('/^(?:\d+|\d*\.\d+)$/',$action['value'])){
+
 				if(in_array($action['value'][0], array('+','-'))){
 					$value = $action['type'].$action['value'];
 				}
 				else{
-					$value = 'hk_'.$action['value'];
+					$value = $action['value'];
+					$tables = array();
+					foreach($strings as $string){
+						if(isset($string['table'])){
+							$tables[$string['table']] = $string['table'];
+						}
+					}
+					foreach($tables as $table){
+						$value = str_replace($table.'.','hk_'.$table.'.',$value);
+					}
 				}
 				$value = strip_tags($value);
 			}
@@ -2406,10 +2430,39 @@ class hikashopMassactionClass extends hikashopClass{
 				}
 			}
 			if(strstr($name,'.')){
-				JFile::write($uploadFolder.$name, $export->buffer);
+				$data = $export->get();
+				JFile::write($uploadFolder.$name, $data);
 			}
 		}
+	}
 
+	function setExportPaths($path){
+		if(preg_match('#{time}#',$path)){
+			$path = str_replace('{time}',hikashop_getDate(time()),$path);
+		}
+
+		$path = str_replace(' ','_',trim($path));
+
+		$oServerUrl = str_replace('administrator','',getcwd());
+		$webUrl = JURI::root();
+		if(preg_match('#'.preg_quote($oServerUrl,'\\').'#',$path)){
+			$webUrl = $webUrl.preg_replace('#'.preg_quote($oServerUrl,'\\').'#','',$path);
+			$serverUrl = $path;
+
+		}else{
+			if(in_array($path[0],array('/','\\')))
+				$path = substr($path, 1);
+			$serverUrl = $oServerUrl.$path;
+			$webUrl = str_replace('\\','/',$webUrl.$path);
+		}
+
+		if(strpos($oServerUrl,'/'))
+			$serverUrl = str_replace('\\','/',$serverUrl);
+		else
+			$serverUrl = str_replace('/','\\',$serverUrl);
+		$webUrl = str_replace('\\','/',$webUrl);
+
+		return array('server'=>$serverUrl, 'web'=>$webUrl);
 	}
 }
 

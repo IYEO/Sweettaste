@@ -1,16 +1,19 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
 ?><?php
- if(!empty($this->element->mail->dst_email) && is_array($this->element->mail->dst_email)){
- 	$this->element->mail->dst_email = implode(',',$this->element->mail->dst_email);
- }
+if(!empty($this->element->mail->dst_email) && is_array($this->element->mail->dst_email))
+	$this->element->mail->dst_email = implode(',',$this->element->mail->dst_email);
+if(!empty($this->element->mail->cc_email) && is_array($this->element->mail->cc_email))
+	$this->element->mail->cc_email = implode(',',$this->element->mail->cc_email);
+if(!empty($this->element->mail->bcc_email) && is_array($this->element->mail->bcc_email))
+	$this->element->mail->bcc_email = implode(',',$this->element->mail->bcc_email);
 ?>
 					<table class="table">
 						<tr>
@@ -84,3 +87,5 @@ defined('_JEXEC') or die('Restricted access');
 					</table>
 					<input type="hidden" name="data[order][mail][html]" value="<?php echo $this->element->mail->html;?>" />
 					<input type="hidden" name="data[order][mail][mail_name]" value="<?php echo $this->element->mail->mail_name;?>" />
+					<input type="hidden" name="data[order][mail][cc_email]" value="<?php echo $this->element->mail->cc_email;?>" />
+					<input type="hidden" name="data[order][mail][bcc_email]" value="<?php echo $this->element->mail->bcc_email;?>" />

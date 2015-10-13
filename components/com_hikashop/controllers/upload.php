@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -248,13 +248,13 @@ class uploadController extends hikashopController {
 			foreach($filesData as $filename) {
 				$r = new stdClass();
 				$r->name = $filename;
-				$r->url = $options['upload_url'].$options['sub_folder'].rawurlencode($filename);
-				$r->path = $options['upload_dir'].$options['sub_folder'].$filename;
+				$r->url = str_replace('//', '/', $options['upload_url'].$options['sub_folder'].rawurlencode($filename));
+				$r->path = str_replace('//', '/', $options['upload_dir'].$options['sub_folder'].$filename);
 				$r->type = $type;
 				$r->size = filesize($r->path);
 
 				$params = new stdClass();
-				$params->file_path = $options['sub_folder'].$filename;
+				$params->file_path = str_replace('//', '/', $options['sub_folder'].$filename);
 				$params->file_name = $filename;
 				$params->file_url = $r->url;
 
@@ -335,72 +335,65 @@ class uploadController extends hikashopController {
 
 		$uploadHelper = hikashop_get('helper.upload');
 		$ret = $uploadHelper->process($options);
-		if($ret !== false && empty($ret->error)) {
+		if($ret !== false && empty($ret->error) && empty($ret->partial)) {
 			$helperImage = null;
 			if($type == 'image') {
 				$helperImage = hikashop_get('helper.image');
 			}
 
-			foreach($ret as &$r) {
-				if(!empty($r->error))
-					continue;
+			$file = new stdClass();
+			$file->file_description = '';
+			$file->file_name = $ret->name;
+			$file->file_type = $type;
+			$file->file_path = $options['sub_folder'].$ret->name;
+			$file->file_url = $options['upload_url'].$options['sub_folder'];
 
-				$file = new stdClass();
-				$file->file_description = '';
-				$file->file_name = $r->name;
-				$file->file_type = $type;
-				$file->file_path = $options['sub_folder'].$r->name;
-				$file->file_url = $options['upload_url'].$options['sub_folder'];
-
-				foreach($extra_data as $k => $v) {
-					$file->$k = $v;
-				}
-
-				if(strpos($file->file_name, '.') !== false) {
-					$file->file_name = substr($file->file_name, 0, strrpos($file->file_name, '.'));
-				}
-
-				$r->file = $file;
-				$r->html = '';
-				$js = '';
-
-				if($type == 'image') {
-					if($max_height > 0 || $max_width > 0) {
-
-					}
-
-					$img = $helperImage->getThumbnail($file->file_path, array(100, 100), array('default' => true));
-					$r->thumbnail_url = $img->url;
-
-					$params = new stdClass();
-					$params->file_path = $file->file_path;
-					$params->file_name = $file->file_name;
-					$params->file_url = $file->file_url;
-				} else {
-					$params = new stdClass();
-					$params->file_name = $file->file_name;
-					$params->file_path = $file->file_path;
-					$params->file_url = $file->file_url;
-					$params->file_limit = -1;
-					$params->file_size = @filesize($options['upload_dir'] . $options['sub_folder'] . $file->file_name);
-				}
-
-				foreach($extra_data as $k => $v) {
-					$params->$k = $v;
-				}
-
-				$r->params = $params;
-
-				$this->base_controller->manageUpload($upload_key, $r, $uploadConfig, 'upload');
-
-				if(empty($r->html))
-					$r->html = hikashop_getLayout($layout, $viewName, $r->params, $js);
-
-				unset($r->path);
-				unset($r->params);
-				unset($r);
+			foreach($extra_data as $k => $v) {
+				$file->$k = $v;
 			}
+
+			if(strpos($file->file_name, '.') !== false) {
+				$file->file_name = substr($file->file_name, 0, strrpos($file->file_name, '.'));
+			}
+
+			$ret->file = $file;
+			$ret->html = '';
+			$js = '';
+
+			if($type == 'image') {
+				if($max_height > 0 || $max_width > 0) {
+
+				}
+
+				$img = $helperImage->getThumbnail($file->file_path, array(100, 100), array('default' => true));
+				$ret->thumbnail_url = $img->url;
+
+				$params = new stdClass();
+				$params->file_path = $file->file_path;
+				$params->file_name = $file->file_name;
+				$params->file_url = $file->file_url;
+			} else {
+				$params = new stdClass();
+				$params->file_name = $file->file_name;
+				$params->file_path = $file->file_path;
+				$params->file_url = $file->file_url;
+				$params->file_limit = -1;
+				$params->file_size = @filesize($options['upload_dir'] . $options['sub_folder'] . $file->file_name);
+			}
+
+			foreach($extra_data as $k => $v) {
+				$params->$k = $v;
+			}
+
+			$ret->params = $params;
+
+			$this->base_controller->manageUpload($upload_key, $ret, $uploadConfig, 'upload');
+
+			if(empty($r->html))
+				$ret->html = hikashop_getLayout($layout, $viewName, $ret->params, $js);
 		}
+		unset($ret->path);
+		unset($ret->params);
 
 		echo json_encode($ret);
 		exit;

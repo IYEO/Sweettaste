@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -25,7 +25,7 @@ $options = array(
 		$this->popup->display(
 			'<span class="hika_add_btn"></span>',
 			JText::_('ADD_FILE'),
-			hikashop_completeLink('product&task=selectfile&pid='.$this->product->product_id,true),
+			hikashop_completeLink('product&task=selectfile&pid='.@$this->product->product_id,true),
 			'hikashop_file_add',
 			750, 460, 'onclick="return window.productMgr.addFile(this,'.(int)@$this->product->product_id.',\''.$product_type.'\');"'.' data-toggle="hk-tooltip" data-title="'.JText::_('ADD_FILE').'"', '', 'link'
 		)
@@ -34,7 +34,7 @@ $options = array(
 	'text' => ($upload ? JText::_('HIKA_PRODUCT_FILES_EMPTY_UPLOAD') : JText::_('HIKA_PRODUCT_FILES_EMPTY')),
 	'uploader' => array('product', 'product_file'),
 	'vars' => array(
-		'product_id' => $this->product->product_id,
+		'product_id' => @$this->product->product_id,
 		'product_type' => $product_type,
 		'file_type' => 'file'
 	),
@@ -121,4 +121,11 @@ window.productMgr.delFile = function(el, type) {
 	if(type == 'variant') type = 'product_variant';
 	return window.hkUploaderList['hikashop_'+type+'_file'].delBlock(el);
 };
+window.hikashop.ready(function() {
+	hkjQuery('#hikashop_product<?php if(!empty($this->editing_variant)) { echo '_variant'; } ?>_file_content').sortable({
+		cursor: "move",
+		placeholder: "ui-state-highlight",
+		forcePlaceholderSize: true
+	});
+});
 </script>

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -158,7 +158,7 @@ class plgSystemHikashopsocial extends JPlugin {
 		if($plugin->params['addThis_display'] == 2)
 			$atClass = 'addthis_counter';
 
-		if($plugin->params['position'] == 0)
+		if($plugin->params['position'] == 1)
 			$class = '_right';
 
 		return '<span class="hikashop_social_addThis'.$class.'" >'.$divClass.'<a class="'.$atClass.'"></a>'.$endDiv.'</span>';
@@ -203,14 +203,14 @@ class plgSystemHikashopsocial extends JPlugin {
 			$c = '_right';
 
 		$layouts = array(0 => 'horizontal', 1 => 'vertical', 2 => 'none');
-		$count = $layouts[ (int)@$plugin->params['display_pinterest'] ];
+		$count = $layouts[ (int)@$plugin->params['pinterest_display'] ];
 
 		if(!empty($element->url_canonical))
 			$url = hikashop_cleanURL($element->url_canonical);
 		else
 			$url = hikashop_currentURL('',false);
 
-		return '<span class="hikashop_social_pinterest'.$c.'"><a href="//pinterest.com/pin/create/button/?url='.urlencode($url).'&media='.urlencode($imageUrl).'&description='.htmlspecialchars(strip_tags($element->description), ENT_COMPAT,'UTF-8').'" class="pin-it-button" count-layout="'.$count.'"><img border="0" src="http://assets.pinterest.com/images/PinExt.png" title="Pin It" /></a></span>';
+		return '<span class="hikashop_social_pinterest'.$c.'"><a href="//pinterest.com/pin/create/button/?url='.urlencode($url).'&media='.urlencode($imageUrl).'&description='.htmlspecialchars(strip_tags($element->description), ENT_COMPAT,'UTF-8').'" class="pin-it-button" count-layout="'.$count.'"><img border="0" src="//assets.pinterest.com/images/PinExt.png" title="Pin It" /></a></span>';
 	}
 
 	function _addTwitterButton(&$plugin) {
@@ -292,6 +292,12 @@ function twitterPop(str) {
 				$options['layout'] = 'box_count';
 				$xfbml_options['layout'] = 'box_count';
 				$options['width'] = 115;
+				break;
+			case 3:
+				$classname = 'button';
+				$options['layout'] = 'button';
+				$xfbml_options['layout'] = 'button';
+				$options['width'] = 65;
 				break;
 		}
 

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -42,7 +42,7 @@ class plgHikashoppaymentPaypalExpress extends hikashopPaymentPlugin
 		$notif = HIKASHOP_LIVE.'index.php?option=com_hikashop&ctrl=checkout&task=notify&amp;notif_payment='.$this->name.'&tmpl=component';
 		$this->pluginConfig['notification'][0] =  JText::sprintf('ALLOW_NOTIFICATIONS_FROM_X','Paypal');
 		$lang = JFactory::getLanguage();
-		$this->button = '<div id=paypal_express_button style="width:144px; height:46px; margin-top:15px;"><a href="'.$notif.'&setExpressCheckout=1"><img src="https://fpdbs.paypal.com/dynamicimageweb?cmd=_dynamic-image&buttontype=ecshortcut&locale='.str_replace('-','_',$lang->get('tag')).'" align="left"></a></div>';
+		$this->button = '<div id="paypal_express_button" style="width:144px; height:46px; margin-top:15px;"><a href="'.$notif.'&setExpressCheckout=1"><img src="https://fpdbs.paypal.com/dynamicimageweb?cmd=_dynamic-image&buttontype=ecshortcut&locale='.str_replace('-','_',$lang->get('tag')).'" align="left"></a></div>';
 		return parent::__construct($subject, $config);
 	}
 

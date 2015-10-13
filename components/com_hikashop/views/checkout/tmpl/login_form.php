@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -38,7 +38,7 @@ if(!HIKASHOP_RESPONSIVE) {
 	</p>
 	<?php endif; ?>
 	<?php
-		echo $this->cart->displayButton(JText::_('HIKA_LOGIN'),'login',@$this->params,'',' hikashopSubmitForm(\'hikashop_checkout_form\'); return false;');
+		echo $this->cart->displayButton(JText::_('HIKA_LOGIN'),'login',@$this->params,'',' hikashopSubmitForm(\'hikashop_checkout_form\', \'login\'); return false;');
 		$button = $this->config->get('button_style','normal');
 	 	if ($button=='css')
 			echo '<input type="submit" style="position: absolute; left: -9999px; width: 1px; height: 1px;"/></input>';
@@ -96,7 +96,7 @@ if(!HIKASHOP_J16){
 <?php } ?>
 	<div id="form-login-submit" class="control-group">
 		<div class="controls">
-			<?php echo $this->cart->displayButton(JText::_('HIKA_LOGIN'), 'login', @$this->params, '',' document.hikashop_checkout_form.submit(); return false;','', 0, 1, 'btn btn-primary'); ?>
+			<?php echo $this->cart->displayButton(JText::_('HIKA_LOGIN'), 'login', @$this->params, '',' var b = document.getElementById(\'login_view_action\'); if(b) { b.value = \'login\'; } document.hikashop_checkout_form.submit(); return false;','', 0, 1, 'btn btn-primary'); ?>
 		</div>
 	</div>
 </div>

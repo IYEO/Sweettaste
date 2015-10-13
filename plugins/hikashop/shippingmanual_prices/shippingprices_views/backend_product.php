@@ -1,25 +1,28 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
-?><fieldset class="adminform"><legend><?php echo JText::_('SHIPPING_PRICES'); ?></legend>
+?><div class="hkc-xl-4 hkc-lg-6 hikashop_product_block hikashop_product_edit_shippingfees"><div>
+	<div class="hikashop_product_part_title hikashop_product_edit_shippingfees_title"><?php echo JText::_('SHIPPING_PRICES');?></div>
 	<table class="adminlist table table-striped hikashop_product_prices_table" width="100%">
 		<thead>
 			<tr>
 				<th class="title"><?php echo JText::_('HIKA_NAME'); ?></th>
-				<th class="title" width="10px"><?php echo JText::_('MINIMUM_QUANTITY'); ?></th>
+				<th class="title" width="6%"><?php
+					echo hikashop_tooltip(JText::_('MINIMUM_QUANTITY'), '', '', JText::_('MIN_QTY'), '', 0);
+				?></th>
 				<th class="title"><?php echo JText::_('PRICE'); ?></th>
 				<th class="title"><?php echo JText::_('FEE'); ?></th>
 				<th class="title"><?php echo JText::_('SHIPPING_BLOCKED'); ?></th>
 				<th class="title"><?php echo JText::_('ACTIONS'); ?></th>
 			</tr>
 		</thead>
-	<tbody>
+		<tbody>
 <?php
 $i = 0;
 $previous_shipping_id = -1;
@@ -161,4 +164,4 @@ function hikashop_shippingprice_blocked_change(id, el) {
 	}
 }
 </script>
-</fieldset>
+</div></div>

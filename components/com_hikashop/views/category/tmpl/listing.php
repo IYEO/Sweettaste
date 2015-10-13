@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -103,9 +103,21 @@ if(empty($layout_type) || $layout_type=='table') $layout_type = 'div';
 $html = $this->loadTemplate($layout_type);
 if(!empty($html)) echo '<div class="hikashop_subcategories_listing">'.$html.'</div>';
 
-
 if(!$this->module){
-	if(!empty($this->modules)){
+	$data = $this->params->get('data');
+	if(isset($data->hk_product) && is_object($data->hk_product)){
+		$js = '';
+		$empty='';
+		jimport('joomla.html.parameter');
+		$params = new HikaParameter($empty);
+		foreach($data->hk_product as $k => $v){
+			$params->set($k,$v);
+		}
+		$main_div_name = 'hikashop_category_information_module_'.$params->get('id');
+		$params->set('main_div_name',$main_div_name);
+		echo '<div class="hikashop_submodules" style="clear:both">'.hikashop_getLayout('product', 'listing', $params, $js).'</div>';
+	}
+	else if(!empty($this->modules)){
 		$html = '';
 		jimport('joomla.application.module.helper');
 		foreach($this->modules as $module){

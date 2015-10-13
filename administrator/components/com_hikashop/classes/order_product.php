@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -65,7 +65,7 @@ class hikashopOrder_productClass extends hikashopClass{
 				(int)$product->order_product_quantity,
 				$this->database->Quote($product->order_product_name),
 				$this->database->Quote($product->order_product_code),
-				$this->database->Quote($product->order_product_price),
+				$this->database->Quote(@$product->order_product_price),
 				$this->database->Quote(@$product->order_product_tax),
 				$this->database->Quote(@$product->order_product_options),
 				(int)@$product->cart_product_id,

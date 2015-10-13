@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -162,7 +162,7 @@ if(!HIKASHOP_BACK_RESPONSIVE) { ?>
 							?>
 						<tr>
 							<td class="key">
-								<?php echo JText::_('MINI_CART'); ?>
+								<?php echo JText::sprintf('MINI_CART',$this->type); ?>
 							</td>
 							<td>
 								<?php echo JHTML::_('hikaselect.booleanlist', $this->control.'[small_cart]','',@$this->element->hikashop_params['small_cart']);?>
@@ -339,7 +339,7 @@ if(!HIKASHOP_BACK_RESPONSIVE) { ?>
 									echo JHTML::_('hikaselect.radiolist', $arr, $this->control.'[add_to_wishlist]' , '', 'value', 'text', @$this->element->hikashop_params['add_to_wishlist']);
 								}else{
 									$this->element->hikashop_params['add_to_wishlist'] = 0;
-									echo hikashop_getUpgradeLink('essential');;
+									echo hikashop_getUpgradeLink('essential');
 								} ?>							</td>
 						</tr>
 						<tr>
@@ -734,7 +734,7 @@ if(!empty($this->extra_blocks['products'])) {
 									<?php echo JText::_('ENABLE_CAROUSEL');?>
 								</td>
 								<td>
-									<?php echo hikashop_getUpgradeLink('business');; ?>
+									<?php echo hikashop_getUpgradeLink('business'); ?>
 								</td>
 							</tr>
 						<?php } ?>

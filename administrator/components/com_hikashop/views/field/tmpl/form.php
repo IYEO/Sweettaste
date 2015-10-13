@@ -1,14 +1,14 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
 ?><div class="iframedoc" id="iframedoc"></div>
-<form action="index.php?option=com_hikashop&amp;ctrl=field" method="post"  name="adminForm" id="adminForm" >
+<form action="<?php echo hikashop_completeLink('field'); ?>" method="post"  name="adminForm" id="adminForm" >
 <?php if(!HIKASHOP_BACK_RESPONSIVE) { ?>
 <div id="page-field">
 	<table style="width:100%">
@@ -120,14 +120,18 @@ defined('_JEXEC') or die('Restricted access');
 			</td>
 			<td>
 				<table id="hikashop_field_values_table" class="hikaspanleft table table-striped table-hover">
-					<tbody id="tablevalues">
+					<thead>
 						<tr>
-							<td><?php echo JText::_('FIELD_VALUE')?></td>
-							<td><?php echo JText::_('FIELD_TITLE'); ?></td>
-							<td><?php echo JText::_('FIELD_DISABLED'); ?></td>
-							<td></td>
+							<th></th>
+							<th><?php echo JText::_('FIELD_VALUE')?></th>
+							<th><?php echo JText::_('FIELD_TITLE'); ?></th>
+							<th><?php echo JText::_('FIELD_DISABLED'); ?></th>
+							<th></th>
 						</tr>
+					</thead>
+					<tbody id="tablevalues">
 <?php
+	$k = 0;
 	if(!empty($this->field->field_value) && is_array($this->field->field_value) && $this->field->field_type!='zone'){
 		$i = 0;
 		foreach($this->field->field_value as $title => $value){
@@ -138,7 +142,8 @@ defined('_JEXEC') or die('Restricted access');
 				$yes_selected = 'selected="selected"';
 			}
 ?>
-						<tr id="field_value_line<?php echo $i; ?>">
+						<tr class="row<?php echo $k; ?>">
+							<td class="column_move"><img src="<?php echo HIKASHOP_IMAGES; ?>move.png"/></td>
 							<td><input type="text" name="field_values[title][]" value="<?php echo $this->escape($title); ?>" /></td>
 							<td><input type="text" name="field_values[value][]" value="<?php echo $this->escape($value->value); ?>" /></td>
 							<td>
@@ -147,14 +152,17 @@ defined('_JEXEC') or die('Restricted access');
 									<option <?php echo $yes_selected; ?> value="1"><?php echo JText::_('HIKASHOP_YES'); ?></option>
 								</select>
 							</td>
-							<td><a href="#" onclick="removeLine(<?php echo $i; ?>); return false;"><img src="<?php echo HIKASHOP_IMAGES; ?>delete.png"/></a></td>
+							<td><a href="#" onclick="window.hikashop.deleteRow(this); return false;"><img src="<?php echo HIKASHOP_IMAGES; ?>delete.png" alt="<?php echo JText::_('DELETE'); ?>)"/></a></td>
 						</tr>
-<?php	$i++;
+<?php
+			$i++;
+			$k = 1 - $k;
 		}
 
 	}
 ?>
-						<tr>
+						<tr class="row<?php echo $k; ?>">
+							<td class="column_move"><img src="<?php echo HIKASHOP_IMAGES; ?>move.png"/></td>
 							<td><input type="text" name="field_values[title][]" value="" /></td>
 							<td><input type="text" name="field_values[value][]" value="" /></td>
 							<td>
@@ -163,20 +171,43 @@ defined('_JEXEC') or die('Restricted access');
 									<option value="1"><?php echo JText::_('HIKASHOP_YES'); ?></option>
 								</select>
 							</td>
-							<td></td>
+							<td><a href="#" onclick="window.hikashop.deleteRow(this); return false;"><img src="<?php echo HIKASHOP_IMAGES; ?>delete.png" alt="<?php echo JText::_('DELETE'); ?>)"/></a></td>
+						</tr>
+
+						<tr id="hikashop_field_values_table_template"  class="row<?php echo (1 - $k); ?>" style="display:none;">
+							<td class="column_move"><img src="<?php echo HIKASHOP_IMAGES; ?>move.png"/></td>
+							<td><input type="text" name="{TITLE}" value="" /></td>
+							<td><input type="text" name="{VALUE}" value="" /></td>
+							<td>
+								<select name="{DISABLED}" class="inputbox no-chzn">
+									<option selected="selected" value="0"><?php echo JText::_('HIKASHOP_NO'); ?></option>
+									<option value="1"><?php echo JText::_('HIKASHOP_YES'); ?></option>
+								</select>
+							</td>
+							<td><a href="#" onclick="window.hikashop.deleteRow(this); return false;"><img src="<?php echo HIKASHOP_IMAGES; ?>delete.png" alt="<?php echo JText::_('DELETE'); ?>)"/></a></td>
 						</tr>
 					</tbody>
 				</table>
-				<script type="text/javascript">
-					function removeLine(el){
-						var line = document.getElementById('field_value_line'+el);
-						line.style.display='none';
-						line.innerHTML='<td></td><td></td><td></td><td></td>';
-					}
-				</script>
-				<a onclick="addLine();return false;" href='#' title="<?php echo $this->escape(JText::_('FIELD_ADDVALUE')); ?>"><?php echo JText::_('FIELD_ADDVALUE'); ?></a>
+				<a class="btn btn-success" onclick="addLine();return false;" href='#' title="<?php echo $this->escape(JText::_('FIELD_ADDVALUE')); ?>"><?php echo JText::_('FIELD_ADDVALUE'); ?></a>
 			</td>
 		</tr>
+
+		<script type="text/javascript">
+			hkjQuery("#hikashop_field_values_table tbody").sortable({
+				axis: "y", cursor: "move", opacity: 0.8,
+				helper: function(e, ui) {
+					ui.children().each(function() {
+						hkjQuery(this).width(hkjQuery(this).width());
+					});
+					return ui;
+				},
+				stop: function(event, ui) {
+					window.hikashop.cleanTableRows('hikashop_field_values_table');
+				}
+			});
+			window.hikashop.ready( function(){ window.hikashop.noChzn(); });
+		</script>
+
 		<tr id="fieldopt_cols">
 			<td class="key">
 				<?php echo JText::_( 'FIELD_COLUMNS' ); ?>
@@ -268,6 +299,15 @@ defined('_JEXEC') or die('Restricted access');
 				<?php echo JHTML::_('hikaselect.booleanlist', "field_options[readonly]" , '',@$this->field->field_options['readonly']); ?>
 			</td>
 		</tr>
+		<tr id="fieldopt_translatable">
+			<td class="key">
+				<?php echo JText::_( 'HIKA_TRANSLATABLE' ); ?>
+			</td>
+			<td>
+				<?php echo JHTML::_('hikaselect.booleanlist', "field_options[translatable]" , '',@$this->field->field_options['translatable']); ?>
+			</td>
+		</tr>
+
 <?php
 	if(!empty($this->fieldtype->externalOptions)) {
 		foreach($this->fieldtype->externalOptions as $key => $extraOption) {
@@ -462,7 +502,7 @@ defined('_JEXEC') or die('Restricted access');
 				<?php
 					echo  $this->nameboxType->display(
 						'data[field][field_products]',
-						explode(',',@$this->field->field_products),
+						explode(',',trim(@$this->field->field_products,',')),
 						hikashopNameboxType::NAMEBOX_MULTIPLE,
 						'product',
 						array(

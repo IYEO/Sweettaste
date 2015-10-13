@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -128,7 +128,9 @@ defined('_JEXEC') or die('Restricted access');
 		<dt class="hikashop_order_additional_payment"><label><?php echo JText::_('HIKASHOP_PAYMENT'); ?></label></dt>
 		<dd class="hikashop_order_additional_payment">
 			<?php echo $this->paymentPlugins->display('data[order][payment]',$this->order->order_payment_method,$this->order->order_payment_id); ?><br/>
-			<input type="text" name="data[order][order_payment_price]" value="<?php echo $this->order->order_payment_price; ?>" />
+			<input type="text" name="data[order][order_payment_price]" value="<?php echo $this->order->order_payment_price; ?>" /><br/>
+			<input type="text" name="data[order][order_payment_tax]" value="<?php echo @$this->order->order_payment_tax; ?>" />
+			<?php echo $this->ratesType->display( "data[order][order_payment_tax_namekey]" , @$this->order->order_payment_tax_namekey ); ?>
 		</dd>
 <?php } else { ?>
 		<dt class="hikashop_order_additional_payment_fee"><label><?php echo JText::_('HIKASHOP_PAYMENT'); ?></label></dt>

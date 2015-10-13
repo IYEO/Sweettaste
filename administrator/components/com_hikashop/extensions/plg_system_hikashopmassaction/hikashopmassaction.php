@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -256,11 +256,11 @@ class plgSystemHikashopmassaction extends JPlugin {
 				$tables = array('user','address');
 
 
-				$filters['dontHave']=JText::_('DONT_HAVE');
+				$filters['haveDontHave']=JText::_('HAVE_DONT_HAVE');
 				$loadedData->massaction_filters['__num__'] = new stdClass();
 				$loadedData->massaction_filters['__num__']->type = 'user';
-				$loadedData->massaction_filters['__num__']->data = array('type'=>'','order_status'=>'created');
-				$loadedData->massaction_filters['__num__']->name = 'dontHave';
+				$loadedData->massaction_filters['__num__']->data = array('have'=>'have','type'=>'','order_status'=>'created');
+				$loadedData->massaction_filters['__num__']->name = 'haveDontHave';
 				$loadedData->massaction_filters['__num__']->html = '';
 
 				$db->setQuery('SELECT `category_name` FROM '.hikashop_table('category').' WHERE `category_type` = '.$db->quote('status').' AND `category_name` != '.$db->quote('order status'));
@@ -270,12 +270,23 @@ class plgSystemHikashopmassaction extends JPlugin {
 					$orderStatuses = $db->loadColumn();
 				}
 				foreach($loadedData->massaction_filters as $key => &$value) {
-					if($value->name != 'dontHave' || ($table->table != $loadedData->massaction_table && is_int($key)))
+					if($value->name != 'haveDontHave' || ($table->table != $loadedData->massaction_table && is_int($key)))
 						continue;
 
 					$value->type = 'user';
 
-					$output= '<select class="chzn-done not-processed" name="filter['.$table->table.']['.$key.'][dontHave][type]" id="userfilter'.$key.'dontHavetype" onchange="showSubSelect(this.value,'.$key.'); countresults(\''.$table->table.'\','.$key.')">';
+					$output= '<select class="chzn-done not-processed" name="filter['.$table->table.']['.$key.'][haveDontHave][have]" id="userfilter'.$key.'haveDontHavetype" onchange="countresults(\''.$table->table.'\','.$key.')">';
+					$datas = array('have'=>'HIKA_HAVE','donthave'=>'DONT_HAVE');
+					$display = 'style="display: none;"';
+					foreach($datas as $k => $data){
+						$selected = '';
+						if($k == $value->data['have']) $selected = 'selected="selected"';
+						if($value->data['have'] == 'order_status') $display = '';
+						$output.= '<option value="'.$k.'" '.$selected.'>'.JText::_(''.$data.'').'</option>';
+					}
+					$output.= '</select>';
+
+					$output.= '<select class="chzn-done not-processed" name="filter['.$table->table.']['.$key.'][haveDontHave][type]" id="userfilter'.$key.'haveDontHavetype" onchange="showSubSelect(this.value,'.$key.'); countresults(\''.$table->table.'\','.$key.')">';
 					$datas = array('order'=>'HIKASHOP_ORDER','order_status'=>'ORDER_STATUS','address'=>'ADDRESS');
 					$display = 'style="display: none;"';
 					foreach($datas as $k => $data){
@@ -286,7 +297,7 @@ class plgSystemHikashopmassaction extends JPlugin {
 					}
 					$output.= '</select>';
 
-					$output .= '<select class="chzn-done not-processed" id="userfilter'.$key.'dontHaveorderStatus" '.$display.' name="filter['.$table->table.']['.$key.'][dontHave][order_status]" onchange="countresults(\''.$table->table.'\','.$key.')">';
+					$output .= '<select class="chzn-done not-processed" id="userfilter'.$key.'haveDontHaveorderStatus" '.$display.' name="filter['.$table->table.']['.$key.'][haveDontHave][order_status]" onchange="countresults(\''.$table->table.'\','.$key.')">';
 					if(is_array($orderStatuses)){
 						foreach($orderStatuses as $orderStatus){
 							$selected = '';
@@ -295,22 +306,22 @@ class plgSystemHikashopmassaction extends JPlugin {
 						}
 					}
 					$output.= '</select>';
-					$output.= '<input type="hidden" id="userfilter'.$key.'dontHavehide" name="filter['.$table->table.']['.$key.'][dontHave][show]" value="0"/>';
+					$output.= '<input type="hidden" id="userfilter'.$key.'haveDontHavehide" name="filter['.$table->table.']['.$key.'][haveDontHave][show]" value="0"/>';
 
-					$filters_html[$value->name] = $massactionClass->initDefaultDiv($value, $key, $type, $table->table, $loadedData, $output);
+					$filters_html['haveDontHave'] = $massactionClass->initDefaultDiv($value, $key, $type, $table->table, $loadedData, $output);
 				}
-				$filters_html['dontHave'] .= '
+				$filters_html['haveDontHave'] .= '
 					<script type="text/javascript">
 						var d = document;
-						var hide = d.getElementById(\'userfilter'.$key.'dontHavehide\').value;
+						var hide = d.getElementById(\'userfilter'.$key.'haveDontHavehide\').value;
 						if(hide != 0){d.getElementById(hide).style.display = \'inline-block\';}
 						function showSubSelect(type, k){
 							if(type == \'order_status\'){
-								d.getElementById(\'userfilter\'+k+\'dontHaveorderStatus\').style.display = \'inline-block\';
-								d.getElementById(\'userfilter\'+k+\'dontHavehide\').value = \'userfilter\'+k+\'dontHaveorderStatus\';
+								d.getElementById(\'userfilter\'+k+\'haveDontHaveorderStatus\').style.display = \'inline-block\';
+								d.getElementById(\'userfilter\'+k+\'haveDontHavehide\').value = \'userfilter\'+k+\'haveDontHaveorderStatus\';
 							}else{
-								d.getElementById(\'userfilter\'+k+\'dontHaveorderStatus\').style.display = \'none\';
-								d.getElementById(\'userfilter\'+k+\'dontHavehide\').value = \'0\';
+								d.getElementById(\'userfilter\'+k+\'haveDontHaveorderStatus\').style.display = \'none\';
+								d.getElementById(\'userfilter\'+k+\'haveDontHavehide\').value = \'0\';
 							}
 						}
 					</script>
@@ -330,7 +341,8 @@ class plgSystemHikashopmassaction extends JPlugin {
 			$hkUsers = $db->getTableColumns('#__hikashop_user');
 			$jUsers = $db->getTableColumns('#__users');
 		}
-
+		ksort($hkUsers);
+		ksort($jUsers);
 		$loadedData->massaction_filters['__num__'] = new stdClass();
 		$loadedData->massaction_filters['__num__']->type = $table->table;
 		$loadedData->massaction_filters['__num__']->data = array();
@@ -364,6 +376,7 @@ class plgSystemHikashopmassaction extends JPlugin {
 					} else {
 						$fields = $db->getTableColumns('#__hikashop_'.$relatedTable);
 					}
+					ksort($fields);
 					$typeField = array();
 					if(!empty($fields)) {
 						foreach($fields as $oneField => $fieldType){
@@ -412,6 +425,7 @@ class plgSystemHikashopmassaction extends JPlugin {
 								} else {
 									$fields = $db->getTableColumns('#__hikashop_product');
 								}
+								ksort($fields);
 								$typeField = array();
 								if(!empty($fields)) {
 									foreach($fields as $oneField => $fieldType){
@@ -513,6 +527,7 @@ class plgSystemHikashopmassaction extends JPlugin {
 					} else {
 						$fields = $db->getTableColumns('#__hikashop_'.$table->table);
 					}
+					ksort($fields);
 					if(!isset($value->data['value'])) $value->data['value'] = $table->table.'_id';
 					$output = '<div id="'.$table->table.'filter'.$key.'ordering">'.JText::_('VALUE').' : ';
 					$output .= '<select class="chzn-done not-processed" name="filter['.$table->table.']['.$key.'][ordering][value]">';
@@ -707,6 +722,7 @@ class plgSystemHikashopmassaction extends JPlugin {
 						if(preg_match('/joomla_/',$relatedTable)) $fields = $db->getTableColumns('#__'.str_replace('joomla_','',$relatedTable));
 						else $fields = $db->getTableColumns('#__hikashop_'.$relatedTable);
 					}
+					ksort($fields);
 					if(!empty($fields)) {
 						$output .= '<div id="action_'.$table->table.'_'.$key.'_displayResults_'.$relatedTable.'Column_div" class="hika_massaction_checkbox"> <a style="cursor: pointer;" onclick="checkAll(\'action_'.$table->table.'_'.$key.'_displayResults_'.$relatedTable.'Column_div\',\'check\');">'.JText::_('SELECT_ALL').'</a> / <a style="cursor: pointer;" onclick="checkAll(\'action_'.$table->table.'_'.$key.'_displayResults_'.$relatedTable.'Column_div\',\'uncheck\');">'.JText::_('UNSELECT_ALL').'</a> <br/>';
 						foreach($fields as $key2 => $field){
@@ -809,6 +825,7 @@ class plgSystemHikashopmassaction extends JPlugin {
 						if(preg_match('/joomla_/',$relatedTable)) $fields = $db->getTableColumns('#__'.str_replace('joomla_','',$relatedTable));
 						else $fields = $db->getTableColumns('#__hikashop_'.$relatedTable);
 					}
+					ksort($fields);
 					if(!empty($fields)) {
 						$output .= '<div id="action_'.$table->table.'_'.$key.'_exportCsv_'.$relatedTable.'Column_div" class="hika_massaction_checkbox"> <a style="cursor: pointer;" onclick="checkAll(\'action_'.$table->table.'_'.$key.'_exportCsv_'.$relatedTable.'Column_div\',\'check\');">'.JText::_('SELECT_ALL').'</a> / <a style="cursor: pointer;" onclick="checkAll(\'action_'.$table->table.'_'.$key.'_exportCsv_'.$relatedTable.'Column_div\',\'uncheck\');">'.JText::_('UNSELECT_ALL').'</a> <br/>';
 						foreach($fields as $key2 => $field){
@@ -948,6 +965,7 @@ class plgSystemHikashopmassaction extends JPlugin {
 						}
 						else $fields = $db->getTableColumns('#__hikashop_'.$relatedTable);
 					}
+					ksort($fields);
 					$typeField[] = JHTML::_('select.option', '<OPTGROUP>',JText::_(strtoupper($relatedTable)));
 					if(!empty($fields)) {
 						foreach($fields as $key2 => $field){
@@ -1111,6 +1129,9 @@ class plgSystemHikashopmassaction extends JPlugin {
 				foreach($loadedData->massaction_actions as $key => &$value) {
 					if($value->name != 'updateCategories' || ($table->table != $loadedData->massaction_table && is_int($key)))
 						continue;
+
+					if(empty($value->data['type']))
+						$value->data['type'] = 'add';
 
 					$categories=array();
 					if(!empty($value->data) && !empty($value->data['value'])){
@@ -1300,7 +1321,6 @@ class plgSystemHikashopmassaction extends JPlugin {
 						continue;
 					if(!isset($value->data['type'])) $value->data['type'] = 'add';
 					if(!isset($value->data['value'])) $value->data['value'] = '1';
-
 					if(HIKASHOP_J25){
 						$query = 'SELECT * FROM '.hikashop_table('usergroups',false);
 					}else{

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -55,8 +55,8 @@ class plgHikashoppaymentPaypalAdvanced extends hikashopPaymentPlugin {
 		parent::onAfterOrderConfirm($order, $methods, $method_id); // This is a mandatory line in order to initialize the attributes of the payment method
 
 		$notify_url = (HIKASHOP_LIVE.'paypaladvanced_'.$method_id.'_'.$this->payment_params->secret_code.'.php');
-		$cancel_url = (HIKASHOP_LIVE.'paypaladvanced_'.$method_id.'.php?from_user=cancel');
-		$return_url = (HIKASHOP_LIVE.'paypaladvanced_'.$method_id.'.php?from_user=return');//return URL to the page of redirection created in onPaymentConfigurationSave(), this can't change
+		$cancel_url = (HIKASHOP_LIVE.'paypaladvanced_cancel_'.$method_id.'.php');
+		$return_url = (HIKASHOP_LIVE.'paypaladvanced_return_'.$method_id.'.php');//return URL to the page of redirection created in onPaymentConfigurationSave(), this can't change
 
 		$vars = array (//required variables for the PayPal Advanced transaction
 			'USER' => $this->payment_params->user,
@@ -163,6 +163,7 @@ window.parent.location = "'.$url.'";
 </script>
 </body>
 </html>';
+				exit;
 			}
 			$doc = JFactory::getDocument();
 			$doc->addScriptDeclaration("window.hikashop.ready(function() {window.parent.location='".$url."'});");
@@ -198,6 +199,7 @@ window.parent.location = "'.$url.'";
 			return false;
 
 		$app = JFactory::getApplication();
+		$order_text = '';
 
 		if($vars['secret_code'] != $this->payment_params->secret_code) {
 			$email = new stdClass();
@@ -301,6 +303,7 @@ window.parent.location = "'.$url.'";
 			'format' => 'html',
 			'local' => $locale,
 			'notif_id' => $element->payment_id,
+			'from_user' =>'return'
 		);
 		$content = '<?php' . "\r\n";
 		foreach($opts as $k => $v) {
@@ -309,8 +312,19 @@ window.parent.location = "'.$url.'";
 						'$_REQUEST[\''.$k.'\']=\''.$v.'\';'."\r\n";
 		}
 		$content .= 'include(\'index.php\');'."\r\n";
-		JFile::write(JPATH_ROOT.DS.$this->name.'_'.$element->payment_id.'.php', $content);
+		JFile::write(JPATH_ROOT.DS.$this->name.'_return_'.$element->payment_id.'.php', $content);
 
+		$opts['from_user'] = 'cancel';
+		$content = '<?php' . "\r\n";
+		foreach($opts as $k => $v) {
+			$v = str_replace(array('\'','\\'), '', $v);
+			$content .= '$_GET[\''.$k.'\']=\''.$v.'\';'."\r\n".
+						'$_REQUEST[\''.$k.'\']=\''.$v.'\';'."\r\n";
+		}
+		$content .= 'include(\'index.php\');'."\r\n";
+		JFile::write(JPATH_ROOT.DS.$this->name.'_cancel_'.$element->payment_id.'.php', $content);
+
+		unset($opts['from_user']);
 		$opts['secret_code'] = $secret;
 
 		$content = '<?php' . "\r\n";

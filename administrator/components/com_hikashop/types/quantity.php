@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -40,8 +40,8 @@ class hikashopQuantityType {
 				'<button class="btn" data-toggle="hk-tooltip" data-title="'.JText::_('UNLIMITED', true).'" onclick="document.getElementById(\''.$id.'\').value=\''.JText::_('UNLIMITED').'\';return false;"><i class="icon-remove"></i></button>'.
 				'</div>';
 		} else {
-			$ret = '<input type="text" name="'.$map.'" id="'.$id.'" value="'.$value.'" onfocus="this.setSelectionRange(0, this.value.length)" '.$attribs.'/>' .
-				'<a class="infinityButton" href="#" onclick="document.getElementById(\''.$id.'\').value=\''.JText::_('UNLIMITED').'\';return false;"><span>X</span></a>';
+			$ret = '<div class="product_quantity_j25" style="display: inline; margin-left: 2px;"><input type="text" name="'.$map.'" id="'.$id.'" value="'.$value.'" onfocus="this.setSelectionRange(0, this.value.length)" '.$attribs.'/>' .
+				'<a class="infinityButton" href="#" onclick="document.getElementById(\''.$id.'\').value=\''.JText::_('UNLIMITED').'\';return false;"><span>X</span></a></div>';
 		}
 		return $ret;
 	}

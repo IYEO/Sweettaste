@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -302,6 +302,14 @@ window.localPage.imagepopupmode = function(el) {
 						if(!isset($this->default_params['add_to_cart']))
 							$this->default_params['add_to_cart']=1;
 						echo JHTML::_('hikaselect.booleanlist', 'config[default_params][add_to_cart]' , '',$this->default_params['add_to_cart']);
+					?></td>
+				</tr>
+				<tr>
+					<td class="key"><?php echo JText::_('ADD_TO_CART_QUANTITY');?></td>
+					<td><?php
+						if(!isset($this->default_params['show_quantity_field']))
+							$this->default_params['show_quantity_field']=1;
+						echo JHTML::_('hikaselect.booleanlist', 'config[default_params][show_quantity_field]' , '',@$this->default_params['show_quantity_field']);
 					?></td>
 				</tr>
 				<tr>

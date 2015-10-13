@@ -1,201 +1,213 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
 ?><?php
-class hikashopUserClass extends hikashopClass{
+class hikashopUserClass extends hikashopClass {
 	var $tables = array('user');
 	var $pkeys = array('user_id');
 
-	function get($id,$type='hikashop',$geoloc=false){
+	function get($id, $type = 'hikashop', $geoloc = false) {
 		static $data = array();
-		if($id===false){
+
+		if($id === false) {
 			$data = array();
 			return true;
 		}
-		if(empty($data[$type.'_'.$id])){
-			$field = 'user_id';
-			switch($type){
-				case 'hikashop':
-					$field = 'user_id';
-					$id = (int)$id;
-					break;
-				case 'email':
-					$field = 'user_email';
-					$id = $this->database->Quote(trim($id));
-					break;
-				case 'cms':
-				default:
-					$field = 'user_cms_id';
-					$id = (int)$id;
-					break;
-			}
-			$geo='';
-			$select='a.*,b.*';
-			if($geoloc && hikashop_level(2)){
-				$geo=' LEFT JOIN '.hikashop_table('geolocation').' AS c ON a.user_id=c.geolocation_ref_id AND c.geolocation_type=\'user\'';
-				$select.=',c.*';
-			}
 
-			$query = 'SELECT '.$select.' FROM '.hikashop_table('user').' AS a LEFT JOIN '.hikashop_table('users',false).' AS b ON a.user_cms_id=b.id '.$geo.' WHERE a.'.$field.'='.$id;
-			$this->database->setQuery($query);
-			$user = $this->database->loadObject();
+		if(!empty($data[$type.'_'.$id]))
+			return $data[$type.'_'.$id];
 
-			if(!empty($user->user_params)){
-				$user->user_params = unserialize($user->user_params);
-			}elseif(!empty($user)){
-				$user->user_params = new stdClass();
-			}
-			$data[$type.'_'.$id] = $user;
+		$field = 'user_id';
+		switch($type) {
+			case 'hikashop':
+				$field = 'user_id';
+				$id = (int)$id;
+				break;
+			case 'email':
+				$field = 'user_email';
+				$id = $this->database->Quote(trim($id));
+				break;
+			case 'cms':
+			default:
+				$field = 'user_cms_id';
+				$id = (int)$id;
+				break;
 		}
+
+		$geo = '';
+		$select = 'a.*,b.*';
+		if($geoloc && hikashop_level(2)) {
+			$geo = ' LEFT JOIN '.hikashop_table('geolocation').' AS c ON a.user_id=c.geolocation_ref_id AND c.geolocation_type=\'user\'';
+			$select .= ',c.*';
+		}
+
+		$query = 'SELECT '.$select.' FROM '.hikashop_table('user').' AS a LEFT JOIN '.hikashop_table('users', false).' AS b ON a.user_cms_id = b.id ' . $geo . ' WHERE a.' . $field . ' = ' . $id;
+		$this->database->setQuery($query);
+		$user = $this->database->loadObject();
+
+		if(!empty($user->user_params)) {
+			$user->user_params = unserialize($user->user_params);
+		} elseif(!empty($user)) {
+			$user->user_params = new stdClass();
+		}
+		$data[$type.'_'.$id] = $user;
+
 		return $data[$type.'_'.$id];
 	}
-	function getID($cms_id,$type='cms'){
-		$user = $this->get($cms_id,$type);
+
+	function getID($cms_id, $type = 'cms') {
+		$user = $this->get($cms_id, $type);
 		$id = (int)@$user->user_id;
 
-		if(empty($id)&&$type=='cms'){
-			$this->database->setQuery('SELECT * FROM '.hikashop_table('users',false).' WHERE id='.(int)$cms_id);
-			$userData = $this->database->loadObject();
-			if(!empty($userData)){
-				$user = new stdClass();
-				$user->user_cms_id = $cms_id;
-				$user->user_email = $userData->email;
-				$id = $this->save($user);
-			}
+		if(!empty($id) || $type != 'cms')
+			return $id;
 
+		$this->database->setQuery('SELECT * FROM '.hikashop_table('users',false).' WHERE id='.(int)$cms_id);
+		$userData = $this->database->loadObject();
+
+		if(!empty($userData)) {
+			$user = new stdClass();
+			$user->user_cms_id = $cms_id;
+			$user->user_email = $userData->email;
+			$id = $this->save($user);
 		}
-
 		return $id;
 	}
 
 	function save(&$element,$skipJoomla=false){
-		$new = true;
-		if(!empty($element->user_id)){
-			$new = false;
-		}else{
-			if(empty($element->user_created_ip)){
+		$new = empty($element->user_id);
+		if($new) {
+			if(empty($element->user_created_ip))
 				$element->user_created_ip = hikashop_getIP();
-			}
-			if(empty($element->user_created)){
+
+			if(empty($element->user_created))
 				$element->user_created = time();
-			}
-			if(empty($element->user_email)&&!empty($element->user_cms_id)){
+
+			if(empty($element->user_email) && !empty($element->user_cms_id)) {
 				$user = JFactory::getUser($element->user_cms_id);
 				$element->user_email = $user->email;
-			}elseif(!empty($element->user_email)&&empty($element->user_cms_id)){
+			} elseif(!empty($element->user_email)&&empty($element->user_cms_id)) {
 			}
 		}
 
-		if(isset($element->user_currency_id)){
-			$user = $this->get($element->user_id);
-			$config =& hikashop_config();
-			if(empty($user->user_currency_id)){
-				$user->user_currency_id = $config->get('partner_currency');
-			}
-			$previousPartnerCurrency = $user->user_currency_id;
+		if(isset($element->user_currency_id)) {
 			$app = JFactory::getApplication();
-			if($app->isAdmin()){
-				if($element->user_currency_id == $config->get('partner_currency')){
-					$element->user_currency_id=0;
+			$config =& hikashop_config();
+
+			$user = $this->get($element->user_id);
+			if(empty($user->user_currency_id))
+				$user->user_currency_id = $config->get('partner_currency');
+
+			$previousPartnerCurrency = $user->user_currency_id;
+
+			if($app->isAdmin()) {
+				if($element->user_currency_id == $config->get('partner_currency')) {
+					$element->user_currency_id = 0;
 				}
-			}else{
-				if($config->get('allow_currency_selection')){
-					$currencyClass = hikashop_get('class.currency');
-					$currency = $currencyClass->get($element->user_currency_id);
-					if(empty($currency->currency_published)){
-						unset($element->user_currency_id);
-					}
-				}else{
+			} elseif($config->get('allow_currency_selection')) {
+				$currencyClass = hikashop_get('class.currency');
+				$currency = $currencyClass->get($element->user_currency_id);
+				if(empty($currency->currency_published))
 					unset($element->user_currency_id);
-				}
+			} else {
+				unset($element->user_currency_id);
 			}
-			if(!empty($element->user_currency_id)) $element->user_currency_id=(int)$element->user_currency_id;
+			if(!empty($element->user_currency_id))
+				$element->user_currency_id = (int)$element->user_currency_id;
 		}
 
-		if(!empty($element->user_params)){
+		if(!empty($element->user_params))
 			$element->user_params = serialize($element->user_params);
-		}
+
 		JPluginHelper::importPlugin( 'hikashop' );
 		$dispatcher = JDispatcher::getInstance();
 		$do = true;
-		if($new){
+		if($new) {
 			$dispatcher->trigger( 'onBeforeUserCreate', array( & $element, & $do) );
-		}else{
+		} else {
 			$dispatcher->trigger( 'onBeforeUserUpdate', array( & $element, & $do) );
 		}
-		if(!$do){
+
+		if(!$do)
 			return false;
-		}
+
 		$element->user_id = parent::save($element);
 
-		if(!empty($element->user_id)){
+		if(empty($element->user_id))
+			return $element->user_id;
 
-			if($new){
-				$dispatcher->trigger( 'onAfterUserCreate', array( & $element ) );
-			}else{
-				$dispatcher->trigger( 'onAfterUserUpdate', array( & $element ) );
-			}
+		if($new) {
+			$dispatcher->trigger( 'onAfterUserCreate', array( & $element ) );
+		} else {
+			$dispatcher->trigger( 'onAfterUserUpdate', array( & $element ) );
+		}
 
-			if($element->user_id==hikashop_loadUser()){
-				hikashop_loadUser(null,true);
-				$this->get(false);
-			}
-			if($new){
-				$plugin = JPluginHelper::getPlugin('system', 'hikashopgeolocation');
-				if(!empty($plugin) && hikashop_level(2)){
-					jimport('joomla.html.parameter');
-					$params = new HikaParameter( $plugin->params );
-					if(!empty($params)){
-						if($params->get('user',1)){
-							$geo = new stdClass();
-							$geo->geolocation_ref_id = $element->user_id;
-							$geo->geolocation_type = 'user';
-							$geo->geolocation_ip = $element->user_created_ip;
-							$class = hikashop_get('class.geolocation');
-							$class->params =& $params;
-							$class->save($geo);
-						}
+		if($element->user_id == hikashop_loadUser()) {
+			hikashop_loadUser(null,true);
+			$this->get(false);
+		}
+
+		if($new) {
+			$plugin = JPluginHelper::getPlugin('system', 'hikashopgeolocation');
+			if(!empty($plugin) && hikashop_level(2)){
+				jimport('joomla.html.parameter');
+				$params = new HikaParameter( $plugin->params );
+				if(!empty($params)){
+					if($params->get('user',1)){
+						$geo = new stdClass();
+						$geo->geolocation_ref_id = $element->user_id;
+						$geo->geolocation_type = 'user';
+						$geo->geolocation_ip = $element->user_created_ip;
+						$class = hikashop_get('class.geolocation');
+						$class->params =& $params;
+						$class->save($geo);
 					}
 				}
-			}else{
-				if(!$skipJoomla && !empty($element->user_email)){
-					if(empty($element->user_cms_id)){
-						$userData = $this->get($element->user_id);
-						$element->user_cms_id = $userData->user_cms_id;
-					}
-					$user = JFactory::getUser($element->user_cms_id);
-					if(!empty($user) && $element->user_email!=$user->email){
-						$user->email = $element->user_email;
-						$user->save();
-					}
+			}
+		} else {
+			if(!$skipJoomla && !empty($element->user_email)){
+				if(empty($element->user_cms_id)){
+					$userData = $this->get($element->user_id);
+					$element->user_cms_id = $userData->user_cms_id;
 				}
-				if(isset($element->user_currency_id)){
-					if(empty($element->user_currency_id)){
-						$element->user_currency_id = $config->get('partner_currency');
-					}
-					if($element->user_currency_id!=$previousPartnerCurrency){
-						$currencyClass = hikashop_get('class.currency');
-						$config =& hikashop_config();
-						$null=null;
-						$main_currency = (int)$config->get('main_currency',1);
-						$ids = array();
-						$ids[$previousPartnerCurrency]=$previousPartnerCurrency;
-						$ids[$element->user_currency_id]=$element->user_currency_id;
-						$ids[$main_currency]=$main_currency;
-						$currencies=$currencyClass->getCurrencies($ids,$null);
-						$srcCurrency = $currencies[$previousPartnerCurrency];
-						$dstCurrency = $currencies[$element->user_currency_id];
-						$mainCurrency =  $currencies[$main_currency];
-						$this->_updatePartnerPrice($srcCurrency,$dstCurrency,$mainCurrency,$element,'click');
-						$this->_updatePartnerPrice($srcCurrency,$dstCurrency,$mainCurrency,$element,'order');
-						$this->_updatePartnerPrice($srcCurrency,$dstCurrency,$mainCurrency,$element,'user');
-					}
+				$user = JFactory::getUser($element->user_cms_id);
+				if(!empty($user) && $element->user_email!=$user->email){
+					$user->email = $element->user_email;
+					$user->save();
+				}
+			}
+			if(isset($element->user_currency_id)) {
+				$config =& hikashop_config();
+
+				if(empty($element->user_currency_id))
+					$element->user_currency_id = $config->get('partner_currency');
+
+				if($element->user_currency_id != $previousPartnerCurrency) {
+					$currencyClass = hikashop_get('class.currency');
+
+					$main_currency = (int)$config->get('main_currency', 1);
+					$null = null;
+					$ids = array(
+						$previousPartnerCurrency => $previousPartnerCurrency,
+						$element->user_currency_id => $element->user_currency_id,
+						$main_currency => $main_currency
+					);
+
+					$currencies = $currencyClass->getCurrencies($ids, $null);
+
+					$srcCurrency = $currencies[$previousPartnerCurrency];
+					$dstCurrency = $currencies[$element->user_currency_id];
+					$mainCurrency = $currencies[$main_currency];
+
+					$this->_updatePartnerPrice($srcCurrency, $dstCurrency, $mainCurrency, $element, 'click');
+					$this->_updatePartnerPrice($srcCurrency, $dstCurrency, $mainCurrency, $element, 'order');
+					$this->_updatePartnerPrice($srcCurrency, $dstCurrency, $mainCurrency, $element, 'user');
 				}
 			}
 		}
@@ -370,63 +382,6 @@ class hikashopUserClass extends hikashopClass{
 
 	}
 
-	function loadSales(&$user,$base){
-		if(empty($user->user_params->user_custom_fee)){
-			$config=&hikashop_config();
-			$user->user_params->user_partner_percent_fee = $config->get('partner_percent_fee',0);
-			$user->user_params->user_partner_flat_fee = $config->get('partner_flat_fee',0);
-		}
-		$user->sales = array();
-		if(!empty($user->user_partner_activated)){
-			if(bccomp($user->user_params->user_partner_percent_fee,0,5) || bccomp($user->user_params->user_partner_flat_fee,0,5)){
-				$config =& hikashop_config();
-				$partner_valid_status_list=explode(',',$config->get('partner_valid_status','confirmed,shipped'));
-				foreach($partner_valid_status_list as $k => $partner_valid_status){
-					$partner_valid_status_list[$k]= $this->database->Quote($partner_valid_status);
-				}
-				$query='SELECT * FROM '.hikashop_table('order').' WHERE order_partner_id='.$user->user_id.' AND order_type=\'sale\' AND order_partner_paid=0 AND order_status IN ('.implode(',',$partner_valid_status_list).') ORDER BY order_created DESC';
-				$db->setQuery($query);
-				$user->sales = $db->loadObjectList();
-			}
-		}
-	}
-
-	function loadClicks(&$user,$base){
-		if(empty($user->user_params->user_custom_fee)){
-			$config=&hikashop_config();
-			$user->user_params->user_partner_click_fee = $config->get('partner_click_fee',0);
-		}
-		$user->clicks = array();
-		if(!empty($user->user_partner_activated)){
-			if(bccomp($user->user_params->user_partner_click_fee,0,5)){
-				$query='SELECT * FROM '.hikashop_table('click').' WHERE click_partner_id='.$user->user_id.' AND click_partner_paid=0 ORDER BY click_created DESC';
-				$db->setQuery($query);
-				$user->clicks = $db->loadObjectList();
-			}
-		}
-	}
-
-	function loadLeads(&$user,$base){
-		if(empty($user->user_params->user_custom_fee)){
-			$config=&hikashop_config();
-			$user->user_params->user_partner_lead_fee = $config->get('partner_lead_fee',0);
-		}
-		$user->leads = array();
-		if(!empty($user->user_partner_activated)){
-			if(bccomp($user->user_params->user_partner_lead_fee,0,5)){
-				$query='SELECT * FROM '.hikashop_table('user').' WHERE user_partner_id='.$user->user_id.' AND user_partner_paid=0 ORDER BY user_id DESC';
-				$db->setQuery($query);
-				$user->leads = $db->loadObjectList();
-			}
-		}
-	}
-
-	function getLatest($partner_id,$ip,$lead_min_delay){
-		$query = 'SELECT user_id FROM '.hikashop_table('user').' WHERE user_partner_id='.(int)$partner_id.' AND user_created_ip='.$this->database->Quote($ip).' AND click_created > '.(time()-$lead_min_delay*3600);
-		$this->database->setQuery($query);
-		return $this->database->loadResult();
-	}
-
 	function register(&$checkout,$page='checkout',$redirect=true){
 		$config =& hikashop_config();
 		$app = JFactory::getApplication();
@@ -504,6 +459,11 @@ class hikashopUserClass extends hikashopClass{
 			$this->registerData->password2 = $this->registerData->password;
 		}else if ($simplified == 3) {
 			$this->registerData->username = $this->registerData->email;
+		}
+
+		if(!empty($this->registerData->username)){
+			$safeHtmlFilter = JFilterInput::getInstance(null, null, 1, 1);
+			$this->registerData->username = $safeHtmlFilter->clean($this->registerData->username,'USERNAME');
 		}
 
 		if($simplified == 0 || $simplified ==3){
@@ -737,29 +697,32 @@ class hikashopUserClass extends hikashopClass{
 		return true;
 	}
 
-	function addAndConfirmUserInCB($newUser,$addressData=null){
-		if(is_null($addressData)){
+	function addAndConfirmUserInCB($newUser, $addressData = null) {
+		if(is_null($addressData)) {
 			$addressClass = hikashop_get('class.address');
 			$addresses = $addressClass->getByUser($newUser->user_id);
 			$addressData = reset($addresses);
 		}
-		$fields = array('cbactivation','id','user_id','approved','confirmed');
-		$values = array('\'\'',(int)$newUser->user_cms_id,(int)$newUser->user_cms_id,1,1);
-		if(!empty($addressData->address_firstname)){
-			$fields[]='firstname';
-			$values[]=$this->database->Quote($addressData->address_firstname);
-		}
-		if(!empty($addressData->address_middle_name)){
-			$fields[]='middlename';
-			$values[]=$this->database->Quote($addressData->address_middle_name);
-		}
-		if(!empty($addressData->address_lastname)){
-			$fields[]='lastname';
-			$values[]=$this->database->Quote($addressData->address_lastname);
-		}
-		$fields = implode(',',$fields);
-		$values = implode(',',$values);
-		$this->database->setQuery('REPLACE #__comprofiler ('.$fields.') VALUES ('.$values.')');
+
+		$fields = array(
+			'cbactivation' => $this->database->Quote(''),
+			'id' => (int)$newUser->user_cms_id,
+			'user_id' => (int)$newUser->user_cms_id,
+			'approved' => 1,
+			'confirmed' => 1
+		);
+
+		if(!empty($addressData->address_firstname))
+			$fields['firstname'] = $this->database->Quote($addressData->address_firstname);
+
+		if(!empty($addressData->address_middle_name))
+			$fields['middlename'] = $this->database->Quote($addressData->address_middle_name);
+
+		if(!empty($addressData->address_lastname))
+			$fields['lastname'] = $this->database->Quote($addressData->address_lastname);
+
+		$query = 'REPLACE #__comprofiler (' . implode(',', array_keys($fields)) . ') VALUES (' . implode(',', $fields) . ')';
+		$this->database->setQuery($query);
 		$this->database->query();
 	}
 }

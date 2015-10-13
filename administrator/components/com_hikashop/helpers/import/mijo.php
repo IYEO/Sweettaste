@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -160,19 +160,28 @@ class hikashopImportmijoHelper extends hikashopImportHelper
 	{
 		$this->options = null;
 
-		if (defined('DIR_IMAGE'))
-			$this->copyImgDir = HIKASHOP_ROOT.DIR_IMAGE;
-		else
+		if (defined('DIR_IMAGE')) {
+			if(strpos(DIR_IMAGE, HIKASHOP_ROOT) === false)
+				$this->copyImgDir = HIKASHOP_ROOT.DIR_IMAGE;
+			else
+				$this->copyImgDir = DIR_IMAGE;
+		} else
 			$this->copyImgDir = HIKASHOP_ROOT.'components/com_mijoshop/opencart/image/';
 
-		if (defined('DIR_IMAGE'))
-			$this->copyCatImgDir = HIKASHOP_ROOT.DIR_IMAGE;
-		else
+		if (defined('DIR_IMAGE')) {
+			if(strpos(DIR_IMAGE, HIKASHOP_ROOT) === false)
+				$this->copyCatImgDir = HIKASHOP_ROOT.DIR_IMAGE;
+			else
+				$this->copyCatImgDir = DIR_IMAGE;
+		} else
 			$this->copyCatImgDir = HIKASHOP_ROOT.'components/com_mijoshop/opencart/image/';
 
-		if (defined('DIR_DOWNLOAD'))
-			$this->copyDownloadDir = HIKASHOP_ROOT.DIR_DOWNLOAD;
-		else
+		if (defined('DIR_DOWNLOAD')) {
+			if(strpos(DIR_DOWNLOAD, HIKASHOP_ROOT) === false)
+				$this->copyDownloadDir = HIKASHOP_ROOT.DIR_DOWNLOAD;
+			else
+				$this->copyDownloadDir = DIR_DOWNLOAD;
+		} else
 			$this->copyDownloadDir = HIKASHOP_ROOT.'components/com_mijoshop/opencart/download/';
 
 		$data = array(
@@ -328,14 +337,11 @@ class hikashopImportmijoHelper extends hikashopImportHelper
 			$this->db->setQuery("CREATE TABLE IF NOT EXISTS `#__hikashop_mijo_cat` (`mijo_cat_id` INT(11) unsigned NOT NULL AUTO_INCREMENT, `mijo_id` int(11) unsigned NOT NULL DEFAULT '0', `hk_id` int(11) unsigned NOT NULL DEFAULT '0', `category_type` varchar(255) NULL, PRIMARY KEY (`mijo_cat_id`)) ENGINE=MyISAM");
 			$this->db->query();
 
-			$this->db->setQuery('ALTER IGNORE TABLE `#__hikashop_address` ADD `address_mijo_order_info_id` INT(11) NULL');
-			$this->db->query();
-			$this->db->setQuery('ALTER IGNORE TABLE `#__hikashop_order` ADD `order_mijo_id` INT(11) NULL');
-			$this->db->query();
-			$this->db->setQuery('ALTER IGNORE TABLE `#__hikashop_order` ADD INDEX ( `order_mijo_id` )');
-			$this->db->query();
-			$this->db->setQuery('ALTER IGNORE TABLE `#__hikashop_taxation` ADD `tax_mijo_id` INT(11) NULL');
-			$this->db->query();
+			$databaseHelper = hikashop_get('helper.database');
+			$databaseHelper->addColumns('address','`address_mijo_order_info_id` INT(11) NULL');
+			$databaseHelper->addColumns('order','`order_mijo_id` INT(11) NULL');
+			$databaseHelper->addColumns('order','INDEX ( `order_mijo_id` )');
+			$databaseHelper->addColumns('taxation','`tax_mijo_id` INT(11) NULL');
 
 			echo '<p '.$this->pmarginstyle.'><span'.$this->bullstyle.'>&#149;</span> All table created</p>';
 
@@ -839,10 +845,44 @@ class hikashopImportmijoHelper extends hikashopImportHelper
 		jimport('joomla.filesystem.file');
 		$categoryClass = hikashop_get('class.category');
 
+		$query = 'SELECT * FROM `#__mijoshop_product`;';
+		$this->db->setQuery($query);
+		$el = $this->db->loadObject();
+		$main_image = false;
+		if(isset($el->image)){
+			$main_image = true;
+
+
+			$query = 'SELECT mjp.product_id, mjp.image FROM `#__mijoshop_product` mjp '.
+				'LEFT JOIN `#__hikashop_mijo_prod` hkprod ON mjp.product_id = hkprod.mijo_id '.
+				'WHERE mjp.product_id > '.$offset.' AND hkprod.hk_id IS NULL AND (mjp.image IS NOT NULL) AND mjp.image <> \'\' '.
+				'ORDER BY product_id ASC LIMIT '.$count.';';
+			$this->db->setQuery($query);
+
+			$datas = $this->db->loadObjectList();
+			$this->copyImgDir = str_replace('\\','/',rtrim(JPath::clean(html_entity_decode($this->copyImgDir)),DS.' ').DS);
+
+			if (!empty($datas))
+			{
+				echo '<p '.$this->pmarginstyle.'><span'.$this->bullstyle.'>&#149;</span> Copying products images... </p>';
+				foreach($datas as $data) {
+					if( !empty($data->image) ) {
+						$file_name = str_replace('\\','/',$data->image);
+						if( strpos($file_name,'/') !== false ) {
+							$file_name = substr($file_name, strrpos($file_name,'/'));
+						}
+						$this->copyFile($this->copyImgDir,$data->image, $this->options->uploadfolder.$file_name);
+						$max = $data->product_id;
+					}
+				}
+			}
+
+		}
+
 		$query = 'SELECT mjp.product_id, mjpi.image FROM `#__mijoshop_product` mjp '.
 				'LEFT JOIN `#__mijoshop_product_image` mjpi ON mjp.product_id = mjpi.product_id '.
 				'LEFT JOIN `#__hikashop_mijo_prod` hkprod ON mjp.product_id = hkprod.mijo_id '.
-				'WHERE mjp.product_id > '.$offset.' AND hkprod.hk_id IS NULL AND (mjp.image IS NOT NULL) AND mjp.image <> \'\' '.
+				'WHERE mjp.product_id > '.$offset.' AND hkprod.hk_id IS NULL AND (mjpi.image IS NOT NULL) AND mjpi.image <> \'\' '.
 				'ORDER BY product_id ASC LIMIT '.$count.';';
 		$this->db->setQuery($query);
 
@@ -859,7 +899,6 @@ class hikashopImportmijoHelper extends hikashopImportHelper
 						$file_name = substr($file_name, strrpos($file_name,'/'));
 					}
 					$this->copyFile($this->copyImgDir,$data->image, $this->options->uploadfolder.$file_name);
-					$max = $data->product_id;
 				}
 			}
 		}
@@ -945,6 +984,20 @@ class hikashopImportmijoHelper extends hikashopImportHelper
 			'LEFT JOIN `#__hikashop_mijo_prod` hkmjp ON hkmjp.mijo_id = mjp.product_id '.
 			'WHERE hkmjp.hk_id IS NULL;';
 
+		$data = array(
+			'file_name' => "''",
+			'file_description' => "''",
+			'file_path' => "SUBSTRING_INDEX(mjp.image,'/',-1)",
+			'file_type' => "'product'",
+			'file_ref_id' => 'hkmjp.hk_id'
+		);
+
+
+		$sql40 = 'INSERT IGNORE INTO `#__hikashop_file` (`'.implode('`,`',array_keys($data)).'`) '.
+			'SELECT '.implode(',',$data).' FROM `#__mijoshop_product` AS mjp '.
+			'INNER JOIN `#__hikashop_mijo_prod` AS hkmjp ON mjp.product_id = hkmjp.mijo_id '.
+			'WHERE mjp.product_id > '.$this->options->last_mijo_prod. ' AND (mjp.image IS NOT NULL) AND (mjp.image <>'." '');";
+
 
 		$data = array(
 			'file_name' => "''",
@@ -978,10 +1031,17 @@ class hikashopImportmijoHelper extends hikashopImportHelper
 		$total = $this->db->getAffectedRows();
 		echo '<p '.$this->pmarginstyle.'><span'.$this->bullstyle.'>&#149;</span> Fallback links: ' . $total . '</p>';
 
+		if($main_image){
+			$this->db->setQuery($sql40);
+			$this->db->query();
+			$total = $this->db->getAffectedRows();
+			echo '<p '.$this->pmarginstyle.'><span'.$this->bullstyle.'>&#149;</span> Inserted products files: ' . $total . '</p>';
+		}
+
 		$this->db->setQuery($sql4);
 		$this->db->query();
 		$total = $this->db->getAffectedRows();
-		echo '<p '.$this->pmarginstyle.'><span'.$this->bullstyle.'>&#149;</span> Inserted products files: ' . $total . '</p>';
+		echo '<p '.$this->pmarginstyle.'><span'.$this->bullstyle.'>&#149;</span> Inserted products images: ' . $total . '</p>';
 
 		$this->db->setQuery($sql5);
 		$this->db->query();

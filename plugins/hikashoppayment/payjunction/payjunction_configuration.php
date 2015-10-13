@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -11,6 +11,7 @@ defined('_JEXEC') or die('Restricted access');
 if(!function_exists('curl_init')) {
 	echo '<tr><td colspan="2"><strong>The PayJunction payment plugin needs the CURL library installed but it seems that it is not available on your server. Please contact your web hosting to set it up.</strong></td></tr>';
 }
+hikashop_loadJslib('mootools');
 ?><tr>
 	<td class="key">
 		<label for="data[payment][payment_params][login]">
@@ -159,7 +160,7 @@ function payjunction_avs_radio(elem) {
 		}
 	}
 }
-window.addEvent('domready', function() {
+window.hikashop.ready( function() {
 	var e = $('data[payment][payment_params][security]1');
 	if( e.checked && !payjunction_el.isDisplayed() )
 		payjunction_el.show();

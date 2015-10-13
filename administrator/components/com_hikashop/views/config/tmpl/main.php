@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -12,7 +12,6 @@ echo $this->leftmenu(
 	'main',
 	array(
 		'#main_global' => JText::_('MAIN'),
-		'#main_address' => JText::_('ADDRESS'),
 		'#main_currency' => JText::_('CURRENCY'),
 		'#main_tax' => JText::_('TAXES'),
 		'#main_product' => JText::_('PRODUCT'),
@@ -41,6 +40,12 @@ echo $this->leftmenu(
 						?></td>
 					</tr>
 					<tr>
+						<td class="key"><?php echo JText::_('STORE_ADDRESS'); ?></td>
+						<td>
+							<textarea class="inputbox" name="config_store_address" cols="30" rows="5"><?php echo $this->config->get('store_address'); ?></textarea>
+						</td>
+					</tr>
+					<tr>
 						<td class="key" ><?php echo JText::_('HIKA_EDITOR'); ?></td>
 						<td><?php
 							echo $this->elements->editor;
@@ -55,17 +60,12 @@ echo $this->leftmenu(
 				</table>
 			</fieldset>
 		</div>
+		<?php if($this->config->get('default_type')!='individual'){ ?>
 	<!-- ADDRESS -->
 		<div id="main_address">
 			<fieldset class="adminform">
 				<legend><?php echo JText::_( 'ADDRESS' ); ?></legend>
 				<table class="admintable table" style="width:100%" cellspacing="1">
-					<tr>
-						<td class="key"><?php echo JText::_('STORE_ADDRESS'); ?></td>
-						<td>
-							<textarea class="inputbox" name="config_store_address" cols="30" rows="5"><?php echo $this->config->get('store_address'); ?></textarea>
-						</td>
-					</tr>
 					<tr>
 						<td class="key"><?php echo JText::_('DEFAULT_ADDRESS_TYPE'); ?></td>
 						<td><?php
@@ -75,6 +75,7 @@ echo $this->leftmenu(
 				</table>
 			</fieldset>
 		</div>
+		<?php } ?>
 	<!-- CURRENCY -->
 		<div id="main_currency">
 			<fieldset class="adminform">
@@ -842,7 +843,6 @@ echo $this->leftmenu(
 							<input class="inputbox" type="text" name="config[order_creation_notification_email]" size="40" value="<?php echo $this->escape($this->config->get('order_creation_notification_email')); ?>">
 						</td>
 					</tr>
-					<tr><td></td><td style="padding: 4px 0 4px 0;"></td></tr>
 					<tr>
 						<td class="key"><?php echo JText::_('ADD_NAMES'); ?></td>
 						<td><?php
@@ -885,6 +885,14 @@ echo $this->leftmenu(
 							echo $this->elements->multiple_part;
 						?></td>
 					</tr>
+					<?php if(file_exists(JPATH_ADMINISTRATOR.DS.'components'.DS.'com_multisites'.DS.'helpers'.DS.'utils.php')){ ?>
+					<tr>
+						<td class="key"><?php echo JText::_('MAIL_FOLDER'); ?></td>
+						<td>
+							<input class="inputbox" type="text" name="config[mail_folder]" size="60" value="<?php echo $this->escape($this->config->get('mail_folder')); ?>">
+						</td>
+					</tr>
+					<?php } ?>
 				</table>
 			</fieldset>
 		</div>
@@ -912,12 +920,6 @@ echo $this->leftmenu(
 							?></td>
 						</tr>
 						<tr>
-							<td class="key"><?php echo JText::_('GENERATE_VARIANT_AUTO'); ?></td>
-							<td><?php
-								echo JHTML::_('hikaselect.booleanlist', 'config[auto_variants]','',$this->config->get('auto_variants',1));
-							?></td>
-						</tr>
-						<tr>
 							<td class="key"><?php echo JText::_('DEACTIVATE_BUFFERING_AND_COMPRESSION'); ?></td>
 							<td><?php
 								echo JHTML::_('hikaselect.booleanlist', 'config[deactivate_buffering_and_compression]','',$this->config->get('deactivate_buffering_and_compression',0));
@@ -928,6 +930,16 @@ echo $this->leftmenu(
 							<td><?php
 								echo JHTML::_('hikaselect.booleanlist', 'config[redirect_post]','',$this->config->get('redirect_post',0));
 							?></td>
+						</tr>
+						<tr>
+							<td class="key"><?php echo JText::_('SERVER_CURRENT_URL_MODE'); ?></td>
+							<td><?php
+							$arr = array(
+								JHTML::_('select.option', '0', JText::_('HIKA_AUTOMATIC') ),
+								JHTML::_('select.option', 'REDIRECT_URL',  JText::_('REDIRECT_URL') ),
+								JHTML::_('select.option', 'REQUEST_URI',  JText::_('REQUEST_URI') ),
+							);
+							echo JHTML::_('hikaselect.genericlist', $arr, "config[server_current_url_mode]" , '', 'value', 'text',$this->config->get('server_current_url_mode','REQUEST_URI') );?></td>
 						</tr>
 						<tr>
 							<td class="key">
@@ -942,9 +954,11 @@ echo $this->leftmenu(
 								<?php echo JText::_('VERSION');?>
 							</td>
 							<td>
-								HikaShop <?php $this->config->get('level').' '.$this->config->get('version'); ?> [1507261232]
+								HikaShop <?php echo $this->config->get('level').' '.$this->config->get('version'); ?> [1510122339]
 							</td>
 						</tr>
+<?php
+?>
 					</table>
 				</fieldset>
 				</div>

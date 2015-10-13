@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="plugin" version="1.5" method="upgrade" group="system">
 	<name>System - Hikashop Social Plugin</name>
-	<creationDate>26 juillet 2015</creationDate>
-	<version>2.5.0</version>
+	<creationDate>12 octobre 2015</creationDate>
+	<version>2.6.0</version>
 	<author>Hikashop</author>
 	<authorEmail>dev@hikashop.com</authorEmail>
 	<authorUrl>http://www.hikashop.com</authorUrl>
@@ -47,6 +47,7 @@
 			<option value="0">Standard</option>
 			<option value="1">Button count</option>
 			<option value="2">Box count</option>
+			<option value="3">Button</option>
 		</param>
 		<param name="fb_faces" type="radio" default="1" label="Show Facebook faces" description="Show or not the face of the people who used your Facebook button">
 			<option value="0">No</option>
@@ -153,6 +154,7 @@
 					<option value="0">Standard</option>
 					<option value="1">Button count</option>
 					<option value="2">Box count</option>
+					<option value="3">Button</option>
 				</field>
 				<field name="fb_faces" type="radio" default="1" label="Show Facebook faces" description="Show or not the face of the people who used your Facebook button">
 					<option value="0">No</option>

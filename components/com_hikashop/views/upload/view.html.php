@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -47,6 +47,7 @@ class uploadViewupload extends hikashopView {
 		$uploadConfig = JRequest::getVar('uploadConfig', null);
 		if(empty($uploadConfig) || !is_array($uploadConfig))
 			return false;
+
 		$this->assignRef('uploadConfig', $uploadConfig);
 		$uploader = JRequest::getCmd('uploader', '');
 		$this->assignRef('uploader', $uploader);
@@ -56,10 +57,9 @@ class uploadViewupload extends hikashopView {
 		$uploadFolder = ltrim(JPath::clean(html_entity_decode($config->get('uploadfolder'))),DS);
 		$uploadFolder = rtrim($uploadFolder,DS).DS;
 		$basePath = JPATH_ROOT.DS.$uploadFolder.DS;
+
 		if(!empty($uploadConfig['options']['upload_dir']))
 			$basePath = rtrim(JPATH_ROOT,DS).DS.str_replace(array('\\','/'), DS, $uploadConfig['options']['upload_dir']);
-		if(!empty($uploadConfig['options']['sub_folder']))
-			$basePath .= rtrim(str_replace(array('\\','/'),DS,$uploadConfig['options']['sub_folder']), DS).DS;
 
 		$pageInfo = new stdClass();
 		$pageInfo->limit = new stdClass();
@@ -73,12 +73,36 @@ class uploadViewupload extends hikashopView {
 		if(!JFolder::exists($basePath))
 			JFolder::create($basePath);
 
+		$subFolder = $basePath;
+		if(!empty($uploadConfig['options']['sub_folder']))
+			$subFolder .= rtrim(str_replace(array('\\','/'), DS, $uploadConfig['options']['sub_folder']), DS).DS;
+
 		$galleryHelper = hikashop_get('helper.gallery');
-		$galleryHelper->setRoot($basePath);
+		$galleryHelper->setRoot($subFolder);
 		$this->assignRef('galleryHelper', $galleryHelper);
 
-		$folder = str_replace('|', '/', JRequest::getString('folder', ''));
+		$folder = str_replace(array('|', '\/'), array(DS, DS), JRequest::getString('folder', ''));
+		if(!empty($uploadConfig['options']['sub_folder']) && substr($folder, 0, strlen($uploadConfig['options']['sub_folder'])) == $uploadConfig['options']['sub_folder']) {
+			$folder = substr($folder, strlen($uploadConfig['options']['sub_folder']));
+			if($folder === false)
+				$folder = '';
+		}
+
 		$destFolder = rtrim($folder, '/\\');
+		if(!$galleryHelper->validatePath($destFolder))
+			$destFolder = '';
+		if(!empty($destFolder)) $destFolder .= '/';
+
+		$treeContent = $galleryHelper->getTreeList(null, $destFolder);
+		$this->assignRef('treeContent', $treeContent);
+
+		if($subFolder != $basePath)
+			$galleryHelper->setRoot($basePath);
+
+		$destFolder = '';
+		if(!empty($uploadConfig['options']['sub_folder']))
+			$destFolder .= rtrim(str_replace(array('\\','/'),DS,$uploadConfig['options']['sub_folder']), DS).DS;
+		$destFolder .= rtrim($folder, '/\\');
 		if(!$galleryHelper->validatePath($destFolder))
 			$destFolder = '';
 		if(!empty($destFolder)) $destFolder .= '/';
@@ -91,11 +115,13 @@ class uploadViewupload extends hikashopView {
 		);
 		$this->assignRef('galleryOptions', $galleryOptions);
 
-		$treeContent = $galleryHelper->getTreeList(null, $destFolder);
-		$this->assignRef('treeContent', $treeContent);
-
 		$dirContent = $galleryHelper->getDirContent($destFolder, $galleryOptions);
 		$this->assignRef('dirContent', $dirContent);
+
+		$subFolder = '';
+		if(!empty($uploadConfig['options']['sub_folder']))
+			$subFolder = rtrim(str_replace(array('\\','/'),DS,$uploadConfig['options']['sub_folder']), DS).DS;
+		$this->assignRef('subFolder', $subFolder);
 
 		jimport('joomla.html.pagination');
 		$pagination = new JPagination( $galleryHelper->filecount, $pageInfo->limit->start, $pageInfo->limit->value );

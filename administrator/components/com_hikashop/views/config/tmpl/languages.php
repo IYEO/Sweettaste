@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -35,13 +35,13 @@ defined('_JEXEC') or die('Restricted access');
 					?>
 				</td>
 			</tr>
-			<?php if(hikashop_level(1)){ ?>
+			<?php if(!$this->config->get('default_translation_publish',1) && hikashop_level(1)){ ?>
 			<tr>
 				<td class="key" >
 				<?php echo JText::_('DEFAULT_TRANSLATION_PUBLISH'); ?>
 				</td>
 				<td>
-					<?php echo JHTML::_('hikaselect.booleanlist', "config[default_translation_publish]" , '',$this->config->get('default_translation_publish',0) );?>
+					<?php echo JHTML::_('hikaselect.booleanlist', "config[default_translation_publish]" , '',$this->config->get('default_translation_publish',1) );?>
 				</td>
 			</tr>
 			<?php if(hikashop_level(9)){ ?>

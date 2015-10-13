@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -43,9 +43,9 @@ if($taskGroup == 'config' && HIKASHOP_J16 && !$currentuser->authorise('core.admi
 	return JError::raiseWarning(404, JText::_('JERROR_ALERTNOAUTHOR'));
 }
 
-if(!class_exists($className) && !include(HIKASHOP_CONTROLLER.$taskGroup.'.php')){
-	echo 'controller '.$taskGroup.' not found';
-	return;
+if(!class_exists($className) && (!file_exists(HIKASHOP_CONTROLLER.$taskGroup.'.php') || !include_once(HIKASHOP_CONTROLLER.$taskGroup.'.php'))) {
+	if(!hikashop_getPluginController($taskGroup))
+		return JError::raiseError(404, 'Page not found : '.$taskGroup);
 }
 ob_start();
 

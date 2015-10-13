@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -276,8 +276,8 @@ defined('_JEXEC') or die('Restricted access');
 							<td class="key"><?php echo JText::_('ADD_TO_CART_QUANTITY');?></td>
 							<td>
 								<?php
-								if(!isset($this->element->hikashop_params['show_quantity_field'])) $this->element->hikashop_params['show_quantity_field'] = '0';
-								echo JHTML::_('hikaselect.booleanlist',  $this->control.'[show_quantity_field]', 'class="inputbox"', @$this->element->hikashop_params['show_quantity_field'] );
+								if(!isset($this->element->hikashop_params['show_quantity_field'])) $this->element->hikashop_params['show_quantity_field'] = '-1';
+								echo JHTML::_('hikaselect.radiolist', $arr, $this->control.'[show_quantity_field]', '', 'value', 'text', @$this->element->hikashop_params['show_quantity_field'] );
 								?>
 							</td>
 						</tr>
@@ -291,7 +291,7 @@ defined('_JEXEC') or die('Restricted access');
 									echo JHTML::_('hikaselect.radiolist', $arr, $this->control.'[add_to_wishlist]' , '', 'value', 'text', @$this->element->hikashop_params['add_to_wishlist']);
 								}else{
 									$this->element->hikashop_params['add_to_wishlist'] = 0;
-									echo hikashop_getUpgradeLink('essential');;
+									echo hikashop_getUpgradeLink('essential');
 								} ?>							</td>
 						</tr>
 						<tr>

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -168,12 +168,34 @@ class hikashopNameboxType {
 		if(isset($this->types[$type]))
 			return;
 
-		static $loaded = false;
-		if($loaded)
-			return;
+		static $loaded_types = false;
+		if($loaded_types === false) {
+			$loaded_types = array();
 
+			JPluginHelper::importPlugin('hikashop');
+			$dispatcher = JDispatcher::getInstance();
+			$dispatcher->trigger('onNameboxTypesLoad', array(&$loaded_types));
+		}
 
-		$loaded = true;
+		foreach($loaded_types as $k => $v) {
+			if(!isset($this->types[$k]))
+				$this->types[$k] = $v;
+		}
+	}
+
+	private function getClass($class) {
+		if(is_string($class))
+			return hikashop_get($class);
+		if(is_object($class) && method_exists($class, 'getNameboxData'))
+			return $class;
+		if(is_array($class) && isset($class['file']) && file_exists($class['file']) && isset($class['name'])) {
+			include_once($class['file']);
+			$n = $class['name'];
+			$ret = new $n;
+			if(method_exists($ret, 'getNameboxData'))
+				return $ret;
+		}
+		return null;
 	}
 
 	public function getValues($search = '', $type = '', $options = array()) {
@@ -188,7 +210,7 @@ class hikashopNameboxType {
 			return '';
 
 		$typeConfig = $this->types[$type];
-		$nameboxClass = hikashop_get($typeConfig['class']);
+		$nameboxClass = $this->getClass($typeConfig['class']);
 		if(empty($nameboxClass))
 			return false;
 
@@ -227,7 +249,7 @@ class hikashopNameboxType {
 
 		$config = hikashop_config();
 
-		$nameboxClass = hikashop_get($typeConfig['class']);
+		$nameboxClass = $this->getClass($typeConfig['class']);
 		if(empty($nameboxClass))
 			return '';
 
@@ -332,7 +354,7 @@ class hikashopNameboxType {
 			$ret .= '<div id="'.$id.'_loading" style="display:none;float:right"><img src="'.HIKASHOP_IMAGES.'spinner.gif" style="vertical-align:middle;margin:0px;padding:0px;" alt="loading..."/></div>';
 		}
 
-		$ret .= "\r\n\t".'<div style="clear:both;float:none;"></div></div>';
+		$ret .= "\r\n\t".'<div id="'.$id.'hikaclear" style="clear:both;float:none;"></div></div>';
 
 		$namebox_options = array(
 			'mode' => $typeConfig['mode'],
@@ -357,7 +379,10 @@ class hikashopNameboxType {
 				}
 			}
 			$url .= '&' . hikashop_getFormToken() . '=1';
-			$namebox_options['add_url'] = hikashop_completeLink($url, false, false, true);
+			if(substr($url, 0, 10) == 'index.php?')
+				$namebox_options['add_url'] = str_replace('&amp;', '&', JRoute::_($url));
+			else
+				$namebox_options['add_url'] = hikashop_completeLink($url, false, false, true);
 		}
 
 		if($mode == hikashopNameboxType::NAMEBOX_SINGLE) {
@@ -392,14 +417,30 @@ class hikashopNameboxType {
 			if(strpos($url, '{displayFormat}') !== false)
 				$url = str_replace('{displayFormat}', $this->getDisplayFormatId($type, $displayFormat), $url);
 			$url .= '&search=HIKASEARCH';
-			$namebox_options['url'] = hikashop_completeLink($url, false, false, true);
+
+			if(empty($typeConfig['mode']) || $typeConfig['mode'] == 'list') {
+				if(empty($namebox_options['olist']))
+					$namebox_options['olist'] = array();
+				$namebox_options['olist']['gradientLoad'] = true;
+				$url .= '&start=HIKASTART';
+				$namebox_options['url_pagination'] = 'HIKASTART';
+			}
+
+			if(substr($url, 0, 10) == 'index.php?')
+				$namebox_options['url'] = str_replace('&amp;', '&', JRoute::_($url));
+			else
+				$namebox_options['url'] = hikashop_completeLink($url, false, false, true);
 			$namebox_options['url_keyword'] = 'HIKASEARCH';
 		}
 
 		if(isset($namebox_options['tree_url'])) {
 			if(strpos($namebox_options['tree_url'], '{displayFormat}') !== false)
 				$namebox_options['tree_url'] = str_replace('{displayFormat}', $this->getDisplayFormatId($type, $displayFormat), $namebox_options['tree_url']);
-			$namebox_options['tree_url'] = hikashop_completeLink($namebox_options['tree_url'], false, false, true);
+
+			if(substr($namebox_options['tree_url'], 0, 10) == 'index.php?')
+				$namebox_options['tree_url'] = str_replace('&amp;', '&', JRoute::_($namebox_options['tree_url']));
+			else
+				$namebox_options['tree_url'] = hikashop_completeLink($namebox_options['tree_url'], false, false, true);
 		}
 
 		if(!empty($typeConfig['mode']) && $typeConfig['mode'] == 'tree') {

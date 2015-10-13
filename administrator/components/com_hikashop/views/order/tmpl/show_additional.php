@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -121,7 +121,12 @@ window.orderMgr.setAdditionals = function(el) {
 		</tr>
 		<tr class="hikashop_order_additional_payment_fee">
 			<td class="key"><label><?php echo JText::_('HIKASHOP_PAYMENT'); ?></label></td>
-			<td><span><?php echo $this->currencyHelper->format($this->order->order_payment_price, $this->order->order_currency_id); ?> - <?php
+			<td><span><?php
+			if($this->config->get('price_with_tax'))
+				echo $this->currencyHelper->format($this->order->order_payment_price, $this->order->order_currency_id);
+			else
+				echo $this->currencyHelper->format($this->order->order_payment_price - @$this->order->order_payment_tax, $this->order->order_currency_id);
+			?> - <?php
 			if(empty($this->order->order_payment_method))
 				echo '<em>'.JText::_('NONE').'</em>';
 			else{

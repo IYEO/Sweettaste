@@ -1,6 +1,6 @@
 /**
  * @package    HikaShop for Joomla!
- * @version    2.5.0
+ * @version    2.6.0
  * @author     hikashop.com
  * @copyright  (C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license    GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -8,12 +8,23 @@
 var hikaVote = function(el,opt) {
 	this.init(el,opt);
 };
+hikaVote.updateVote = function(type, ref_id, value) {
+	for(var i = window.hikaVotes.length - 1; i >= 0; i--) {
+		if(window.hikaVotes[i].type != type)
+			continue;
+		if(window.hikaVotes[i].ref_id != ref_id)
+			continue;
+		window.hikaVotes[i].setRating(value);
+	}
+};
 hikaVote.prototype = {
 	options : {},
 	selectBox: null,
 	container: null,
 	max: null,
 	cb: null,
+	type:null,
+	ref_id:null,
 	/**
 	 *
 	 */
@@ -99,6 +110,11 @@ hikaVote.prototype = {
 		else
 			t.selectBox.parentNode.appendChild(t.container);
 	},
+	reset: function() {
+		if(t.container)
+			t.container.parentNode.removeChild(t.container);
+		t.createContainer();
+	},
 	createStar: function(el, value) {
 		var t = this, d = document;
 		if(el) value = el.getAttribute('value');
@@ -156,9 +172,12 @@ hikaVote.prototype = {
 			from = t.selectBox.getAttribute('id');
 		t.setRating(rating);
 		t.selectBox.value = rating;
-		//send the id of the view which send the vote ( mini / form )
-		if(hikashop_send_vote)
+		// Send the id of the view which send the vote ( mini / form )
+		if(hikashop_send_vote){
+			var el = d.getElementById('hikashop_vote_rating_id');
+			if(el) el.value = rating;
 			hikashop_send_vote(rating, from);
+		}
 		if(t.cb)
 			t.cb(rating, from);
 	},
@@ -239,8 +258,7 @@ hikaVote.prototype = {
 	}
 };
 
-/* Vote initialization */
-window.hikashop.ready(function(){
+var initVote = function(){
 	var d = document, el = null, r = null;
 	var voteContainers = d.getElementsByName('hikashop_vote_rating');
 	if(voteContainers.length == 0)
@@ -255,5 +273,16 @@ window.hikashop.ready(function(){
 			container : null,
 			defaultRating :  el.getAttribute("data-rate")
 		});
+		window.hikaVotes.push(r);
 	}
+	el = d.getElementById('hikashop_vote_rating_id');
+	if(el) el.value = '0';
+};
+
+if(!window.hikaVotes)
+	window.hikaVotes = [];
+
+/* Vote initialization */
+window.hikashop.ready(function(){
+	initVote();
 });

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -55,48 +55,15 @@ class FieldViewField extends hikashopView{
 			$jsDrop = 'jQuery(input3).chosen();';
 		}
 
-		$script = 'function addLine(){
-			var myTable=window.document.getElementById("tablevalues");
-			var newline = document.createElement(\'tr\');
-			var column = document.createElement(\'td\');
-			var column2 = document.createElement(\'td\');
-			var column3 = document.createElement(\'td\');
-			var column4 = document.createElement(\'td\');
-			var input = document.createElement(\'input\');
-			var input2 = document.createElement(\'input\');
-			var input3 = document.createElement(\'select\');
-			var option1 = document.createElement(\'option\');
-			var option2 = document.createElement(\'option\');
-			input.type = \'text\';
-			input2.type = \'text\';
-			option1.value= \'0\';
-			option2.value= \'1\';
-			input.name = \'field_values[title][]\';
-			input2.name = \'field_values[value][]\';
-			input3.name = \'field_values[disabled][]\';
-			option1.text= \''.JText::_('HIKASHOP_NO',true).'\';
-			option2.text= \''.JText::_('HIKASHOP_YES',true).'\';
-			try { input3.add(option1, null); } catch(ex) { input3.add(option1); }
-			try { input3.add(option2, null); } catch(ex) { input3.add(option2); }
-			column.appendChild(input);
-			column2.appendChild(input2);
-			column3.appendChild(input3);
-			newline.appendChild(column);
-			newline.appendChild(column2);
-			newline.appendChild(column3);
-			newline.appendChild(column4);
-			myTable.appendChild(newline);
-			'.$jsDrop.'
-		}
+		hikashop_loadJslib('jquery');
 
-		function deleteRow(divName,inputName,rowName){
-			var d = document.getElementById(divName);
-			var olddiv = document.getElementById(inputName);
-			if(d && olddiv){
-				d.removeChild(olddiv);
-				document.getElementById(rowName).style.display="none";
-			}
-			return false;
+		$script = '
+		function addLine() {
+			window.hikashop.dupRow("hikashop_field_values_table_template", {
+				"TITLE":"field_values[title][]",
+				"VALUE":"field_values[value][]",
+				"DISABLED":"field_values[disabled][]"
+			})
 		}
 
 		function setVisible(value){
@@ -236,15 +203,15 @@ class FieldViewField extends hikashopView{
 	function state(){
 		$namekey = JRequest::getCmd('namekey', '');
 		if(!empty($namekey)) {
-			$field_namekey = JRequest::getString('field_namekey', '');
+			$field_namekey = JRequest::getCmd('field_namekey', '');
 			if(empty($field_namekey))
 				$field_namekey = 'address_state';
 
-			$field_id = JRequest::getString('field_id', '');
+			$field_id = JRequest::getCmd('field_id', '');
 			if(empty($field_id))
 				$field_id = 'address_state';
 
-			$field_type = JRequest::getString('field_type', '');
+			$field_type = JRequest::getCmd('field_type', '');
 			if(empty($field_type))
 				$field_type = 'address';
 

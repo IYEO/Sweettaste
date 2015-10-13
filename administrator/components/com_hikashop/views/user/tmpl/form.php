@@ -1,14 +1,14 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
 ?><div class="iframedoc" id="iframedoc"></div>
-<form action="index.php?option=com_hikashop&amp;ctrl=user" method="post"  name="adminForm" id="adminForm"  enctype="multipart/form-data">
+<form action="<?php echo hikashop_completeLink('user'); ?>" method="post" name="adminForm" id="adminForm"  enctype="multipart/form-data">
 <?php if(!HIKASHOP_BACK_RESPONSIVE) { ?>
 <div id="page-mail">
 	<table style="width:100%">
@@ -22,16 +22,16 @@ defined('_JEXEC') or die('Restricted access');
 					<legend><?php echo JText::_('MAIN_INFORMATION'); ?></legend>
 					<table class="admintable table">
 						<tr>
-							<td class="key">
-									<?php echo JText::_( 'HIKA_USER_NAME' ); ?>
-							</td>
+							<td class="key"><?php
+								echo JText::_( 'HIKA_USER_NAME' );
+							?></td>
 							<td>
 								<?php echo $this->escape(@$this->user->name); ?>
 							</td>
 						</tr>
 						<tr>
 							<td class="key">
-									<?php echo JText::_( 'HIKA_USERNAME' ); ?>
+								<?php echo JText::_( 'HIKA_USERNAME' ); ?>
 							</td>
 							<td>
 								<?php echo $this->escape(@$this->user->username); ?>
@@ -39,7 +39,7 @@ defined('_JEXEC') or die('Restricted access');
 						</tr>
 						<tr>
 							<td class="key">
-									<?php echo JText::_( 'HIKA_EMAIL' ); ?>
+								<?php echo JText::_( 'HIKA_EMAIL' ); ?>
 							</td>
 							<td>
 								<input type="text" size="30" name="data[user][user_email]" class="inputbox" value="<?php echo $this->escape(@$this->user->user_email); ?>" />
@@ -48,7 +48,7 @@ defined('_JEXEC') or die('Restricted access');
 						<?php if(hikashop_level(2) && !empty($this->user->geolocation_ip)){ ?>
 							<tr>
 								<td class="key">
-										<?php echo JText::_( 'IP' ); ?>
+									<?php echo JText::_( 'IP' ); ?>
 								</td>
 								<td>
 									<?php
@@ -97,7 +97,7 @@ defined('_JEXEC') or die('Restricted access');
 						?>
 							<tr>
 								<td class="key">
-										<?php echo JText::_( 'PARTNER_CURRENCY' ); ?>
+									<?php echo JText::_( 'PARTNER_CURRENCY' ); ?>
 								</td>
 								<td>
 									<?php
@@ -117,7 +117,7 @@ defined('_JEXEC') or die('Restricted access');
 							</tr>
 							<tr>
 								<td class="key">
-										<?php echo JText::_( 'CUSTOM_FEES' ); ?>
+									<?php echo JText::_( 'CUSTOM_FEES' ); ?>
 								</td>
 								<td>
 									<?php echo JHTML::_('hikaselect.booleanlist', "data[user][user_params][user_custom_fee]", 'onchange="updateCustomFeesPanel(this.value);return false;"',@$this->user->user_params->user_custom_fee);?>
@@ -128,7 +128,7 @@ defined('_JEXEC') or die('Restricted access');
 							<table class="admintable table">
 								<tr>
 									<td class="key">
-											<?php echo JText::_( 'PARTNER_FEES_CURRENCY' ); ?>
+										<?php echo JText::_( 'PARTNER_FEES_CURRENCY' ); ?>
 									</td>
 									<td>
 										<?php echo $this->currencyType->display("data[user][user_params][partner_fee_currency]",@$this->user->user_params->partner_fee_currency);?>
@@ -136,7 +136,7 @@ defined('_JEXEC') or die('Restricted access');
 								</tr>
 								<tr>
 									<td class="key">
-											<?php echo JText::_( 'PARTNER_LEAD_FEE' ); ?>
+										<?php echo JText::_( 'PARTNER_LEAD_FEE' ); ?>
 									</td>
 									<td>
 										<input type="text" size="5" name="data[user][user_params][user_partner_lead_fee]" class="inputbox" value="<?php echo $this->escape(@$this->user->user_params->user_partner_lead_fee); ?>" />
@@ -144,7 +144,7 @@ defined('_JEXEC') or die('Restricted access');
 								</tr>
 								<tr>
 									<td class="key">
-											<?php echo JText::_( 'PARTNER_ORDER_PERCENT_FEE' ); ?>
+										<?php echo JText::_( 'PARTNER_ORDER_PERCENT_FEE' ); ?>
 									</td>
 									<td>
 										<input type="text" size="5" name="data[user][user_params][user_partner_percent_fee]" class="inputbox" value="<?php echo $this->escape(@$this->user->user_params->user_partner_percent_fee); ?>" />%
@@ -152,7 +152,7 @@ defined('_JEXEC') or die('Restricted access');
 								</tr>
 								<tr>
 									<td class="key">
-											<?php echo JText::_( 'PARTNER_ORDER_FLAT_FEE' ); ?>
+										<?php echo JText::_( 'PARTNER_ORDER_FLAT_FEE' ); ?>
 									</td>
 									<td>
 										<input type="text" size="5" name="data[user][user_params][user_partner_flat_fee]" class="inputbox" value="<?php echo $this->escape(@$this->user->user_params->user_partner_flat_fee); ?>" />
@@ -160,7 +160,7 @@ defined('_JEXEC') or die('Restricted access');
 								</tr>
 								<tr>
 									<td class="key">
-											<?php echo JText::_( 'PARTNER_CLICK_FEE' ); ?>
+										<?php echo JText::_( 'PARTNER_CLICK_FEE' ); ?>
 									</td>
 									<td>
 										<input type="text" size="5" name="data[user][user_params][user_partner_click_fee]" class="inputbox" value="<?php echo $this->escape(@$this->user->user_params->user_partner_click_fee); ?>" />
@@ -367,9 +367,9 @@ defined('_JEXEC') or die('Restricted access');
 								foreach($this->rows as $row){
 									$i++;
 							?>
-								<tr class="<?php echo "row$k"; ?>">
+								<tr class="row<?php echo $k; ?>">
 									<td align="center">
-									<?php echo $i; ?>
+										<?php echo $i; ?>
 									</td>
 									<td align="center">
 										<a href="<?php echo hikashop_completeLink('order&task=edit&cid[]='.$row->order_id.'&user_id='.$this->user->user_id); ?>">
@@ -421,7 +421,7 @@ defined('_JEXEC') or die('Restricted access');
 	<input type="hidden" name="cancel_redirect" value="<?php echo base64_encode(JRequest::getString('cancel_redirect'));?>" />
 	<input type="hidden" name="cid[]" value="<?php echo @$this->user->user_id; ?>" />
 	<input type="hidden" name="order_id" value="<?php echo JRequest::getInt('order_id',0); ?>" />
-	<input type="hidden" name="option" value="com_hikashop" />
+	<input type="hidden" name="option" value="<?php echo HIKASHOP_COMPONENT; ?>" />
 	<input type="hidden" name="task" value="" />
 	<input type="hidden" name="ctrl" value="user" />
 	<?php echo JHTML::_( 'form.token' ); ?>

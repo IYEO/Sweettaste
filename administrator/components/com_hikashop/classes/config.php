@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -87,8 +87,19 @@ class hikashopConfigClass extends hikashopClass{
 				continue;
 			}
 
+			if($namekey == 'mail_folder' && !empty($value) && !preg_match('#^\{root\}[a-z0-9/_\-]*$#i', $value)) {
+				if($app->isAdmin())
+					$app->enqueueMessage('The email folder must be a relative path from your ROOT folder prefixed with the tag {root}', 'error');
+				continue;
+			}
+
 			if($namekey=='main_currency' && !empty($this->values[$namekey]->config_value)) {
 				$currencyClass = hikashop_get('class.currency');
+				$currency = new stdClass();
+				$currency->currency_id = $this->values[$namekey]->config_value;
+				$currency->currency_published = 1;
+				$currency->currency_displayed = 1;
+				$currencyClass->save($currency);
 				$currencyClass->updateRatesWithNewMainCurrency($this->values[$namekey]->config_value,$value);
 			}
 

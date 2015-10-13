@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -101,6 +101,18 @@ class configViewConfig extends hikashopView
 			}
 		}
 
+		if(!isset($_SESSION['check_system_user'])){
+			$db = JFactory::getDBO();
+			if(!HIKASHOP_J16){
+				$db->setQuery("SELECT id FROM `#__plugins` WHERE `folder` = 'system' AND `element` = 'hikashopuser' AND `published` = '1'");
+			}else{
+				$db->setQuery("SELECT extension_id FROM `#__extensions` WHERE `folder` = 'system' AND `element` = 'hikashopuser' AND `enabled` = '1'");
+			}
+			$_SESSION['check_system_user'] = $db->loadResult();
+			if(empty($_SESSION['check_system_user'])){
+				hikashop_display('The HikaShop user synchronization plugin has been either removed or disabled from the website. It is a critical part of HikaShop and should not be disabled if you\'re using HikaShop on your website.Please enable that plugin via the Joomla plugins manager and then logout/login from the backend.','error');
+			}
+		}
 
 		$elements->add_names = JHTML::_('hikaselect.booleanlist', "config[add_names]" , '',$config->get('add_names',true) );
 		$elements->embed_images = JHTML::_('hikaselect.booleanlist', "config[embed_images]" , '',$config->get('embed_images',0) );

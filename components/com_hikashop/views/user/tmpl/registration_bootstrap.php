@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -134,7 +134,7 @@ if(!$this->simplified_registration || $this->simplified_registration == 3){ ?>
 				if($this->simplified_registration==2){
 					$registerButtonName=JText::_('HIKA_NEXT');
 				}
-			 	echo $this->cartClass->displayButton($registerButtonName,'register',$this->params,'',' hikashopSubmitForm(\''.$this->form_name.'\'); return false;','id="hikashop_register_form_button"', 0, 1, 'btn btn-primary'); //hikashopSubmitForm(\''.$this->form_name.'\');
+			 	echo $this->cartClass->displayButton($registerButtonName,'register',$this->params,'',' hikashopSubmitForm(\''.$this->form_name.'\', \'register\'); return false;','id="hikashop_register_form_button"', 0, 1, 'btn btn-primary'); //hikashopSubmitForm(\''.$this->form_name.'\');
 			 	$button = $this->config->get('button_style','normal');
 			 	if ($button=='css')
 					echo '<input type="submit" style="position: absolute; left: -9999px; width: 1px; height: 1px;"/></input>';

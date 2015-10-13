@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -287,11 +287,15 @@ class plgHikashopMassaction_order extends JPlugin
 	}
 	function onProcessOrderMassActionexportCsv(&$elements,&$action,$k){
 		$formatExport = $action['formatExport']['format'];
-		$path = $action['formatExport']['path'];
 		$email = $action['formatExport']['email'];
-		if(empty($path)){
+		$path = $action['formatExport']['path'];
+		if(!empty($path)){
+			$url = $this->massaction->setExportPaths($path);
+		}else{
+			$url = array('server'=>'','web'=>'');
 			ob_get_clean();
 		}
+
 		$app = JFactory::getApplication();
 		if($app->isAdmin() || (!$app->isAdmin() && !empty($path))){
 			$params = new stdClass();
@@ -299,7 +303,7 @@ class plgHikashopMassaction_order extends JPlugin
 			unset($action['formatExport']);
 			$params = $this->massaction->_displayResults('order',$elements,$action,$k);
 			$params->formatExport = $formatExport;
-			$params->path = $path;
+			$params->path = $url['server'];
 			$params = $this->massaction->sortResult($params->table,$params);
 			$this->massaction->_exportCSV($params);
 		}
@@ -311,9 +315,9 @@ class plgHikashopMassaction_order extends JPlugin
 			$mail->subject = JText::_('MASS_CSV_EMAIL_SUBJECT');
 			$mail->html = '1';
 			$csv = new stdClass();
-			$csv->name = JText::_('MASS_CSV_EMAIL_FILE_NAME');
-			$csv->filename = $path;
-			$csv->url = $path;
+			$csv->name = basename($path);
+			$csv->filename = basename($path);
+			$csv->url = $url['web'];
 			$mail->attachments = array($csv);
 			$mail->dst_name = '';
 			$mail->dst_email = explode(',',$email);
@@ -538,6 +542,7 @@ class plgHikashopMassaction_order extends JPlugin
 			$content = array('elements' => $elements, 'action' => $action, 'type' => 'order_notification');
 			$mail = $mailClass->get('massaction_notification',$content);
 			$mail->subject = !empty($action['emailSubject'])?JText::_($action['emailSubject']):JText::_('MASS_NOTIFICATION_EMAIL_SUBJECT');
+			$mail->body = $action['bodyData'];
 			$mail->html = '1';
 			$mail->dst_name = '';
 			if(!empty($action['emailAddress']))

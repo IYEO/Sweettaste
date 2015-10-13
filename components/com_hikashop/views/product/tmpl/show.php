@@ -1,15 +1,14 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
 ?><?php
-
-if($this->canonical) {
+if(!empty($this->canonical)) {
 	$doc = JFactory::getDocument();
 	$doc->addCustomTag('<link rel="canonical" href="'.hikashop_cleanURL($this->canonical).'" />');
 }
@@ -36,7 +35,21 @@ if(!empty($this->links->next))
 	echo "<a title='".JText :: _('NEXT_PRODUCT')."' href='".$this->links->next."'><span class='hikashop_next_product'></span></a>";
 ?>
 	<div class='clear_both'></div>
-	<form action="<?php echo hikashop_completeLink('product&task=updatecart'); ?>" method="post" name="hikashop_product_form" enctype="multipart/form-data">
+	<form action="<?php echo hikashop_completeLink('product&task=updatecart'); ?>" method="post" name="hikashop_product_form" onsubmit="return hikashop_product_form_check();" enctype="multipart/form-data">
+	<script type="text/javascript">
+	function hikashop_product_form_check(){
+		var add_to_cart_main_div = document.getElementById('hikashop_product_quantity_main');
+		if(!add_to_cart_main_div)
+			return true;
+		var main_div_inputs = add_to_cart_main_div.getElementsByTagName('input');
+		if(!main_div_inputs.length){
+			var main_div_links = add_to_cart_main_div.getElementsByTagName('a');
+			if(!main_div_links.length)
+				return false;
+		}
+		return true;
+	}
+	</script>
 <?php
 $this->variant_name ='';
 if(!empty($this->element->variants)&&$this->config->get('variant_increase_perf',1)&&!empty($this->element->main)){
@@ -305,7 +318,7 @@ if(empty($this->element->variants) || $this->params->get('characteristic_display
 				}
 				if(!empty($variant->$fieldName))
 					$variant->$fieldName = trim($variant->$fieldName);
-				if(!empty($variant->$fieldName) || $variant->$fieldName === '0') {
+				if(!empty($variant->$fieldName) || (isset($variant->$fieldName) && $variant->$fieldName === '0')) {
 ?>
 			<tr class="hikashop_product_custom_<?php echo $oneExtraField->field_namekey;?>_line">
 				<td class="key">

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -113,7 +113,7 @@ if(!empty($this->rows)){
 		<?php echo JHTML::_( 'form.token' ); ?>
 	</form>
 	<?php } ?>
-	<div class="hikashop_subcategories">
+	<div class="hikashop_subcategories" data-consistencyheight=".hikashop_subcontainer">
 	<?php
 
 	if($enableCarousel){
@@ -237,7 +237,7 @@ if(!empty($this->rows)){
 								break;
 							}
 							$i++;
-							$link = hikashop_completeLink('category&task=listing&cid='.$child->category_id.'&name='.$child->alias.$this->menu_id);
+							$link = $this->getLink($child);
 							$class = ($found == $child->category_id) ? ' hikashop_current_subcategory' : '';
 ?>
 							<li class="hikashop_category_list_item<?php echo $class; ?>">

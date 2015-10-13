@@ -1,6 +1,6 @@
 /**
  * @package    HikaShop for Joomla!
- * @version    2.5.0
+ * @version    2.6.0
  * @author     hikashop.com
  * @copyright  (C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license    GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -918,6 +918,7 @@ span.hikashop_AUP_points{
 #hikashop_social span.hikashop_social_pinterest_right { float:right; margin-right:5px; }
 #hikashop_social span.hikashop_social_addThis { float:left; margin-right:5px; }
 #hikashop_social span.hikashop_social_addThis_right { float:right; margin-right:5px; }
+#hikashop_social iframe{ max_width: inherit !important; }
 
 .hikashop_option_info {
 	margin-left:5px;
@@ -1564,6 +1565,9 @@ a.hikashop_filter_list_selected:hover { color:black; font-weight:bold; text-deco
 .hikashop_main_carousel_div ul li{
 	padding: 0px !important;
 	background: none !important;
+}
+.hikashop_main_carousel_div > ul > li {
+	margin: 0px !important;
 }
 
 .hika-radio input[type="radio"] {
@@ -2464,7 +2468,7 @@ p.jRatingInfos span.maxRate {
 #hikashop_shipping_methods .row0:hover, #hikashop_shipping_methods .row1:hover{background-color:#f8f8f8}
 .hikashop_checkout_shipping_name{font-weight: bold; color:#333}
 .hikashop_checkout_shipping_price_full, .hikashop_checkout_payment_description{color:#666}
-.hikashop_checkout_cart_shipping{color:#2C8296; font-style:italic; font-family:"Times New Roman", Times, serif; font-size:14px}
+.hikashop_checkout_cart_shipping, .hikashop_checkout_cart_subtotal{color:#2C8296; font-style:italic; font-family:"Times New Roman", Times, serif; font-size:14px; font-weight: bold;}
 
 #hikashop_payment_methods table {border-collapse:collapse; width:100%}
 .hikashop_checkout_payment_description{margin-left:10px}
@@ -2743,4 +2747,156 @@ div.hikashop_checkout_loading div.hikashop_checkout_loading_elem {
 }
 div.hikashop_checkout_loading div.hikashop_checkout_loading_spinner {
 	background:url('../images/spinner_02.gif') no-repeat center;
+}
+
+
+.hikashop_menu_block_content_type,
+.hikashop_module_block_content_type {
+	color: #aaa;
+	font-weight: bold;
+	line-height: 28px;
+	text-align: center;
+	background-color: #eee;
+	cursor: pointer;
+	border: solid 1px #ccc;
+	border-bottom-style: none;
+	border-radius: 8px 8px 0px 0px;
+}
+
+.hikashop_edit_display_type .selected {
+	font-size: 1.2em;
+	background-color: white !important;
+	color: #333;
+}
+
+.hikashop_menu_block_content_type:hover,
+.hikashop_menu_block_content_type:hover {
+	background-color: #ddd;
+	color: #333;
+}
+
+.hikashop_module_block,
+.hikashop_menu_block {
+	border: solid 1px #ccc;
+	border-top-style: none;
+	width: 99.9%;
+}
+
+.item-cartmodule-interface .hikashop_module_block{
+	border: solid 1px #ccc;
+}
+
+.hikashop_module_subblock,
+.hikashop_menu_subblock {
+	padding: 10px 5px;
+	width: 100%;
+}
+
+.hikashop_module_subblock_content,
+.hikashop_menu_subblock_content {
+	background-color: #f7f7f7;
+	border-radius: 8px;
+	border: 1px solid #ddd;
+	padding-bottom: 10px;
+}
+
+.hikashop_menu_subblock_title,
+.hikashop_module_subblock_title {
+	font-weight: bold;
+	text-align: center;
+	background-image: linear-gradient(#f9f9f9, #e1e1e1);
+	margin-top: 5px;
+	height: 22px;
+}
+
+dl.hika_options,
+dl.hika_suboptions {
+	margin-bottom:2px;
+}
+
+dl.hika_options > dt {
+	float:left;
+	clear:left;
+	font-weight:normal;
+	padding:5px;
+	width:120px;
+	text-align:right;
+	line-height:16px;
+
+	overflow:hidden;
+	text-overflow:ellipsis;
+	white-space:nowrap;
+}
+
+dl.hika_options.large > dt {
+	width:180px;
+}
+
+dl.hika_options > dt label {
+	margin:0px;
+}
+
+dl.hika_options > dd {
+	margin-left:130px;
+	padding-top:4px;
+	padding-bottom:4px;
+	line-height:18px;
+	min-height:18px;
+}
+dl.hika_options.large > dd {
+	margin-left:190px;
+}
+
+
+#attrib-hk_options .control-group{
+	display: none;
+}
+
+
+.hikashop_option_name .field_rows{
+	line-height: 19;
+}
+.hikashop_option_value .field_columns{
+	padding-left: 34px;
+	margin: 0px;
+}
+.listing_item_quantity_selector{
+	width: 120px;
+}
+.listing_item_quantity_selector{
+	line-height: 9px;
+}
+.listing_item_quantity_selector div{
+	display: inline-block;
+	padding: 8px 8px;
+	border: solid 1px #ccc;
+	margin: 1px;
+	background-color: #fff;
+	cursor: pointer;
+}
+.listing_item_quantity_selector div.listing_table{
+	padding: 8px 58px;
+}
+.listing_item_quantity_selector div.listing_list{
+	padding: 4px 8px;
+}
+.listing_item_quantity_selector div.selected, .listing_item_quantity_selector div.tmp_selected{
+	background-color: #C8DEF4;
+}
+.listing_item_quantity_fields{
+	margin-top: 5px;
+}
+.listing_item_quantity_fields input{
+	text-align: center;
+	width: 38px;
+}
+.listing_item_quantity_fields.onecol input{
+	width: 105px;
+}
+label.btn-default{
+	background-color: #ccc;
+	background-image: linear-gradient(to bottom, #ccc, #E6E6E6);
+}
+label.btn-default-lbl{
+	font-weight: bold;
 }

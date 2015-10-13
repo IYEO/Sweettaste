@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -51,7 +51,7 @@ hikashopGallery.callbackSelection = function(tree,id) {
 					$params .= '&' . urlencode($uploadField) . '=' . urlencode($uploadFieldValue);
 				}
 			}
-			echo hikamarket::completeLink('upload&task=galleryimage&folder={FOLDER}&uploader='.$this->uploader.'&field='.$this->field.$params, true, true) ;
+			echo hikashop_completeLink('upload&task=galleryimage&folder={FOLDER}&uploader='.$this->uploader.'&field='.$this->field.$params, true, true) ;
 		?>";
 		document.location = url.replace('{FOLDER}', node.value.replace('/', '|'));
 	}
@@ -65,10 +65,13 @@ hikashopGallery.callbackSelection = function(tree,id) {
 if(!empty($this->dirContent)) {
 	foreach($this->dirContent as $k => $content) {
 		$chk_uid = 'hikaGalleryChk_' . $k . '_' . uniqid();
+
+		if(!empty($this->subFolder))
+			$content->path = str_replace($this->subFolder, '', $content->path);
 ?>
 	<li class="hikaGalleryItem">
 		<a class="hikaGalleryPhoto" href="#" onclick="return window.hikagallery.select(this, '<?php echo $chk_uid; ?>');">
-			<img src="<?php echo $content->thumbnail->url; ?>" alt="<?php echo $content->filename; ?>"/>
+			<img src="<?php echo str_replace('//', '/', $content->thumbnail->url); ?>" alt="<?php echo $content->filename; ?>"/>
 			<span style="display:none;" class="hikaGalleryChk"><input type="checkbox" id="<?php echo $chk_uid ;?>" name="files[]" value="<?php echo $content->path; ?>"/></span>
 			<div class="hikaGalleryCommand">
 				<span class="photo_name"><?php echo $content->filename; ?></span>

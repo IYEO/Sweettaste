@@ -1,113 +1,81 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
 ?><?php
-class productController extends hikashopController{
+class productController extends hikashopController {
 	var $modify = array();
 	var $delete = array();
 	var $modify_views = array();
 
-	function __construct($config = array(),$skip=false){
-		parent::__construct($config,$skip);
-		$this->display[]='updatecart';
-		$this->display[]='cart';
-		$this->display[]='cleancart';
-		$this->display[]='contact';
-		$this->display[]='compare';
-		$this->display[]='waitlist';
-		$this->display[]='send_email';
-		$this->display[]='add_waitlist';
-		$this->display[]='price';
-		$this->display[]='download';
-		$this->display[]='printcart';
-		$this->display[]='sendcart';
-	}
-	function authorize($task){
-		if($this->isIn($task,array('display'))){
-			return true;
-		}
-		return false;
+	public function __construct($config = array(), $skip = false) {
+		parent::__construct($config, $skip);
+		$this->display = array_merge($this->display, array(
+			'updatecart', 'cart', 'cleancart', 'contact', 'compare', 'waitlist', 'send_email', 'add_waitlist', 'price', 'download', 'printcart', 'sendcart'
+		));
 	}
 
-	function printcart(){
-		JRequest::setVar( 'layout', 'printcart' );
-		return parent::display();
-	}
-	function sendcart(){
-		JRequest::setVar( 'layout', 'sendcart' );
-		return parent::display();
+	public function authorize($task) {
+		return $this->isIn($task, array('display'));
 	}
 
-	function contact(){
-		JRequest::setVar( 'layout', 'contact' );
-		return $this->display();
-	}
-
-	function compare(){
-		JRequest::setVar( 'layout', 'compare' );
-		return $this->display();
-	}
-
-	function waitlist(){
-		JRequest::setVar( 'layout', 'waitlist' );
-		return $this->display();
-	}
-
-	function price(){
-		JRequest::setVar( 'layout', 'option_price' );
-		return $this->display();
-	}
+	public function printcart() { JRequest::setVar('layout', 'printcart'); return $this->display(); }
+	public function sendcart() { JRequest::setVar('layout', 'sendcart'); return $this->display(); }
+	public function contact() { JRequest::setVar('layout', 'contact'); return $this->display(); }
+	public function compare() { JRequest::setVar('layout', 'compare'); return $this->display(); }
+	public function waitlist() { JRequest::setVar('layout', 'waitlist'); return $this->display(); }
+	public function price() { JRequest::setVar('layout', 'option_price'); return $this->display(); }
 
 	function send_email(){
 		JRequest::checkToken('request') || jexit( 'Invalid Token' );
 		$element = new stdClass();
-		$formData = JRequest::getVar( 'data', array(), '', 'array' );
-		if(empty($formData['contact'])){
+		$formData = JRequest::getVar('data', array(), '', 'array');
+		if(empty($formData['contact'])) {
 			$formData['contact'] = @$formData['register'];
 			foreach($formData['contact'] as $column => $value) {
 				hikashop_secureField($column);
 				$element->$column = strip_tags($value);
 			}
-		}
-		else{
+		} else {
 			$fieldsClass = hikashop_get('class.field');
 			$element = $fieldsClass->getInput('contact',$element);
 		}
 
-
 		$app = JFactory::getApplication();
-		if(empty($element->email)){
+		if(empty($element->email)) {
 			$app->enqueueMessage(JText::_('VALID_EMAIL'));
 			return $this->contact();
 		}
+
 		$config =& hikashop_config();
 
 		$dispatcher = JDispatcher::getInstance();
 		JPluginHelper::importPlugin('hikashop');
 		$send = $config->get('product_contact',0);
-		$dispatcher->trigger( 'onBeforeSendContactRequest', array(&$element, &$send));
+		$dispatcher->trigger('onBeforeSendContactRequest', array(&$element, &$send));
 
 		jimport('joomla.mail.helper');
 		if($element->email && !JMailHelper::isEmailAddress($element->email)){
-			$app->enqueueMessage(JText::_('EMAIL_INVALID'),'error');
-			$send = false;
-		}
-		if(empty($element->name)){
-			$app->enqueueMessage(JText::_('SPECIFY_A_NAME'),'error');
-			$send = false;
-		}
-		if(empty($element->altbody)){
-			$app->enqueueMessage(JText::_('PLEASE_FILL_ADDITIONAL_INFO'),'error');
+			$app->enqueueMessage(JText::_('EMAIL_INVALID'), 'error');
 			$send = false;
 		}
 
-		if($send){
+		if(empty($element->name)) {
+			$app->enqueueMessage(JText::_('SPECIFY_A_NAME'), 'error');
+			$send = false;
+		}
+
+		if(empty($element->altbody)) {
+			$app->enqueueMessage(JText::_('PLEASE_FILL_ADDITIONAL_INFO'), 'error');
+			$send = false;
+		}
+
+		if($send) {
 			$subject = JText::_('CONTACT_REQUEST');
 			if(!empty($element->product_id)){
 				$productClass = hikashop_get('class.product');
@@ -154,37 +122,38 @@ class productController extends hikashopController{
 					if(!isset($productClass))
 						$productClass = hikashop_get('class.product');
 					$productClass->addAlias($product);
-					$app->enqueueMessage(JText::sprintf('CLICK_HERE_TO_GO_BACK_TO_PRODUCT',hikashop_completeLink('product&task=show&cid='.$product->product_id.'&name='.$product->alias.$url_itemid)));
+					$app->enqueueMessage(JText::sprintf('CLICK_HERE_TO_GO_BACK_TO_PRODUCT',hikashop_contentLink('product&task=show&cid='.$product->product_id.'&name='.$product->alias.$url_itemid, $product)));
 				}
 			}
-		}else{
-			JRequest::setVar('formData',$element);
+		} else {
+			JRequest::setVar('formData', $element);
 		}
+
 		$url = JRequest::getVar('redirect_url');
 		if($send && !empty($url)) {
 			$app->redirect($url);
 		} else {
 			$this->contact();
 		}
-
 	}
 
 	function add_waitlist() {
 		JRequest::checkToken('request') || jexit( 'Invalid Token' );
 		$element = new stdClass();
-		$formData = JRequest::getVar( 'data', array(), '', 'array' );
+		$formData = JRequest::getVar('data', array(), '', 'array');
 		foreach($formData['register'] as $column => $value){
 			hikashop_secureField($column);
 			$element->$column = strip_tags($value);
 		}
 		$user = JFactory::getUser();
-		$app= JFactory::getApplication();
-		if(empty($element->email) && $user->guest){
+		$app = JFactory::getApplication();
+		if(empty($element->email) && $user->guest) {
 			$app->enqueueMessage(JText::_('VALID_EMAIL'));
 			return $this->waitlist();
 		}
+
 		$config =& hikashop_config();
-		if(!$config->get('product_waitlist',0)){
+		if(!$config->get('product_waitlist', 0)) {
 			return $this->waitlist();
 		}
 		$waitlist_subscribe_limit = $config->get('product_waitlist_sub_limit',10);
@@ -232,14 +201,32 @@ class productController extends hikashopController{
 				$sql = 'INSERT IGNORE INTO '.hikashop_table('waitlist').' (`product_id`,`date`,`email`,`name`,`product_item_id`) VALUES ('.(int)$product_id.', '.time().', '.$db->quote($email).', '.$db->quote($name).', '.(int)$itemId.');';
 				$db->setQuery($sql);
 				$db->query();
+
 				$app->enqueueMessage(JText::_('WAITLIST_SUBSCRIBE'));
+
+				$subject = JText::_('WAITLIST_REQUEST');
+				if(!empty($product->product_name)) {
+					$subject = JText::sprintf('WAITLIST_REQUEST_FOR_PRODUCT', strip_tags($product->product_name));
+				}
+				$mailClass = hikashop_get('class.mail');
+				$infos = new stdClass();
+				$infos->user =& $element;
+				$infos->product =& $product;
+				$mail = $mailClass->get('waitlist_admin_notification', $infos);
+				$mail->subject = $subject;
+				$mail->from_email = $config->get('from_email');
+				$mail->from_name = $config->get('from_name');
+				$mail->reply_email = $element->email;
+				if(empty($mail->dst_email))
+					$mail->dst_email = array($config->get('from_email'));
+				$status = $mailClass->sendMail($mail);
 			} else {
 				$app->enqueueMessage(JText::_('WAITLIST_FULL'));
 			}
 		} else {
 			$app->enqueueMessage(JText::_('ALREADY_REGISTER_WAITLIST'));
 		}
-		$app->enqueueMessage(JText::sprintf('CLICK_HERE_TO_GO_BACK_TO_PRODUCT',hikashop_completeLink('product&task=show&cid='.$product->product_id.'&name='.$alias.$url_itemid)));
+		$app->enqueueMessage(JText::sprintf('CLICK_HERE_TO_GO_BACK_TO_PRODUCT',hikashop_contentLink('product&task=show&cid='.$product->product_id.'&name='.$alias.$url_itemid,$product)));
 		$url = JRequest::getVar('redirect_url');
 		if(!empty($url)){
 			$app->redirect($url);
@@ -248,44 +235,58 @@ class productController extends hikashopController{
 		}
 	}
 
-	function cleancart(){
-		$class = hikashop_get('class.cart');
-		if($class->hasCart()){
-			$class->delete($class->cart->cart_id);
-		}
+	public function cleancart() {
+		$cartClass = hikashop_get('class.cart');
+		if($cartClass->hasCart())
+			$cartClass->delete($cartClass->cart->cart_id);
 
 		$url = JRequest::getVar('return_url','');
-		if(empty($url)){
+		if(empty($url)) {
 			$url = JRequest::getVar('url','');
 			$url = urldecode($url);
-		}else{
+		} else {
 			$url = base64_decode(urldecode($url));
 		}
 
-		if(!empty($url)){
-			if(strpos($url,'tmpl=component')!==false || strpos($url,'tmpl-component')!==false){
-				if(!empty($_SERVER['HTTP_REFERER'])){
-					$app =& JFactory::getApplication();
-					$app->redirect($_SERVER['HTTP_REFERER']);
-				}else{
-					echo '<html><head><script type="text/javascript">history.back();</script></head><body></body></html>';
-					exit;
-				}
-			}
-			if(hikashop_disallowUrlRedirect($url)) return false;
-			$this->setRedirect($url);
-		}else{
+		if(HIKASHOP_J30){
+			$plugin = JPluginHelper::getPlugin('system', 'cache');
+			$params = new JRegistry(@$plugin->params);
+
+			$options = array(
+				'defaultgroup'	=> 'page',
+				'browsercache'	=> $params->get('browsercache', false),
+				'caching'		=> false,
+			);
+
+			$cache		= JCache::getInstance('page', $options);
+			$cache->clean();
+		}
+
+		if(empty($url)) {
 			echo '<html><head><script type="text/javascript">history.go(-1);</script></head><body></body></html>';
 			exit;
 		}
+
+		if(strpos($url, 'tmpl=component') !== false || strpos($url, 'tmpl-component') !== false) {
+			if(!empty($_SERVER['HTTP_REFERER'])) {
+				$app = JFactory::getApplication();
+				$app->redirect($_SERVER['HTTP_REFERER']);
+			} else {
+				echo '<html><head><script type="text/javascript">history.back();</script></head><body></body></html>';
+				exit;
+			}
+		}
+		if(hikashop_disallowUrlRedirect($url))
+			return false;
+		$this->setRedirect($url);
 	}
 
-	function updatecart(){
+	public function updatecart() {
 		hikashop_nocache();
 
 		$app = JFactory::getApplication();
-		$product_id = (int)JRequest::getCmd('product_id',0);
-		$module_id = (int)JRequest::getCmd('module_id',0);
+		$product_id = (int)JRequest::getCmd('product_id', 0);
+		$module_id = (int)JRequest::getCmd('module_id', 0);
 
 		$cart_type = JRequest::getString('hikashop_cart_type_'.$product_id.'_'.$module_id,'null');
 
@@ -586,9 +587,10 @@ class productController extends hikashopController{
 		}
 	}
 
-	function download() {
-		$file_id = JRequest::getInt('file_id');
-		if(!$file_id){ return false; }
+	public function download() {
+		$file_id = JRequest::getInt('file_id', 0);
+		if(empty($file_id))
+			return false;
 		$fileClass = hikashop_get('class.file');
 		$fileClass->download($file_id);
 		return true;

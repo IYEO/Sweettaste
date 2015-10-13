@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -80,7 +80,15 @@ class hikashopBadgeClass extends hikashopClass {
 		);
 		$categoryClass = hikashop_get('class.category');
 		$productClass = hikashop_get('class.product');
-		$loadedCategories = $productClass->getCategories($product_id);
+
+		if(isset($row->categories)) {
+			$oneCat = reset($row->categories);
+			if(is_object($oneCat))
+				$loadedCategories = array_keys($row->categories);
+			else
+				$loadedCategories = $row->categories;
+		} else
+			$loadedCategories = $productClass->getCategories($product_id);
 
 		if(!empty($row->main->product_manufacturer_id))
 			$categories['originals'][$row->main->product_manufacturer_id] = $row->main->product_manufacturer_id;
@@ -89,7 +97,7 @@ class hikashopBadgeClass extends hikashopClass {
 
 		if(!empty($loadedCategories)){
 			foreach($loadedCategories as $cat){
-				$categories['originals'][$cat]=$cat;
+				$categories['originals'][$cat] = $cat;
 			}
 		}
 
@@ -159,6 +167,7 @@ class hikashopBadgeClass extends hikashopClass {
 		$width_real= $image->thumbnail_x;
 		$height_real= $image->thumbnail_y;
 		$html = '';
+		$config = hikashop_config();
 
 		foreach($badges as $badge){
 			if($badge->badge_published == 1) {
@@ -177,10 +186,13 @@ class hikashopBadgeClass extends hikashopClass {
 				$styletopright="position: absolute; z-index:3; top: ".$position_top."px; right: ".$position_right."px;margin-top:10px;";
 				$stylebottomleft="position: absolute; z-index:4; bottom: ".$position_bottom."px; left: ".$position_left."px;margin-bottom:10px;";
 				$stylebottomright="position: absolute; z-index:5; bottom: ".$position_bottom."px; right: ".$position_right."px;margin-bottom:10px;";
+				$image_options = array('default' => true,'forcesize'=>$config->get('image_force_size',true),'scale'=>$config->get('image_scale_mode','inside'));
+				$img = $image->getThumbnail(@$badge->badge_image, array('width' => $badge_width, 'height' => $badge_height), $image_options);
+				if(!$img)
+					continue;
+				$imageDisplayed = '<img class="hikashop_product_badge_image" title="'.htmlentities(@$badge->badge_name).'" alt="'.htmlentities(@$badge->badge_name).'" src="'.$img->url.'"/>';
 				if(!empty($badge->badge_url)){
-					$imageDisplayed='<a href="'.hikashop_cleanURL($badge->badge_url).'">'. $image->display(@$badge->badge_image,false,@$badge->badge_name,'','', $badge_width, $badge_height).'</a>';
-				}else{
-					$imageDisplayed=$image->display(@$badge->badge_image,false,@$badge->badge_name,'','', $badge_width, $badge_height);
+					$imageDisplayed='<a href="'.hikashop_cleanURL($badge->badge_url).'">'. $imageDisplayed .'</a>';
 				}
 				if($position == 'topleft' && ($position1 == 0 || $badge->badge_ordering < $position1)) {
 					$html .= '<div class="hikashop_badge_topleft_div" style="' . $styletopleft . '">'.$imageDisplayed.'</div>';

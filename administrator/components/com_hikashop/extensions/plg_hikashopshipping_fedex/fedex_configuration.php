@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -138,13 +138,19 @@ defined('_JEXEC') or die('Restricted access');
 			</label>
 		</td>
 		<td>
-			<span id="state_zone">
-				<?php if(!empty($this->element->shipping_params->sender_state)){ echo $this->element->shipping_params->sender_state;} ?>
-				<input type="hidden" name="data[shipping][shipping_params][sender_state]" value="<?php echo @$this->element->shipping_params->sender_state ?>"/>
-			</span>
-			<a class="modal" rel="{handler: 'iframe', size: {x: 760, y: 480}}" href="<?php echo hikashop_completeLink("zone&task=selectchildlisting&type=shipping&subtype=state_zone&map=data[shipping][shipping_params][sender_state]&tmpl=component"); ?>" >
-				<img src="<?php echo HIKASHOP_IMAGES; ?>edit.png"/>
-			</a>
+			<?php
+				echo $this->data['nameboxType']->display(
+					'data[shipping][shipping_params][sender_state]',
+					@$this->element->shipping_params->sender_state,
+					hikashopNameboxType::NAMEBOX_SINGLE,
+					'zone',
+					array(
+						'delete' => true,
+						'default_text' => '<em>'.JText::_('HIKA_NONE').'</em>',
+						'zone_types' => array('state' => 'STATE'),
+					)
+				);
+			?>
 		</td>
 	</tr>
 	<tr>
@@ -154,13 +160,19 @@ defined('_JEXEC') or die('Restricted access');
 			</label>
 		</td>
 		<td>
-			<span id="country_zone">
-				<?php if(!empty($this->element->shipping_params->sender_country)){ echo $this->element->shipping_params->sender_country;} ?>
-				<input type="hidden" name="data[shipping][shipping_params][sender_country]" value="<?php echo @$this->element->shipping_params->sender_country ?>"/>
-			</span>
-			<a class="modal" rel="{handler: 'iframe', size: {x: 760, y: 480}}" href="<?php echo hikashop_completeLink("zone&task=selectchildlisting&type=shipping&subtype=country_zone&map=data[shipping][shipping_params][sender_country]&tmpl=component"); ?>" >
-				<img src="<?php echo HIKASHOP_IMAGES; ?>edit.png"/>
-			</a>
+			<?php
+				echo $this->data['nameboxType']->display(
+					'data[shipping][shipping_params][sender_country]',
+					@$this->element->shipping_params->sender_country,
+					hikashopNameboxType::NAMEBOX_SINGLE,
+					'zone',
+					array(
+						'delete' => true,
+						'default_text' => '<em>'.JText::_('HIKA_NONE').'</em>',
+						'zone_types' => array('country' => 'COUNTRY'),
+					)
+				);
+			?>
 		</td>
 	</tr>
 	<tr>

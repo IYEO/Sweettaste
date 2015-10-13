@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -15,7 +15,7 @@ class hikashopFileClass extends hikashopClass {
 	var $deleteToggle = array('file'=>array('file_type', 'file_ref_id'));
 	var $error_type = '';
 
-	function saveFile($var_name='files',$type = 'image') {
+	function saveFile($var_name = 'files', $type = 'image', $allowed = null) {
 		$file = JRequest::getVar($var_name, array(), 'files', 'array');
 
 		if(empty($file['name']))
@@ -23,10 +23,12 @@ class hikashopFileClass extends hikashopClass {
 
 		$app = JFactory::getApplication();
 		$config =& hikashop_config();
-		if($type=='file')
-			$allowed = $config->get('allowedfiles');
-		else
-			$allowed = $config->get('allowedimages');
+		if(empty($allowed)) {
+			if($type == 'file')
+				$allowed = $config->get('allowedfiles');
+			else
+				$allowed = $config->get('allowedimages');
+		}
 
 		$uploadPath = $this->getPath($type);
 		$tempData = array();
@@ -250,8 +252,8 @@ class hikashopFileClass extends hikashopClass {
 		$file_pos = (int)$file_pos;
 		if($file_pos <= 0)
 			$file_pos = 1;
-		if(!$app->isAdmin() && empty($file->file_free_download)) {
 
+		if(!$app->isAdmin() && empty($file->file_free_download)) {
 			$orderClass = hikashop_get('class.order');
 			$order = $orderClass->get($order_id);
 			$user_id = hikashop_loadUser();
@@ -413,7 +415,7 @@ class hikashopFileClass extends hikashopClass {
 		JPluginHelper::importPlugin('hikashop');
 		$dispatcher = JDispatcher::getInstance();
 		$do = true;
-		$dispatcher->trigger( 'onBeforeDownloadFile', array( &$filename, &$do, &$file) );
+		$dispatcher->trigger( 'onBeforeDownloadFile', array( &$filename, &$do, &$file, $options) );
 		if(!$do) return false;
 
 		if(substr($filename,0,7) == 'http://' || substr($filename,0,8) == 'https://') {
@@ -547,7 +549,7 @@ class hikashopFileClass extends hikashopClass {
 		}
 
 		fclose($fp);
-		$dispatcher->trigger( 'onAfterDownloadFile', array( &$filename, &$file) );
+		$dispatcher->trigger('onAfterDownloadFile', array( &$filename, &$file));
 		exit;
 	}
 

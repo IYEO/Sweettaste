@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -17,7 +17,7 @@ class hikashopToggleHelper{
 		$this->token = '&'.hikashop_getFormToken().'=1';
 	}
 
-	function _getToggle($column,$table = ''){
+	function _getToggle($column,$table = '') {
 		$params = new stdClass();
 		$params->mode = 'pictures';
 		if(!HIKASHOP_J16){
@@ -89,14 +89,15 @@ class hikashopToggleHelper{
 			return $return;
 		}
 	}
-	function display($column,$value){
+
+	function display($column, $value) {
 		$params = $this->_getToggle($column);
-		if(empty($params->pictures)){
-			return '<a class="'.$params->aclass[$value].'" href="#" style="cursor:default;"> </a>';
-		}else{
-			return '<img src="'.$params->pictures[$value].'"/>';
+		if(empty($params->pictures)) {
+			return '<div class="toggle_loading"><a class="'.$params->aclass[$value].'" href="#" onclick="return false;" style="cursor:default;"></a></div>';
 		}
+		return '<img src="'.$params->pictures[$value].'"/>';
 	}
+
 	function delete($lineId,$elementids,$table,$confirm = false,$text=''){
 		$this->addDeleteJS();
 		if(empty($text)) $text = '<img src="'.HIKASHOP_IMAGES.'delete.png"/>';

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -189,9 +189,9 @@ class hikashopVoteClass extends hikashopClass {
 		$vElement->vote_ref_id = (int)$element->vote_ref_id;
 		$vElement->vote_type = strip_tags($element->vote_type);
 		$vElement->vote_user_id = strip_tags($element->user_id);
-		$vElement->vote_pseudo = strip_tags($element->pseudo_comment);
+		$vElement->vote_pseudo = strip_tags(@$element->pseudo_comment);
 		$vElement->vote_ip = strip_tags($user_ip);
-		$vElement->vote_email = strip_tags($element->email_comment);
+		$vElement->vote_email = strip_tags(@$element->email_comment);
 		$vElement->vote_date = $date;
 
 		$comment_by_person_by_product = $config->get('comment_by_person_by_product');
@@ -277,7 +277,16 @@ class hikashopVoteClass extends hikashopClass {
 		$vote_id = '';
 		$vote_old =  '';
 
-		$query = 'SELECT * FROM '.hikashop_table('vote').' WHERE vote_type = '.$db->quote($vElement->vote_type).' AND vote_ref_id = '.(int)$vElement->vote_ref_id.' AND (vote_user_id = '.$db->quote($element->user_id).' OR vote_ip = '.$db->quote($user_ip).') AND vote_rating != 0';
+		$filters = array('vote_type = '.$db->quote($vElement->vote_type),'vote_ref_id = '.(int)$vElement->vote_ref_id,'vote_rating != 0');
+
+		if(empty($element->user_id) || $element->user_id == $user_ip){
+			$filters[] = 'vote_ip = '.$db->quote($user_ip);
+			$filters[] = 'vote_user_id = \'\'';
+		}else{
+			$filters[] = 'vote_user_id = '.$db->quote($element->user_id);
+		}
+
+		$query = 'SELECT * FROM '.hikashop_table('vote').' WHERE '.implode(' AND ',$filters);
 		$db->setQuery($query);
 		$result = $db->loadObject();
 		if(!empty($result)){
@@ -287,6 +296,8 @@ class hikashopVoteClass extends hikashopClass {
 		}
 
 		$nb_comment = $this->commentPassed($vElement->vote_type,$vElement->vote_ref_id,$element->user_id);
+
+		$vote_mode = $config->get('enable_status_vote', 0);
 
 		if($element->hikashop_vote_type == 'vote') {
 			$vElement->vote_rating = strip_tags($element->vote);

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -28,7 +28,7 @@ class plgHikashoppaymentPaypal extends hikashopPaymentPlugin
 		if(parent::onBeforeOrderCreate($order, $do) === true)
 			return true;
 
-		if(empty($this->payment_params->email) || empty($this->payment_params->url)) {
+		if((empty($this->payment_params->email) || empty($this->payment_params->url)) && $this->plugin_data->payment_id == $order->order_payment_id) {
 			$this->app->enqueueMessage('Please check your &quot;PayPal&quot; plugin configuration');
 			$do = false;
 		}
@@ -142,6 +142,18 @@ class plgHikashoppaymentPaypal extends hikashopPaymentPlugin
 				$i++;
 			}
 
+			if(!empty($order->cart->additional)){
+				foreach($order->cart->additional as $product) {
+					if(empty($product->order_product_price) || $product->order_product_price <= 0) continue;
+					$vars['item_name_' . $i] = substr(JText::_(strip_tags($product->order_product_name)), 0, 127);
+					$vars['item_number_' . $i] = $product->order_product_code;
+					$vars['amount_'.$i] = round($product->order_product_price, (int)$this->currency->currency_locale['int_frac_digits']);
+					$vars['quantity_' . $i] = 1;
+					$tax += round($product->order_product_tax, (int)$this->currency->currency_locale['int_frac_digits']);
+					$i++;
+				}
+			}
+
 			if(!empty($order->order_shipping_price) && bccomp($order->order_shipping_price, 0, 5)) {
 				$vars['item_name_' . $i] = JText::_('HIKASHOP_SHIPPING');
 				$vars['amount_' . $i] = round($order->order_shipping_price - @$order->order_shipping_tax, (int)$this->currency->currency_locale['int_frac_digits']);
@@ -152,16 +164,25 @@ class plgHikashoppaymentPaypal extends hikashopPaymentPlugin
 
 			if(!empty($order->order_payment_price) && bccomp($order->order_payment_price, 0, 5)) {
 				$vars['item_name_' . $i] = JText::_('HIKASHOP_PAYMENT');
-				$vars['amount_' . $i] = round($order->order_payment_price, (int)$this->currency->currency_locale['int_frac_digits']);
+				$vars['amount_' . $i] = round($order->order_payment_price - @$order->order_payment_tax, (int)$this->currency->currency_locale['int_frac_digits']);
+				$tax += round($order->order_payment_tax, (int)$this->currency->currency_locale['int_frac_digits']);
 				$vars['quantity_' . $i] = 1;
 				$i++;
 			}
 
 			if(bccomp($tax, 0, 5))
 				$vars['tax_cart'] = $tax;
-			if(!empty($order->cart->coupon))
+			if(!empty($order->cart->coupon) && bccomp($order->order_discount_price, 0, 5)){
 				$vars['discount_amount_cart'] = round($order->order_discount_price, (int)$this->currency->currency_locale['int_frac_digits']);
 			}
+			if(!empty($order->cart->additional)){
+				foreach($order->cart->additional as $product) {
+					if(empty($product->order_product_price) || $product->order_product_price >= 0) continue;
+					if(!isset($vars['discount_amount_cart'])) $vars['discount_amount_cart'] = 0;
+					$vars['discount_amount_cart'] += round($product->order_product_price*-1, (int)$this->currency->currency_locale['int_frac_digits']);
+				}
+			}
+		}
 
 		if((isset($this->payment_params->validation) && $this->payment_params->validation) || (isset($this->payment_params->enable_validation) && !$this->payment_params->enable_validation)) {
 			$vars['paymentaction'] = 'authorization';
@@ -341,7 +362,6 @@ class plgHikashoppaymentPaypal extends hikashopPaymentPlugin
 			$this->modifyOrder($order_id, $this->payment_params->invalid_status, $history, $email);
 			return false;
 		}
-
 		if(strtolower(@$vars['receiver_email']) != strtolower($this->payment_params->email) && strtolower(@$vars['business']) != strtolower($this->payment_params->email)){
 			$email = new stdClass();
 			$email->subject = JText::sprintf('NOTIFICATION_REFUSED_FOR_THE_ORDER','Paypal').'wrong receiver';
@@ -354,7 +374,6 @@ class plgHikashoppaymentPaypal extends hikashopPaymentPlugin
 			$this->modifyOrder($order_id, $this->payment_params->invalid_status, $history, $email);
 			return false;
 		}
-
 
 		if($completed){
 			$order_status = $this->payment_params->verified_status;

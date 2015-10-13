@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -12,6 +12,15 @@ class hikashopModuleHelper{
 
 	function initialize(&$obj){
 		$this->_getParams($obj);
+		if(!empty($obj->ctrl)){
+			$data = $obj->params->get('data');
+			$type = 'hk_'.$obj->ctrl;
+			if(isset($data->$type) && is_object($data->$type)){
+				foreach($data->$type as $k => $v){
+					$obj->params->set($k,$v);
+				}
+			}
+		}
 		$this->setCSS($obj->params,@$obj->module);
 		$obj->modules = $this->setModuleData($obj->params->get('modules'));
 	}
@@ -171,6 +180,16 @@ class hikashopModuleHelper{
 			}
 			jimport('joomla.html.parameter');
 			if (is_object( $menu )) {
+				if(HIKASHOP_J30 && (($menu->query['view'] == 'category' && (!$menu->params->get('hk_category',false) || !$menu->params->get('hk_product',false))) || ($menu->query['view'] == 'product' && !$menu->params->get('hk_product',false)))){
+					$db = JFactory::getDBO();
+					$query = 'SELECT params FROM '.hikashop_table('menu',false).' WHERE id = '.(int)$menu->id;
+					$db->setQuery($query);
+					$itemData = json_decode($db->loadResult());
+					if(isset($itemData->hk_category))
+						$menu->params->set('hk_category', $itemData->hk_category);
+					if(isset($itemData->hk_product))
+						$menu->params->set('hk_product', $itemData->hk_product);
+				}
 				$obj->params = new HikaParameter( $menu->params );
 				$obj->params->set('id',$menu->id);
 				if(version_compare(JVERSION,'1.6','<')){

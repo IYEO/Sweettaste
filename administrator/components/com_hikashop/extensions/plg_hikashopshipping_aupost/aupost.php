@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -61,6 +61,17 @@ class plgHikashopshippingAupost extends hikashopShippingPlugin {
 		$cache_messages = array();
 
 		$currentCurrencyId = null;
+
+		$app = JFactory::getApplication();
+		$user = JFactory::getUser();
+		$iAmSuperAdmin = false;
+		if(!HIKASHOP_J16) {
+			$iAmSuperAdmin = ($user->get('gid') == 25);
+		} else {
+			$iAmSuperAdmin = $user->authorise('core.admin');
+		}
+		if ($iAmSuperAdmin)
+			$app->enqueueMessage('That Australia Post shipping version is deprecated and is using the old Australia post API, Please start using the new Australia Post v2 shipping method');
 		foreach($local_usable_rates as $rate) {
 			if(!empty($rate->shipping_zone_namekey)){
 				if(empty($rate->shipping_params->SEA) && empty($rate->shipping_params->AIR) && !empty($order->shipping_address->address_country)){
@@ -104,7 +115,6 @@ class plgHikashopshippingAupost extends hikashopShippingPlugin {
 			}
 			if(empty($order->shipping_address_full)){
 				$cart = hikashop_get('class.cart');
-				$app = JFactory::getApplication();
 				$address=$app->getUserState( HIKASHOP_COMPONENT.'.shipping_address');
 				$cart->loadAddress($order->shipping_address_full,$address,'object','shipping');
 			}
@@ -115,7 +125,10 @@ class plgHikashopshippingAupost extends hikashopShippingPlugin {
 			if(!empty($rate->shipping_params->reverse_order)){
 				$rates=array_reverse($rates,true);
 			}
+
 			foreach($rates as $finalRate){
+				if(hikashop_getCurrency() != 6)
+					$finalRate->shipping_price = $currencyClass->convertUniquePrice($finalRate->shipping_price, 6, hikashop_getCurrency());
 				$usable_rates[$finalRate->shipping_id]=$finalRate;
 				$cache_usable_rates[$finalRate->shipping_id] = $finalRate;
 			}
@@ -306,6 +319,10 @@ class plgHikashopshippingAupost extends hikashopShippingPlugin {
 		$elements = array($element);
 	}
 	function onShippingConfiguration(&$element){
+
+		$app = JFactory::getApplication();
+		$app->enqueueMessage('That Australia Post shipping version is deprecated and is using the old Australia post API, Please start using the new Australia Post v2 shipping method');
+
 		$this->aupost = JRequest::getCmd('name','aupost');
 		$this->categoryType = hikashop_get('type.categorysub');
 		$this->categoryType->type = 'tax';

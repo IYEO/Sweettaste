@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -231,6 +231,26 @@ class hikashopZoneClass extends hikashopClass{
 		$this->database->setQuery(rtrim($query,',').';');
 		$this->database->query();
 		return $toInsertNamekeys;
+	}
+
+	public function getStateDropdownContent($namekey, $field_namekey = '', $field_id = '', $field_type = '') {
+		if(empty($namekey))
+			return '<span class="state_no_country">'.JText::_('PLEASE_SELECT_COUNTRY_FIRST').'</span>';
+
+		if(empty($field_namekey))
+			$field_namekey = 'address_state';
+		if(empty($field_id))
+			$field_id = 'address_state';
+		if(empty($field_type))
+			$field_type = 'address';
+
+		$db = JFactory::getDBO();
+		$query = 'SELECT * FROM '.hikashop_table('field').' WHERE field_namekey = '.$db->Quote($field_namekey);
+		$db->setQuery($query, 0, 1);
+		$field = $db->loadObject();
+
+		$countryType = hikashop_get('type.country');
+		return $countryType->displayStateDropDown($namekey, $field_id, $field_namekey, $field_type, '', $field->field_options);
 	}
 
 	public function &getNameboxData(&$typeConfig, &$fullLoad, $mode, $value, $search, $options) {

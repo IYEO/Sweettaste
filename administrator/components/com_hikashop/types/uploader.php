@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -77,7 +77,15 @@ class HikashopUploaderType {
 		if(empty($options['classes']['btn_add']))
 			$options['classes']['btn_add'] = 'hika_add_btn';
 
-		$options['maxSize'] = min(hikashop_bytes(ini_get('upload_max_filesize')), hikashop_bytes(ini_get('post_max_size')));
+		$maxSize = min(hikashop_bytes(ini_get('upload_max_filesize')), hikashop_bytes(ini_get('post_max_size')));
+		if(empty($options['maxSize'])) {
+			$options['maxSize'] = $maxSize;
+		} else {
+			$size = (int)$options['maxSize'];
+			if((''.$size) != $options['maxSize'])
+				$size = hikashop_bytes($options['maxSize']);
+			$options['maxSize'] = min($size, $maxSize);
+		}
 
 		if(empty($options['uploadUrls']))
 			$options['uploadUrls'] = null;

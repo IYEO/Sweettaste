@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -39,7 +39,7 @@ if($config->get('simplified_registration',0)!=2) {
 $data->cart = $orderClass->loadFullOrder($data->order_id,true,false);
 $data->cart->coupon = new stdClass();
 $price = new stdClass();
-$tax = $data->cart->order_subtotal - $data->cart->order_subtotal_no_vat - $data->cart->order_discount_tax + $data->cart->order_shipping_tax;
+$tax = $data->cart->order_subtotal - $data->cart->order_subtotal_no_vat - $data->cart->order_discount_tax + $data->cart->order_shipping_tax + $data->cart->order_payment_tax;
 $price->price_value = $data->cart->order_full_price - $tax;
 $price->price_value_with_tax = $data->cart->order_full_price;
 $data->cart->full_total = new stdClass;
@@ -215,9 +215,14 @@ $cartFooters = array();
 		);
 	}
 	if(bccomp($data->cart->order_payment_price,0,5)){
+		if($config->get('price_with_tax')) {
+			$t = $currencyHelper->format($data->cart->order_payment_price, $data->cart->order_currency_id);
+		} else {
+			$t = $currencyHelper->format($data->cart->order_payment_price - @$data->cart->order_payment_tax, $data->cart->order_currency_id);
+		}
 		$cartFooters[] = array(
 			'NAME' => JText::_('HIKASHOP_PAYMENT'),
-			'VALUE' => $currencyHelper->format($data->cart->order_payment_price,$data->cart->order_currency_id)
+			'VALUE' => $t
 		);
 	}
 	if(!empty($data->cart->additional)) {

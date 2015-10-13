@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -28,12 +28,17 @@ $type = (!empty($this->params->product_type) && $this->params->product_type == '
 			'',
 			750, 460, 'onclick="return window.productMgr.editFile(this, '.$this->params->file_id.', '.$this->params->product_id.', \''.$type.'\');"', '', 'link'
 		);
-	?></span><br/>
+	?></span>
+	<div style="clear:both"></div>
 	<span class="file_path_text"><?php echo JText::_('FILENAME');?>:&nbsp;</span><span class="file_path"><?php
 		echo hikashop_limitString($this->params->file_path, 24, '...', true);
 	?></span><br/>
 	<span class="file_limit_text"><?php echo JText::_('DOWNLOADS');?>: </span><span class="file_limit"><?php
-		if((int)$this->params->file_limit > 0)
+		echo (int)@$this->params->download_number . ' / ';
+
+		if(!isset($this->params->file_limit) || (int)$this->params->file_limit == 0)
+			echo '<em>'.$this->config->get('download_number_limit').'</em>';
+		else if((int)$this->params->file_limit > 0)
 			echo $this->params->file_limit;
 		else
 			echo JText::_('UNLIMITED');

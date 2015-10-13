@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -71,7 +71,7 @@ defined('_JEXEC') or die('Restricted access');
 			<dd class="hikashop_product_translations"><?php
 		foreach($this->product->translations as $language_id => $translation){
 			$lngName = $this->translationHelper->getFlag($language_id);
-			echo '<div class="hikamarket_multilang_button">' .
+			echo '<div class="hikashop_multilang_button">' .
 				$this->popup->display(
 					$lngName, $lngName,
 					hikashop_completeLink('product&task=edit_translation&product_id=' . @$this->product->product_id.'&language_id='.$language_id, true),
@@ -116,6 +116,8 @@ defined('_JEXEC') or die('Restricted access');
 	</div></div>
 <?php } ?>
 
+	<div class="hkc-lg-clear"></div>
+
 	<div class="hkc-xl-4 hkc-lg-6 hikashop_product_block hikashop_product_edit_price"><div>
 		<div class="hikashop_product_part_title hikashop_product_edit_price_title"><?php
 			echo JText::_('PRICES');
@@ -139,7 +141,9 @@ defined('_JEXEC') or die('Restricted access');
 		</dl>
 	</div></div>
 
-<?php if(hikashop_acl('product/variant/description')) { ?>
+	<div class="hkc-xl-clear"></div>
+
+	<?php if(hikashop_acl('product/variant/description')) { ?>
 	<div class="hkc-xl-4 hkc-lg-6 hikashop_product_block hikashop_product_edit_description"><div>
 		<div class="hikashop_product_part_title hikashop_product_edit_description_title"><?php
 			echo JText::_('HIKA_DESCRIPTION');
@@ -159,6 +163,18 @@ window.productMgr.closeVariantEditor = function() { <?php echo $this->editor->js
 		?></div>
 		<dl class="hika_options">
 <?php
+	if(hikashop_acl('product/edit/qtyperorder')) { ?>
+			<dt class="hikashop_product_qtyperorder">
+				<label for="data_variant__product_min_per_order"><?php echo JText::_('QUANTITY_PER_ORDER'); ?></label>
+			</dt>
+			<dd class="hikashop_product_qtyperorder">
+				<input type="text" id="data_variant__product_min_per_order" name="data[variant][product_min_per_order]" value="<?php echo (int)@$this->product->product_min_per_order; ?>" /><?php
+					echo ' <label for="data_variant__product_max_per_order" style="font-weight:bold">' . JText::_('HIKA_QTY_RANGE_TO') . '</label> ';
+					echo $this->quantityType->displayInput('data[variant][product_max_per_order]', @$this->product->product_max_per_order);
+			?></dd>
+<?php
+	}
+
 	if(hikashop_acl('product/edit/salestart')) { ?>
 			<dt class="hikashop_product_salestart"><label for="product_sale_start_img"><?php echo JText::_('PRODUCT_SALE_DATES'); ?></label></dt>
 			<dd class="hikashop_product_salestart"><?php
@@ -217,6 +233,8 @@ window.productMgr.closeVariantEditor = function() { <?php echo $this->editor->js
 		</dl>
 	</div></div>
 
+	<div class="hkc-lg-clear"></div>
+
 <?php
 
 	JPluginHelper::importPlugin('hikashop');
@@ -246,8 +264,6 @@ window.productMgr.closeVariantEditor = function() { <?php echo $this->editor->js
 		</dl>
 <?php		}
 		}
-
-
 
 		if(!empty($html)) {
 			foreach($html as $k => $h) {
@@ -290,6 +306,8 @@ window.productMgr.closeVariantEditor = function() { <?php echo $this->editor->js
 	}
 ?>
 
+	<div class="hkc-xl-clear"></div>
+
 <?php
 	$html = array();
 	JPluginHelper::importPlugin('hikashop');
@@ -311,7 +329,7 @@ window.productMgr.closeVariantEditor = function() { <?php echo $this->editor->js
 $doc = JFactory::getDocument();
 foreach($doc->_custom as $custom) {
 	$custom = preg_replace('#<script .*type="text/javascript" src=".*"></script>#iU', '', $custom);
-	$custom = preg_replace('#<script .*type="text/javascript">#iU', '<script type="text/javascript">', $custom);
+	$custom = preg_replace('#<script .*type=[\'"]text/javascript[\'"]>#iU', '<script type="text/javascript">', $custom);
 	$custom = str_replace(
 		array('<script type="text/javascript">', '</script>'),
 		array('<script type="text/javascript">setTimeout(function(){', '},20);</script>'),

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -17,13 +17,23 @@ class plgHikashoppaymentVirtualmerchant extends hikashopPaymentPlugin
 		'user_id' => array('HKASHOP_USER_ID', 'input'),
 		'pin' => array('PIN', 'input'),
 		'currency' => array('CURRENCY', 'list',array(
-			'USD' => 'USD',
-			'EUR' => 'EUR')
+			'AED','KZT','ANG','LBP','ARS','LKR','AUS','LTL','AWG','LVL',
+			'AZN','LYD','BBD','MAD','BDT','MKD','BGN','MUR','BHD','MWK',
+			'BMD','MXN','BRL','MYR','BSD','NAD','BWP','NGN','CAD','NOK',
+			'CDF','NPR','CHF','NZD','CLP','OMR','CNY','PEN','COP','PHP',
+			'CRC','PKR','CZK','PLN','DKK','QAR','DOP','RON','DZD','RSD',
+			'EEK','RUB','EGP','SAR','ETB','SEK','EUR','SGD','FJD','SYP',
+			'GBP','THB','GTQ','TND','HKD','TRY','HRK','TTD','HTG','TWD',
+			'HUF','UAH','IDR','USD','ILS','VEF','INR','VND','IRR','XAF',
+			'ISK','XCD','JMD','XOF','JOD','XPF','JPY','ZAR','KES','ZMK',
+			'KRW','ZWL','KWD')
 		),
 		'ask_ccv' => array('CARD_VALIDATION_CODE', 'boolean','0'),
 		'use_avs' => array('Add AVS information', 'boolean','0'),
 		'debug' => array('DEBUG', 'boolean','0'),
 		'sandbox' => array('SANDBOX', 'boolean','0'),
+		'test_mode' => array('TEST_MODE', 'boolean','0'),
+		'multi_currency' => array('Multi-currency support', 'boolean','0'),
 		'cancel_url' => array('CANCEL_URL', 'input'),
 		'return_url' => array('RETURN_URL', 'input'),
 		'invalid_status' => array('INVALID_STATUS', 'orderstatus'),
@@ -54,7 +64,7 @@ class plgHikashoppaymentVirtualmerchant extends hikashopPaymentPlugin
 			'<ssl_merchant_ID>'.$this->payment_params->merchant_id.'</ssl_merchant_ID>'.
 			'<ssl_user_id>'.$this->payment_params->user_id.'</ssl_user_id>'.
 			'<ssl_pin>'.$this->payment_params->pin.'</ssl_pin>'.
-			'<ssl_test_mode>'.(($this->payment_params->sandbox)?'True':'False').'</ssl_test_mode>'.
+			'<ssl_test_mode>'.((@$this->payment_params->test_mode)?'True':'False').'</ssl_test_mode>'.
 			'<ssl_transaction_type>CCSALE</ssl_transaction_type>'.
 			'<ssl_show_form >False</ssl_show_form >'.
 			'<ssl_card_number>'.str_replace(array('<','>'),array('&lt;','&gt;'),$this->cc_number).'</ssl_card_number>'.
@@ -66,6 +76,9 @@ class plgHikashoppaymentVirtualmerchant extends hikashopPaymentPlugin
 			'<ssl_customer_code>'.$this->user->user_id.'</ssl_customer_code>'.
 			'<ssl_first_name>'.str_replace(array('<','>'),array('&lt;','&gt;'),$order->cart->billing_address->address_firstname).'</ssl_first_name>'.
 			'<ssl_last_name>'.str_replace(array('<','>'),array('&lt;','&gt;'),$order->cart->billing_address->address_lastname).'</ssl_last_name>';
+
+		if(@$this->payment_params->multi_currency)
+			$vars .= '<ssl_transaction_currency>'.$this->currency->currency_code.'</ssl_transaction_currency>';
 
 		if($this->payment_params->use_avs) {
 			$addr1 = @$order->cart->billing_address->address_street;

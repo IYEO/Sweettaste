@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -14,7 +14,7 @@ defined('_JEXEC') or die('Restricted access');
 	$newItem = $item->newItem;
 	if($newItem == true){
 		$row->vote_ip = '';
-		$this->element->vote_type = 'product';
+		$row->vote_type = 'product';
 		$this->item->enabled = '3';
 		$row->vote_rating = '';
 		$row->vote_comment = ' ';
@@ -51,7 +51,9 @@ defined('_JEXEC') or die('Restricted access');
 			</label>
 		</td>
 		<td>
-			<input type="text" size="100" name="<?php echo $this->vote_type_input; ?>" value="<?php echo $this->element->vote_type; ?>"/>
+		<?php
+			echo $this->voteType->display('data[vote][vote_type]',$row->vote_type);
+		?>
 		</td>
 	</tr>
 	<?php } ?>
@@ -62,8 +64,8 @@ defined('_JEXEC') or die('Restricted access');
 			</label>
 		</td>
 		<td>
-			<input type="text" size="100" name="<?php echo $this->vote_pseudo_input; ?>"
-			value="<?php if($newItem == true){echo "\"";}else if($this->element->vote_pseudo == '0'){echo $row->username."\" disabled=\"disabled\"";}else{echo $this->escape(@$this->element->vote_pseudo);} ?>" />
+			<input type="text" size="100" name="data[vote][vote_pseudo]"
+			value="<?php if($newItem == true){echo "\"";}else if($row->vote_pseudo == '0'){echo $row->vote_pseudo."\" disabled=\"disabled\"";}else{echo $this->escape(@$row->vote_pseudo);} ?>" />
 
 		</td>
 	</tr>
@@ -74,7 +76,7 @@ defined('_JEXEC') or die('Restricted access');
 			</label>
 		</td>
 		<td>
-			<input type="text" size="100" name="<?php echo $row->vote_ip; ?>" value="<?php if($newItem == true){echo "\"";}else{ echo $row->vote_ip."\" disabled=\"disabled\"";} ?>" />
+			<input type="text" size="100" name="data[vote][vote_ip]" value="<?php if($newItem == true){echo "\"";}else{ echo $row->vote_ip."\" disabled=\"disabled\"";} ?>" />
 		</td>
 	</tr>
 	<tr>
@@ -84,8 +86,8 @@ defined('_JEXEC') or die('Restricted access');
 			</label>
 		</td>
 		<td>
-			<input type="text" size="100" name="<?php echo $this->vote_email_input; ?>"
-			value="<?php if($newItem == true){echo "\"";} else if($this->element->vote_pseudo == '0'){echo $row->email."\" disabled=\"disabled\"";}elseif($this->element->vote_email != '0'){echo $this->escape(@$this->element->vote_email)."\"";}else{echo "";}?> "/>
+			<input type="text" size="100" name="data[vote][vote_email]"
+			value="<?php if($newItem == true){echo "\"";} else if($row->vote_email == '0'){echo $row->vote_email."\" disabled=\"disabled\"";}elseif($row->vote_email != '0'){echo $this->escape(@$row->vote_email)."\"";}else{echo "";}?> "/>
 
 		</td>
 	</tr>
@@ -97,8 +99,8 @@ defined('_JEXEC') or die('Restricted access');
 			</label>
 		</td>
 		<td>
-			<input type="text" size="100" name="<?php echo $this->vote_rating_input; ?>"
-			value="<?php echo $this->escape(@$this->element->vote_rating);?>" />
+			<input type="text" size="100" name="data[vote][vote_rating]"
+			value="<?php echo $this->escape(@$row->vote_rating);?>" />
 
 		</td>
 	</tr>
@@ -112,7 +114,7 @@ defined('_JEXEC') or die('Restricted access');
 			</label>
 		</td>
 		<td>
-			<textarea cols="71" name="<?php echo $this->vote_comment_input; ?>" ><?php echo $this->escape(@$this->element->vote_comment); ?></textarea>
+			<textarea cols="71" name="data[vote][vote_comment]" ><?php echo $this->escape(@$row->vote_comment); ?></textarea>
 
 		</td>
 	</tr>
@@ -124,7 +126,7 @@ defined('_JEXEC') or die('Restricted access');
 			</label>
 		</td>
 		<td>
-			<input type="text" size="100" name="<?php echo $row->vote_date; ?>" value="<?php echo date('d/m/Y h:m:s', $row->vote_date); ?>" disabled="disabled"/>
+			<input type="text" size="100" name="data[vote][vote_date]" value="<?php echo date('d/m/Y h:m:s', $row->vote_date); ?>" disabled="disabled"/>
 		</td>
 	</tr>
 </table>

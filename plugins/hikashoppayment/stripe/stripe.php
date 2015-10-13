@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -119,6 +119,7 @@ class plgHikashoppaymentStripe extends hikashopPaymentPlugin
 		$desc = JText::sprintf('ORDER_NUMBER').' : '.$order_id;
 
 		Stripe::setApiKey(trim($this->payment_params->secret_key));
+		Stripe::setApiVersion('2013-12-03');
 		$token = $_POST['stripeToken'];
 
 		try {
@@ -140,6 +141,4 @@ class plgHikashoppaymentStripe extends hikashopPaymentPlugin
 		$this->app->redirect($return_url);
 		return true;
 	}
-
-
 }

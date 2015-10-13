@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -484,14 +484,11 @@ class hikashopImportvm2Helper extends hikashopImportHelper
 			$this->db->setQuery("CREATE TABLE IF NOT EXISTS `#__hikashop_vm_cat` (`vm_id` int(10) unsigned NOT NULL DEFAULT '0', `hk_id` int(11) unsigned NOT NULL DEFAULT '0', PRIMARY KEY (`vm_id`)) ENGINE=MyISAM");
 			$this->db->query();
 
-			$this->db->setQuery('ALTER IGNORE TABLE `#__hikashop_address` ADD `address_vm_order_info_id` INT(11) NULL');
-			$this->db->query();
-			$this->db->setQuery('ALTER IGNORE TABLE `#__hikashop_order` ADD `order_vm_id` INT(11) NULL');
-			$this->db->query();
-			$this->db->setQuery('ALTER IGNORE TABLE `#__hikashop_order` ADD INDEX ( `order_vm_id` )');
-			$this->db->query();
-			$this->db->setQuery('ALTER IGNORE TABLE `#__hikashop_taxation` ADD `tax_vm_id` INT(11) NULL');
-			$this->db->query();
+			$databaseHelper = hikashop_get('helper.database');
+			$databaseHelper->addColumns('address','`address_vm_order_info_id` INT(11) NULL');
+			$databaseHelper->addColumns('order','`order_vm_id` INT(11) NULL');
+			$databaseHelper->addColumns('order','INDEX ( `order_vm_id` )');
+			$databaseHelper->addColumns('taxation','`tax_vm_id` INT(11) NULL');
 
 			echo '<p '.$this->pmarginstyle.'><span'.$this->bullstyle.'>&#149;</span> All table created</p>';
 		}
@@ -799,8 +796,8 @@ class hikashopImportvm2Helper extends hikashopImportHelper
 				'1',
 				(int)@$c->ordering,
 				$this->db->quote($nameKey),
-				$this->db->quote($c->created_on),
-				$this->db->quote($c->modified_on),
+				$this->db->quote(strtotime($c->created_on)),
+				$this->db->quote(strtotime($c->modified_on)),
 				"'all'",
 				'0'
 			);
@@ -956,7 +953,7 @@ class hikashopImportvm2Helper extends hikashopImportHelper
 					if(strpos($this->copyImgValue, trim($c->file_url, '/')) === 0)
 						$c->file_url = trim(substr(trim($c->file_url, '/'), strlen($this->copyImgValue)), '/');
 					$result = $this->copyFile($this->copyImgDir,$c->file_url, $this->options->uploadfolder.$file_name);
-					if(!$result){ //if we couldn't copy the image from the file_url, we still add the image name from file_meta and then the user can copy the files manually
+					if(!$result && !empty($c->file_meta)){ //if we couldn't copy the image from the file_url, we still add the image name from file_meta and then the user can copy the files manually
 						$meta_files[] = $this->db->Quote($c->file_meta);
 					}
 				}
@@ -974,12 +971,12 @@ class hikashopImportvm2Helper extends hikashopImportHelper
 			'product_name' => 'vmpeg.product_name',
 			'product_description' => "CONCAT(vmpeg.product_s_desc,'<hr id=\"system-readmore\"/>',vmpeg.product_desc)",
 			'product_quantity' => 'case when vmp.product_in_stock IS NULL or vmp.product_in_stock < 0 then 0 else vmp.product_in_stock end',
-			'product_code' => 'vmp.product_sku',
+			'product_code' => 'case when vmp.product_sku IS NULL or vmp.product_sku="" then MD5(vmp.virtuemart_product_id) else vmp.product_sku end',
 			'product_published' => "vmp.published",
 			'product_hit' => '0',
-			'product_created' => "case when vmp.created_on='0000-00-00 00:00:00' then 0 else 1 end",
-			'product_modified' => 'vmp.modified_on',
-			'product_sale_start' => 'vmp.product_available_date',
+			'product_created' => "UNIX_TIMESTAMP(vmp.created_on)",
+			'product_modified' => 'UNIX_TIMESTAMP(vmp.modified_on)',
+			'product_sale_start' => 'UNIX_TIMESTAMP(vmp.product_available_date)',
 			'product_tax_id' => 'hkc.category_id',
 			'product_type' => "'main'",
 			'product_url' => 'vmp.product_url',
@@ -994,8 +991,8 @@ class hikashopImportvm2Helper extends hikashopImportHelper
 
 		$sql1 = 'INSERT IGNORE INTO `#__hikashop_product` (`'.implode('`,`',array_keys($data)).'`) '.
 			'SELECT '.implode(',',$data).' FROM `'.$this->vmprefix.'virtuemart_products` AS vmp '.
-			"INNER JOIN `".$buffTable."` vmpeg ON vmp.virtuemart_product_id = vmpeg.virtuemart_product_id ".
-			"LEFT JOIN `".$this->vmprefix."virtuemart_product_prices` vmpp ON vmpeg.virtuemart_product_id = vmpp.virtuemart_product_id ".
+			'INNER JOIN `'.$buffTable.'` vmpeg ON vmp.virtuemart_product_id = vmpeg.virtuemart_product_id '.
+			'LEFT JOIN `'.$this->vmprefix.'virtuemart_product_prices` vmpp ON vmpeg.virtuemart_product_id = vmpp.virtuemart_product_id '.
 			'LEFT JOIN `#__hikashop_taxation` hkt ON hkt.tax_vm_id = vmpp.product_tax_id '.
 			'LEFT JOIN `#__hikashop_category` hkc ON hkc.category_namekey = hkt.category_namekey '.
 			'LEFT JOIN `#__hikashop_vm_prod` AS hkp ON vmp.virtuemart_product_id = hkp.vm_id '.
@@ -1251,7 +1248,7 @@ class hikashopImportvm2Helper extends hikashopImportHelper
 			'order_status' => 'hkc.category_name',
 			'order_discount_code' => 'vmo.coupon_code',
 			'order_discount_price' => 'vmo.coupon_discount',
-			'order_created' => 'vmo.created_on',
+			'order_created' => 'UNIX_TIMESTAMP(vmo.created_on)',
 			'order_ip' => 'vmo.ip_address',
 			'order_currency_id' => 'hkcur.currency_id',
 			'order_shipping_price' => 'vmo.order_shipment',
@@ -1260,7 +1257,7 @@ class hikashopImportvm2Helper extends hikashopImportHelper
 			'order_payment_id' => 0,
 			'order_payment_method' => "'vm import'",
 			'order_full_price' => 'vmo.order_total',
-			'order_modified' => 'vmo.modified_on',
+			'order_modified' => 'UNIX_TIMESTAMP(vmo.modified_on)',
 			'order_partner_id' => 0,
 			'order_partner_price' => 0,
 			'order_partner_paid' => 0,
@@ -1457,7 +1454,7 @@ class hikashopImportvm2Helper extends hikashopImportHelper
 		$this->db->setQuery($sql);
 		$data = $this->db->loadObjectList();
 		$max = 0;
-
+		$meta_files = array();
 		foreach($data as $c) {
 			$result = false;
 			if( !empty($c->file_meta) ) {
@@ -1470,6 +1467,9 @@ class hikashopImportvm2Helper extends hikashopImportHelper
 					$dstFolder = $this->options->uploadfolder;
 				}
 				$result = $this->copyFile($this->copyImgDir,$c->file_meta, $dstFolder.$file_name);
+				if($result){
+					$meta_files[] = $this->db->Quote($c->file_meta);
+				}
 				$max = $c->virtuemart_media_id;
 			}
 			if(!$result && !empty($c->file_url)){
@@ -1482,8 +1482,16 @@ class hikashopImportvm2Helper extends hikashopImportHelper
 					$dstFolder = $this->options->uploadfolder;
 				}
 				$result = $this->copyFile($this->copyImgDir,$c->file_url, $dstFolder.$file_name);
+				if(!$result && !empty($c->file_meta)){
+					$meta_files[] = $this->db->Quote($c->file_meta);
+				}
 				$max = $c->virtuemart_media_id;
 			}
+		}
+		if(empty($meta_files) || !count($meta_files)){
+			$meta_files = "''";
+		}else{
+			$meta_files = implode(',',$meta_files);
 		}
 		$app->setUserState($this->sessionParams.'last_vm_pfile',$max);
 
@@ -1497,7 +1505,7 @@ class hikashopImportvm2Helper extends hikashopImportHelper
 		$data = array(
 			'file_name' => 'vmm.file_title',
 			'file_description' => 'vmm.file_description',
-			'file_path' => "SUBSTRING_INDEX(SUBSTRING_INDEX(vmm.file_meta, '/', -1), '\\\\', -1)",
+			'file_path' => "case when vmm.file_meta IN (".$meta_files.") then SUBSTRING_INDEX(SUBSTRING_INDEX(vmm.file_meta, '/', -1), '\\\\', -1) else SUBSTRING_INDEX(SUBSTRING_INDEX(vmm.file_url, '/', -1), '\\\\', -1) end",
 			'file_type' => "case when vmm.file_is_product_image = 1 then 'product' else 'file' end",
 			'file_ref_id' => 'hkp.hk_id'
 		);
@@ -1558,8 +1566,8 @@ class hikashopImportvm2Helper extends hikashopImportHelper
 			'discount_quota' => "''",
 			'discount_product_id' => 'hkp.hk_id',
 			'discount_category_id' => '0',
-			'discount_start' => "vmc.coupon_start_date",
-			'discount_end' => "vmc.coupon_expiry_date"
+			'discount_start' => "UNIX_TIMESTAMP(vmc.coupon_start_date)",
+			'discount_end' => "UNIX_TIMESTAMP(vmc.coupon_expiry_date)"
 		);
 
 		$sql = 'INSERT IGNORE INTO #__hikashop_discount (`'.implode('`,`',array_keys($data)).'`) '.
@@ -1601,7 +1609,7 @@ class hikashopImportvm2Helper extends hikashopImportHelper
 			'vote_pseudo' => 'u.username',
 			'vote_ip' => 'vrr.lastip',
 			'vote_email' => 'u.email',
-			'vote_date' => 'vrv.created_on'
+			'vote_date' => 'UNIX_TIMESTAMP(vrv.created_on)'
 		);
 
 		$sql = 'INSERT IGNORE INTO `#__hikashop_vote` (`'.implode('`,`',array_keys($data)).'`) '.

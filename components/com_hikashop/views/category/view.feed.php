@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -177,15 +177,23 @@ class CategoryViewCategory  extends HikaShopView {
 			$pathway_sef_name = $config->get('pathway_sef_name','category_pathway');
 			$link = JURI::base().'index.php?option=com_hikashop&amp;ctrl=product&amp;task=show&amp;cid='.$product->product_id.'&amp;name='.$product->alias.'&amp;Itemid='.$Itemid.'&amp;'.$pathway_sef_name.'='.$product->category_id;
 
-				if($product->prices['0']->price_value_with_tax != 0 ){
-				$desc = $product->product_description.JText::_('CART_PRODUCT_PRICE').' : '.$currencyClass->format($product->prices[0]->price_value_with_tax,$product->prices[0]->price_currency_id);
-				}
-				else{
-					$desc= $product->product_description.JText::_('FREE_PRICE');
-				}
-				$desc = preg_replace('#<hr *id="system-readmore" */>#i','',$desc);
+			if($product->prices['0']->price_value_with_tax != 0 ){
+			$desc = $product->product_description.JText::_('CART_PRODUCT_PRICE').' : '.$currencyClass->format($product->prices[0]->price_value_with_tax,$product->prices[0]->price_currency_id);
+			}
+			else{
+				$desc= $product->product_description.JText::_('FREE_PRICE');
+			}
+			$desc = preg_replace('#<hr *id="system-readmore" */>#i','',$desc);
 
-				$description	= '<table><tr><td>'.$imageHelper->display(@$product->images[0]->file_path,false,$title, '' , '' , $imageHelper->main_thumbnail_x, $imageHelper->main_thumbnail_y).'</td><td>'.$desc.'</td></tr></table>';
+
+			$image_options = array('default' => true);
+			$img = $imageHelper->getThumbnail(@$product->images[0]->file_path, array('width' => $imageHelper->main_thumbnail_x, 'height' => $imageHelper->main_thumbnail_y), $image_options);
+			if(substr($img->url, 0, 3) == '../')
+				$image = str_replace('../', HIKASHOP_LIVE, $img->url);
+			else
+				$image = substr(HIKASHOP_LIVE, 0, strpos(HIKASHOP_LIVE, '/', 9)) . $img->url;
+
+			$description = '<table><tr><td><img src="'.$image.'"/></td><td>'.$desc.'</td></tr></table>';
 			$item = new JFeedItem();
 			$item->title 		= $title;
 			$item->link 		= $link;

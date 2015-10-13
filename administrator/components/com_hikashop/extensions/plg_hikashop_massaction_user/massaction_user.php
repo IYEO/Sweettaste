@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -106,7 +106,7 @@ class plgHikashopMassaction_user extends JPlugin
 		$this->onProcessUserMassFilteraddressColumn($elements,$query,$filter,$num);
 		return JText::sprintf('SELECTED_PRODUCTS',$query->count('hk_user.user_id'));
 	}
-	function onProcessUserMassFilterdontHave(&$elements,&$query,$filter,$num){
+	function onProcessUserMassFilterhaveDontHave(&$elements,&$query,$filter,$num){
 		if(empty($filter['type']) || $filter['type']=='all') return;
 		if(count($elements)){
 			foreach($elements as $k => $element){
@@ -115,32 +115,58 @@ class plgHikashopMassaction_user extends JPlugin
 		}else{
 			$db = JFactory::getDBO();
 			$ids = null;
+			$qSearch = 'NOT IN';
+			if($filter['have'] == 'have')
+				$qSearch = 'IN';
 			switch($filter['type']){
 				case 'order':
 					$db->setQuery('SELECT order_user_id FROM '.hikashop_table('order').' GROUP BY order_user_id');
-					$ids = $db->loadResultArray();
+					if(!HIKASHOP_J25){
+						$ids = $db->loadResultArray();
+					} else {
+						$ids = $db->loadColumn();
+					}
 					break;
 				case 'order_status':
 					$db->setQuery('SELECT order_user_id FROM '.hikashop_table('order').' WHERE order_status = '.$db->quote($filter['order_status']).' GROUP BY order_user_id');
-					$ids = $db->loadResultArray();
+					if(!HIKASHOP_J25){
+						$ids = $db->loadResultArray();
+					} else {
+						$ids = $db->loadColumn();
+					}
+					if($filter['have'] != 'have'){
+						$db->setQuery('SELECT order_user_id FROM '.hikashop_table('order').' GROUP BY order_user_id');
+						if(!HIKASHOP_J25){
+							$allIds = $db->loadResultArray();
+						} else {
+							$allIds = $db->loadColumn();
+						}
+						$ids = array_diff($allIds, $ids);
+						$qSearch = 'IN';
+					}
 					break;
 				case 'address':
 					$db->setQuery('SELECT address_user_id FROM '.hikashop_table('address').' GROUP BY address_user_id');
-					$ids = $db->loadResultArray();
+					if(!HIKASHOP_J25){
+						$ids = $db->loadResultArray();
+					} else {
+						$ids = $db->loadColumn();
+					}
 					break;
 			}
 			if($ids == null){
-				echo JText::sprintf('SELECTED_PRODUCTS',0); exit;
+				$query->where[] = ' 0 = 1';
 			}else{
-				$query->where[] = 'hk_user.user_id NOT IN ('.implode(',',$ids).')';
+				$query->where[] = 'hk_user.user_id '.$qSearch.' ('.implode(',',$ids).')';
 			}
-		 }
+		}
 	}
-	function onCountUserMassFilterdontHave(&$query,$filter,$num){
+	function onCountUserMassFilterhaveDontHave(&$query,$filter,$num){
 		$elements = array();
-		$this->onProcessUserMassFilterdontHave($elements,$query,$filter,$num);
+		$this->onProcessUserMassFilterhaveDontHave($elements,$query,$filter,$num);
 		return JText::sprintf('SELECTED_PRODUCTS',$query->count('hk_user.user_id'));
 	}
+
 	function onProcessUserMassFilteraccessLevel(&$elements,&$query,$filter,$num){
 		if(empty($filter['type']) || $filter['type']=='all') return;
 		if(count($elements)){
@@ -179,7 +205,10 @@ class plgHikashopMassaction_user extends JPlugin
 		$formatExport = $action['formatExport']['format'];
 		$path = $action['formatExport']['path'];
 		$email = $action['formatExport']['email'];
-		if(empty($path)){
+		if(!empty($path)){
+			$url = $this->massaction->setExportPaths($path);
+		}else{
+			$url = array('server'=>'','web'=>'');
 			ob_get_clean();
 		}
 		$app = JFactory::getApplication();
@@ -188,7 +217,7 @@ class plgHikashopMassaction_user extends JPlugin
 			unset($action['formatExport']);
 			$params = $this->massaction->_displayResults('user',$elements,$action,$k);
 			$params->formatExport = $formatExport;
-			$params->path = $path;
+			$params->path = $url['server'];
 			$params = $this->massaction->sortResult($params->table,$params);
 			$this->massaction->_exportCSV($params);
 		}
@@ -200,9 +229,9 @@ class plgHikashopMassaction_user extends JPlugin
 			$mail->subject = JText::_('MASS_CSV_EMAIL_SUBJECT');
 			$mail->html = '1';
 			$csv = new stdClass();
-			$csv->name = JText::_('MASS_CSV_EMAIL_FILE_NAME');
-			$csv->filename = $path;
-			$csv->url = $path;
+			$csv->name = basename($path);
+			$csv->filename = basename($path);
+			$csv->url = $url['web'];
 			$mail->attachments = array($csv);
 			$mail->dst_name = '';
 			$mail->dst_email = explode(',',$email);
@@ -341,7 +370,8 @@ class plgHikashopMassaction_user extends JPlugin
 			$mailClass = hikashop_get('class.mail');
 			$content = array('elements' => $elements, 'action' => $action, 'type' => 'user_notification');
 			$mail = $mailClass->get('massaction_notification',$content);
-			$mail->subject = !empty($action['emailSubject'])?JText::_($action['emailSubject']):JText::_('MASS_NOTIFICATION_EMAIL_SUBJECT');
+			$mail->subject = !empty($mail->subject)?JText::_($action['emailSubject']):JText::_('MASS_NOTIFICATION_EMAIL_SUBJECT');
+			$mail->body = $action['bodyData'];
 			$mail->html = '1';
 			$mail->dst_name = '';
 			if(!empty($action['emailAddress']))

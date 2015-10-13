@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -35,23 +35,24 @@ $customer = $data->customer;
 
 if(!isset($data->order))
 	$data->order = new stdClass();
-$fs = array('order_number','order_discount_tax','order_shipping_tax','order_full_price','order_shipping_price','order_payment_price','order_discount_price','order_currency_id','order_status');
+$fs = array('order_number','order_discount_tax','order_shipping_tax','order_payment_tax','order_full_price','order_shipping_price','order_payment_price','order_discount_price','order_currency_id','order_status');
 foreach($fs as $f) {
 	if(isset($data->$f) && !isset($data->order->$f))
 		$data->order->$f = $data->$f;
 }
 
-$url = $data->order->order_number;
 $data->order->order_url = $order_url;
 
+$data->cart = $orderClass->loadFullOrder($data->order_id,true,false);
+
+$url = $data->order_number = $data->cart->order_number;
 if(!empty($customer->user_cms_id) && (int)$customer->user_cms_id != 0) {
 	$url = '<a href="'.$order_url.'">'. $url.'</a>';
 }
 
-$data->cart = $orderClass->loadFullOrder($data->order_id,true,false);
 $data->cart->coupon = new stdClass();
 $price = new stdClass();
-$tax = $data->cart->order_subtotal - $data->cart->order_subtotal_no_vat - $data->cart->order_discount_tax + $data->cart->order_shipping_tax;
+$tax = $data->cart->order_subtotal - $data->cart->order_subtotal_no_vat - $data->cart->order_discount_tax + $data->cart->order_shipping_tax + $data->cart->order_payment_tax;
 $price->price_value = $data->cart->order_full_price - $tax;
 $price->price_value_with_tax = $data->cart->order_full_price;
 $data->cart->full_total = new stdClass;
@@ -248,9 +249,14 @@ $cartFooters = array();
 		);
 	}
 	if(bccomp($data->cart->order_payment_price,0,5)){
+		if($config->get('price_with_tax')) {
+			$t = $currencyHelper->format($data->cart->order_payment_price, $data->cart->order_currency_id);
+		} else {
+			$t = $currencyHelper->format($data->cart->order_payment_price - @$data->cart->order_payment_tax, $data->cart->order_currency_id);
+		}
 		$cartFooters[] = array(
 			'NAME' => JText::_('HIKASHOP_PAYMENT'),
-			'VALUE' => $currencyHelper->format($data->cart->order_payment_price,$data->cart->order_currency_id)
+			'VALUE' => $t
 		);
 	}
 	if(!empty($data->cart->additional)) {

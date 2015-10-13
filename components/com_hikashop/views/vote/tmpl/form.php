@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -9,44 +9,31 @@
 defined('_JEXEC') or die('Restricted access');
 ?><?php
 $row = & $this->row;
-$type_item = $row->type_item;
-$hikashop_vote_nb_star = $row->hikashop_vote_nb_star;
-$email_comment = $row->email_comment;
-$comment_enabled = $row->comment_enabled;
-$vote_enabled = $row->vote_enabled;
-$hikashop_vote_average_score = (float)hikashop_toFloat($row->hikashop_vote_average_score);
-$hikashop_vote_average_score_rounded = $row->hikashop_vote_average_score_rounded;
-$hikashop_vote_total_vote = $row->hikashop_vote_total_vote;
-
-$purchased = $row->purchased;
-$access_vote = $row->access_vote;
+$row->hikashop_vote_average_score = (float)hikashop_toFloat($row->hikashop_vote_average_score);
 $hikashop_vote_user_id = hikashop_loadUser();
 
 $hide = 0;
-if(($access_vote == 'registered' && empty($hikashop_vote_user_id)) || ($access_vote == 'buyed' && $purchased == 0)){
+if(($row->access_vote == 'registered' && empty($hikashop_vote_user_id)) || ($row->access_vote == 'buyed' && $row->purchased == 0)){
 	$hide = 1;
 }
+if ($row->comment_enabled == 0 || $hide)
+	return;
 
-if ($comment_enabled == 1 && !$hide) {
-
-	$hikashop_vote_ref_id = $row->vote_ref_id;
-	$hikashop_vote_user_id = hikashop_loadUser();
-	if($hikashop_vote_user_id == ''){
-		$hikashop_vote_user_id = 0;
-	}
-
+$hikashop_vote_user_id = hikashop_loadUser();
+if(empty($hikashop_vote_user_id))
+	$hikashop_vote_user_id = 0;
 ?>
-	<div id="reload" class="hikashop_vote_form">
-	<input type="hidden" name="hikashop_vote_ref_id" id="hikashop_vote_ref_id" value="<?php echo $hikashop_vote_ref_id;?>"/>
-	<input type="hidden" name="vote_type" id="vote_type_<?php echo $hikashop_vote_ref_id;?>" value="<?php echo $type_item; ?>"/>
-	<input type="hidden" name="hikashop_vote_user_id" id="hikashop_vote_user_id_<?php echo $hikashop_vote_ref_id;?>" value="<?php echo $hikashop_vote_user_id;?>"/>
-	<input type="hidden" name="hikashop_vote_ok" id="hikashop_vote_ok_<?php echo $hikashop_vote_ref_id;?>" value="0"/>
+<div id="reload" class="hikashop_vote_form">
+	<input type="hidden" name="hikashop_vote_ref_id" id="hikashop_vote_ref_id" value="<?php echo $row->vote_ref_id;?>"/>
+	<input type="hidden" name="vote_type" id="vote_type_<?php echo $row->vote_ref_id;?>" value="<?php echo $row->type_item; ?>"/>
+	<input type="hidden" name="hikashop_vote_user_id" id="hikashop_vote_user_id_<?php echo $row->vote_ref_id;?>" value="<?php echo (int)$hikashop_vote_user_id;?>"/>
+	<input type="hidden" name="hikashop_vote_ok" id="hikashop_vote_ok_<?php echo $row->vote_ref_id;?>" value="0"/>
 <?php
-	if ($vote_enabled == 1) {
+	if ($row->vote_enabled == 1) {
 ?>
 	<div class="hikashop_vote_stars"><?php echo JText::_('VOTE'); ?>:
-	<input type="hidden" name="hikashop_vote_rating" data-max="<?php echo $hikashop_vote_nb_star; ?>" data-type="<?php echo $type_item; ?>" data-ref="<?php echo $hikashop_vote_ref_id; ?>" data-rate="<?php echo $hikashop_vote_average_score_rounded; ?>" id="hikashop_vote_rating_id" />
-	<span class="hikashop_total_vote">(<?php echo JHTML::tooltip($hikashop_vote_average_score.'/'.$hikashop_vote_nb_star, JText::_('VOTE_AVERAGE'), '', ' '.$hikashop_vote_total_vote.' '); ?>)</span>
+	<input type="hidden" name="hikashop_vote_rating" data-max="<?php echo $row->hikashop_vote_nb_star; ?>" data-type="<?php echo $row->type_item; ?>" data-ref="<?php echo $row->vote_ref_id; ?>" data-rate="<?php echo $row->hikashop_vote_average_score_rounded; ?>" id="hikashop_vote_rating_id" />
+	<span class="hikashop_total_vote">(<?php echo JHTML::tooltip($row->hikashop_vote_average_score.'/'.$row->hikashop_vote_nb_star, JText::_('VOTE_AVERAGE'), '', ' '.$row->hikashop_vote_total_vote.' '); ?>)</span>
 	</div>
 	<div class="clear_both"></div>
 <?php
@@ -68,7 +55,7 @@ if ($comment_enabled == 1 && !$hide) {
 				</td>
 			</tr>
 <?php
-		if ($email_comment == 1) {
+		if ($row->email_comment == 1) {
 ?>
 			<tr class="hikashop_comment_form_mail">
 				<td>
@@ -94,9 +81,9 @@ if ($comment_enabled == 1 && !$hide) {
 <?php
 	}
 ?>
-		<textarea type="text" name="hikashop_vote_comment" id="hikashop_vote_comment" class="hikashop_comment_textarea" onfocus="clearTextArea(this);" ><?php echo JText::_('HIKASHOP_POST_COMMENT');?></textarea>
+		<textarea type="text" name="hikashop_vote_comment" id="hikashop_vote_comment" class="hikashop_comment_textarea" placeholder="<?php echo JText::_('HIKASHOP_POST_COMMENT');?>"></textarea>
 		<input class="button btn" type="button" value="<?php echo JText::_('HIKASHOP_SEND_COMMENT'); ?>" onClick="hikashop_send_comment();"/>
-	</div>
+</div>
 <script type='text/javascript'>
 var clickedIt = false;
 function clearTextArea(id) {
@@ -106,5 +93,3 @@ function clearTextArea(id) {
 	}
 }
 </script>
-<?php
-}

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -231,7 +231,7 @@ class checkoutController extends hikashopController {
 			static $done = false;
 			if(!$done && isset($ck_submital[$unique_id])){
 				JRequest::setVar('step',JRequest::getInt('previous',0));
-				JRequest::setVar( 'layout', 'step' );
+				JRequest::setVar('layout', 'step');
 				return $this->display();
 			}
 			else{
@@ -385,8 +385,7 @@ class checkoutController extends hikashopController {
 			}
 		}
 
-		JRequest::setVar( 'layout', 'step' );
-
+		JRequest::setVar('layout', 'step');
 		return $this->display();
 	}
 
@@ -1110,7 +1109,9 @@ class checkoutController extends hikashopController {
 			}
 			$currencyClass = hikashop_get('class.currency');
 			$currencyClass->convertPayments($rates);
-			$cart->payment->payment_price = $currencyClass->round(($price_all * (float)@$cart->payment->payment_params->payment_percentage / 100) + $rates[$payment_id]->payment_price,$currencyClass->getRounding(hikashop_getCurrency(),true));
+			$paymentClass = hikashop_get('class.payment');
+			$paymentClass->computePrice( $cart, $cart->payment, $price_all, $rates[$payment_id]->payment_price, hikashop_getCurrency());
+			$cart->full_total->prices[0]->payment_tax = @$cart->payment->payment_tax;
 		}
 
 		if(empty($payment_method) || $this->cart_update){
@@ -1208,7 +1209,7 @@ class checkoutController extends hikashopController {
 			$rates = $pluginsClass->getMethods('payment');
 
 			$data = hikashop_import('hikashoppayment',$payment);
-			$paymentData = $data->onPaymentSave($cart,$rates,$payment_id);
+			$paymentData = $data->onPaymentSave($cart, $rates, $payment_id);
 			if($paymentData===false){
 				return false;
 			}
@@ -1225,7 +1226,9 @@ class checkoutController extends hikashopController {
 			}
 			$currencyClass = hikashop_get('class.currency');
 			$currencyClass->convertPayments($rates);
-			$paymentData->payment_price = $currencyClass->round(($price_all * (float)@$paymentData->payment_params->payment_percentage / 100) + $paymentData->payment_price,$currencyClass->getRounding(hikashop_getCurrency(),true));;
+			$paymentClass = hikashop_get('class.payment');
+			$paymentClass->computePrice( $cart, $paymentData, $price_all, $paymentData->payment_price, hikashop_getCurrency());
+			$cart->full_total->prices[0]->payment_tax = @$paymentData->payment_tax;
 			$app->setUserState( HIKASHOP_COMPONENT.'.payment_data',$paymentData);
 
 			if(!empty($paymentData->ask_cc)){
@@ -1466,12 +1469,23 @@ class checkoutController extends hikashopController {
 				$orderProduct = new stdClass();
 				$orderProduct->product_id = $product->product_id;
 				$orderProduct->order_product_quantity = $product->cart_product_quantity;
-				$orderProduct->order_product_name = $product->product_name;
+				if(empty($product->cart_product_option_parent_id)){
+					$text = $product->product_name;
+				}elseif(empty($optionElement->variant_name)){
+					if(empty($product->characteristics_text)){
+						$text = $product->product_name;
+					}else{
+						$text = $product->characteristics_text;
+					}
+				}else{
+					$text = $product->variant_name;
+				}
+				$orderProduct->order_product_name = $text;
 				$orderProduct->cart_product_id = $product->cart_product_id;
 				$orderProduct->cart_product_option_parent_id = $product->cart_product_option_parent_id;
 				$orderProduct->order_product_code = $product->product_code;
 				$orderProduct->order_product_price = @$product->prices[0]->unit_price->price_value;
-				$orderProduct->order_product_wishlist_id = $product->cart_product_wishlist_id;
+				$orderProduct->order_product_wishlist_id = @$product->cart_product_wishlist_id;
 				$orderProduct->product_subscription_id = @$product->product_subscription_id;
 
 				$tax = 0;
@@ -1613,7 +1627,23 @@ class checkoutController extends hikashopController {
 			}
 		}
 
-		$order->order_payment_price = @$cart->payment->payment_price;
+		$order->order_payment_price = @$cart->payment->payment_price_with_tax;
+		if(!empty($cart->payment)) {
+			if(!empty($cart->payment->payment_price_with_tax) && !empty($cart->payment->payment_price)) {
+				$order->order_payment_tax = $cart->payment->payment_price_with_tax - $cart->payment->payment_price;
+				if(!empty($cart->payment->taxes)) {
+					foreach($cart->payment->taxes as $tax) {
+						if(isset($order->order_tax_info[$tax->tax_namekey])) {
+							$order->order_tax_info[$tax->tax_namekey]->tax_amount_for_payment = $tax->tax_amount;
+						} elseif(!empty($order->order_tax_info[$tax->tax_namekey]->tax_amount) && $order->order_tax_info[$tax->tax_namekey]->tax_amount>0) {
+							$order->order_tax_info[$tax->tax_namekey] = $tax;
+							$order->order_tax_info[$tax->tax_namekey]->tax_amount_for_payment = $order->order_tax_info[$tax->tax_namekey]->tax_amount;
+							$order->order_tax_info[$tax->tax_namekey]->tax_amount = 0;
+						}
+					}
+				}
+			}
+		}
 		$discount_price = 0;
 		$discount_tax=0;
 

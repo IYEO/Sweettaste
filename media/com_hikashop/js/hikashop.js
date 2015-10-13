@@ -1,6 +1,6 @@
 /**
  * @package    HikaShop for Joomla!
- * @version    2.5.0
+ * @version    2.6.0
  * @author     hikashop.com
  * @copyright  (C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license    GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -167,19 +167,19 @@
 			options.mode = options.mode || 'GET';
 			options.update = options.update || false;
 			xhr.onreadystatechange = function() {
-				if(xhr.readyState == 4) {
-					if( xhr.status == 200 || (xhr.status == 0 && xhr.responseText > 0) || !cbError ) {
-						if(cb)
-							cb(xhr,options.params);
-						if(options.update)
-							t.updateElem(options.update, xhr.responseText);
-					} else {
-						cbError(xhr,options.params);
-					}
+				if(xhr.readyState != 4)
+					return;
+				if( xhr.status == 200 || (xhr.status == 0 && xhr.responseText > 0) || !cbError ) {
+					if(cb)
+						cb(xhr,options.params);
+					if(options.update)
+						t.updateElem(options.update, xhr.responseText);
+				} else {
+					cbError(xhr,options.params);
 				}
 			};
 			xhr.open(options.mode, url, true);
-			if( options.mode.toUpperCase() == 'POST' ) {
+			if(options.mode.toUpperCase() == 'POST' && typeof(options.data) == 'string') {
 				xhr.setRequestHeader("Content-type","application/x-www-form-urlencoded");
 			}
 			xhr.send( options.data );
@@ -363,7 +363,7 @@
 					tableUser = tplLine.parentNode;
 			if(!tplLine) return;
 			trLine = tplLine.cloneNode(true);
-			tableUser.appendChild(trLine);
+			tableUser.insertBefore(trLine, tplLine);
 			trLine.style.display = "";
 			trLine.id = "";
 			if(id)
@@ -371,11 +371,15 @@
 			for(var i = tplLine.cells.length - 1; i >= 0; i--) {
 				if(trLine.cells[i]) {
 					for(var k in htmlblocks) {
+						if(!htmlblocks.hasOwnProperty(k))
+							continue;
 						trLine.cells[i].innerHTML = trLine.cells[i].innerHTML.replace(new RegExp("{"+k+"}","g"), htmlblocks[k]);
 						trLine.cells[i].innerHTML = trLine.cells[i].innerHTML.replace(new RegExp("%7B"+k+"%7D","g"), htmlblocks[k]);
 					}
 					if(extraData) {
 						for(var k in extraData) {
+							if(!extraData.hasOwnProperty(k))
+								continue;
 							trLine.cells[i].innerHTML = trLine.cells[i].innerHTML.replace(new RegExp('{'+k+'}','g'), extraData[k]);
 							trLine.cells[i].innerHTML = trLine.cells[i].innerHTML.replace(new RegExp('%7B'+k+'%7D','g'), extraData[k]);
 						}
@@ -433,23 +437,21 @@
 		},
 		checkAll: function(checkbox, stub) {
 			stub = stub || 'cb';
-			if(checkbox.form) {
-				var cb = checkbox.form, c = 0;
-				for(var i = 0, n = cb.elements.length; i < n; i++) {
-					var e = cb.elements[i];
-					if (e.type == checkbox.type) {
-						if ((stub && e.id.indexOf(stub) == 0) || !stub) {
-							e.checked = checkbox.checked;
-							c += (e.checked == true ? 1 : 0);
-						}
-					}
+			if(!checkbox.form)
+				return false;
+			var o = window.Oby, cb = checkbox.form, c = 0;
+			for(var i = 0, n = cb.elements.length; i < n; i++) {
+				var e = cb.elements[i];
+				if (e != checkbox && e.type == checkbox.type && ((stub && e.id.indexOf(stub) == 0) || !stub)) {
+					e.checked = checkbox.checked;
+					o.fireEvent(e, 'change');
+					c += (e.checked == true ? 1 : 0);
 				}
-				if (cb.boxchecked) {
-					cb.boxchecked.value = c;
-				}
-				return true;
 			}
-			return false;
+			if (cb.boxchecked) {
+				cb.boxchecked.value = c;
+			}
+			return true;
 		},
 		submitform: function(task, form, extra) {
 			var d = document;
@@ -637,9 +639,13 @@
 			if(!window.jQuery)
 				return false;
 			jQuery('.no-chzn').each(function(i,el) {
-				var id = el.getAttribute('id');
-				id = id.replace('{','_').replace('}','_');
-				var chzn = jQuery('#'+id+'_chzn');
+				var id = el.getAttribute('id'), chzn;
+				if(id) {
+					id = id.replace('{','_').replace('}','_');
+					chzn = jQuery('#'+id+'_chzn');
+				} else {
+					chzn = el.nextSibling;
+				}
 				if(chzn) chzn.remove();
 				jQuery(el).removeClass('chzn-done').show();
 			});
@@ -692,6 +698,122 @@
 						dt[i].setAttribute('title', val);
 				}
 			}
+		},
+		checkConsistency: function() {
+			if(!document.querySelectorAll)
+				return;
+			var s = null, elems = null,
+				parents = document.querySelectorAll('[data-consistencyheight]');
+			if(!parents || !parents.length)
+				return;
+			for(var i = parents.length - 1; i >= 0; i--) {
+				s = parents[i].getAttribute('data-consistencyheight');
+				if(s == '' || s == 'true')
+					continue;
+				var reg = new RegExp('^\.[-_a-z0-9]+$', 'i');
+				if(reg.test(s) && document.getElementsByClassName)
+					elems = parents[i].getElementsByClassName(s.substring(1));
+				else
+					elems = parents[i].querySelectorAll(s);
+				if(!elems || !elems.length)
+					continue;
+				this.setConsistencyHeight(elems);
+				parents[i].setAttribute('data-consistencyheight', '');
+			}
+		},
+		setConsistencyHeight: function(elems, mode) {
+			if(!elems || !elems.length || elems.length == 0)
+				return;
+			var maxHeight = 0, cpt = 0;
+			for(var i = elems.length - 1; i >= 0; i--) {
+				if(maxHeight > 0 && elems[i].clientHeight < maxHeight) {
+					cpt++;
+				} else if(elems[i].clientHeight > maxHeight) {
+					maxHeight = elems[i].clientHeight;
+					cpt++;
+				}
+			}
+			if(cpt <= 1)
+				return;
+			for(var i = elems.length - 1; i >= 0; i--) {
+				if(mode !== undefined && mode == 'min')
+					elems[i].style.minHeight = maxHeight + 'px';
+				else
+					elems[i].style.height = maxHeight + 'px';
+			}
+		},
+		toggleField: function(new_value, namekey, field_type, id, prefix) {
+			var d = document, checked = 0, size = 0, obj = null, specialField = false,
+				checkedGood = 0, count = 0, el = null,
+				arr = d.getElementsByName('data['+field_type+']['+namekey+'][]');
+
+			if(!arr)
+				return false;
+
+			if(!this.fields_data && window.hikashopFieldsJs)
+				this.fields_data = window.hikashopFieldsJs;
+
+			if(this.fields_data === undefined || this.fields_data[field_type] === undefined)
+				return false;
+
+			size = (arr[0] && arr[0].length !== undefined) ? arr[0].length : arr.length;
+
+			if(prefix === undefined || !prefix || prefix.length == 0 || prefix.substr(-1) != '_')
+				prefix = 'hikashop_';
+
+			for(var c = 0; c < size; c++) {
+				if(arr && arr[0] != undefined && arr[0].length != undefined)
+					obj = d.getElementsByName('data['+field_type+']['+namekey+'][]').item(0).item(c);
+				else
+					obj = d.getElementsByName('data['+field_type+']['+namekey+'][]').item(c);
+
+				if(obj.checked || obj.selected)
+					checked++;
+
+				if(obj.type && obj.type == 'checkbox')
+					specialField = true;
+			}
+
+			var data = this.fields_data[field_type][namekey];
+			for(var k in data) {
+				if(typeof data[k] != 'object')
+					continue;
+
+				for(var l in data[k]) {
+					if(typeof data[k][l] != 'string')
+						continue;
+
+					count++;
+					newEl = d.getElementById(namekey + '_' + k);
+					if(newEl && (newEl.checked || newEl.selected))
+						checkedGood++;
+				}
+			}
+
+			specialField = specialField || (arr[0] && arr[0].length && count > 1);
+
+			for(var j in data) {
+				if(typeof data[j] != 'object')
+					continue;
+				for(var i in data[j]) {
+					if(typeof data[j][i] != 'string')
+						continue;
+
+					var elementName = prefix+field_type + '_' + data[j][i];
+					if(id)
+						elementName = elementName + '_' + id;
+					el = document.getElementById(elementName);
+					if(!el)
+						continue;
+					if( (specialField && checkedGood == count && checkedGood == checked && new_value != '') || (!specialField && j == new_value) ) {
+						el.style.display = '';
+						this.toggleField(el.value, data[j][i], field_type, id, prefix);
+					} else {
+						el.style.display = 'none';
+						this.toggleField('', data[j][i], field_type, id, prefix);
+					}
+				}
+			}
 		}
 	};
 	window.hikashop = hikashop;
@@ -737,7 +859,7 @@ function hikashopCheckChangeForm(type, form) {
 		return true;
 
 	var d = document;
-	for(var i = hikashopFieldsJs['reqFieldsComp'][type].length - 1; i >= 0; i--) {
+	for(var i = 0; i < hikashopFieldsJs['reqFieldsComp'][type].length; i++) {
 		elementName = 'data['+type+']['+hikashopFieldsJs['reqFieldsComp'][type][i]+']';
 		if(typeof(varform.elements[elementName]) == 'undefined')
 			elementName = type+'_'+hikashopFieldsJs['reqFieldsComp'][type][i];
@@ -872,6 +994,9 @@ function hikashopCheckField(elementToCheck, type, i, elementName, form) {
 	return true;
 }
 
+window.hikashop.ready(function(){
+	window.hikashop.checkConsistency();
+});
 if(window.jQuery && typeof(jQuery.noConflict) == "function" && !window.hkjQuery) {
 	window.hkjQuery = jQuery.noConflict();
 }

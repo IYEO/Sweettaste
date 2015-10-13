@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -47,6 +47,7 @@ class CategoryController extends hikashopController{
 	function rebuild(){
 		$class = hikashop_get('class.category');
 		$database = JFactory::getDBO();
+
 		$query = 'SELECT category_left,category_right,category_depth,category_id,category_parent_id FROM #__hikashop_category ORDER BY category_left ASC';
 		$database->setQuery($query);
 		$root = null;
@@ -58,6 +59,13 @@ class CategoryController extends hikashopController{
 							$root = $cat;
 			}
 		}
+
+		if(!empty($root)){
+			$query = 'UPDATE `#__hikashop_category` SET category_parent_id = '.(int)$root->category_id.' WHERE category_parent_id = 0 AND category_id != '.(int)$root->category_id.'';
+			$database->setQuery($query);
+			$database->query();
+		}
+
 		$class->rebuildTree($root,0,1);
 		$app= JFactory::getApplication();
 		$app->enqueueMessage(JText::_('CATEGORY_TREE_REBUILT'));
@@ -116,6 +124,7 @@ class CategoryController extends hikashopController{
 
 	public function findList() {
 		$search = JRequest::getVar('search', '');
+		$start = JRequest::getInt('start', 0);
 		$type = JRequest::getVar('category_type', '');
 		$displayFormat = JRequest::getVar('displayFormat', '');
 
@@ -131,6 +140,8 @@ class CategoryController extends hikashopController{
 
 		if(!empty($displayFormat))
 			$options['displayFormat'] = $displayFormat;
+		if($start > 0)
+			$options['page'] = $start;
 
 		$nameboxType = hikashop_get('type.namebox');
 		$elements = $nameboxType->getValues($search, $type, $options);

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -909,7 +909,7 @@ function checkAllBox(id, type){
 				if($shipment[$i]['return']=="-1"){
 					$app = JFactory::getApplication();
 					$shipment[$i]['err_message'] = (string)$xml->Response->Error->ErrorDescription;
-					$shipment[$i]['err_code'] = (string)$xml->Response->Error->ErrorCode;;
+					$shipment[$i]['err_code'] = (string)$xml->Response->Error->ErrorCode;
 					if($shipment[$i]['err_code']==111210){
 						$error_locations = $shipment[$i]['err_message'];
 					}elseif($shipment[$i]['err_code']<=111056 && $shipment[$i]['err_code']>=111050){

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -414,18 +414,24 @@ class plgHikashoppaymentAtos extends hikashopPaymentPlugin
 		}
 
 		if(!empty($vars['bank_response_code'])){
-			$vars['status']=(int)$vars['bank_response_code'];
+			$vars['status'] = (int)$vars['bank_response_code'];
 		}else{
-			$vars['status']=(int)@$vars['response_code'];
+			$vars['status'] = (int)@$vars['response_code'];
 		}
 
 		$history = new stdClass();
 		$email = new stdClass();
 
-		if($vars['response_code']=='17'||$vars['response_code']=='75'){
+		if((int)$vars['response_code'] == 17 || (int)$vars['response_code'] == 75) {
+
+			if($dbOrder->order_status == $this->payment_params->verified_status) {
+				$this->app->redirect(hikashop_completeLink('checkout&task=after_end&order_id='.$order_id, false, true));
+				return true;
+			}
+
 			$order_status = $this->payment_params->invalid_status;
 			$history->data = ob_get_clean();
-			$history->data .= JText::sprintf( 'ORDER_CANCEL_BY_USER');
+			$history->data .= JText::sprintf('ORDER_CANCEL_BY_USER');
 
 			$this->modifyOrder($order_id, $order_status, $history, false);
 

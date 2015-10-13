@@ -2,21 +2,6 @@
 include_once $originalFile;
 
 class hikashopFieldClassOverride extends hikashopFieldClass {
-
-	var $tables = array('field');
-	var $pkeys = array('field_id');
-	var $namekeys = array();
-	var $errors = array();
-	var $prefix = '';
-	var $suffix = '';
-	var $excludeValue = array();
-	var $toggle = array('field_required'=>'field_id','field_published'=>'field_id','field_backend'=>'field_id','field_backend_listing'=>'field_id','field_frontcomp'=>'field_id','field_core'=>'field_id');
-	var $where = array();
-	var $skipAddressName=false;
-	var $report = true;
-	var $externalValues = null;
-	var $regexs = array();
-
 	function getFieldName($field,$requiredDisplay = false){
 		$app = JFactory::getApplication();
 		if($app->isAdmin())
@@ -52,23 +37,30 @@ class hikashopFieldClassOverride extends hikashopFieldClass {
 class hikashopTextOverride extends hikashopText{
 	var $type = 'text';
 	var $class = 'form-control';
-	function display($field, $value, $map, $inside, $options = '', $test = false, $allFields = null, $allValues = null){
-		$size = empty($field->field_options['size']) ? '' : 'size="'.intval($field->field_options['size']).'"';
-		$size .= empty($field->field_options['maxlength']) ? '' : ' maxlength="'.intval($field->field_options['maxlength']).'"';
-		$size .= empty($field->field_options['readonly']) ? '' : ' readonly="readonly"';
-		$size .= empty($field->field_options['placeholder']) ? '' : ' placeholder="'.JText::_($field->field_options['placeholder']).'"';
+
+	function display($field, $value, $map, $inside, $options = '', $test = false, $allFields = null, $allValues = null) {
+
+		$size = '';
+		if(!empty($field->field_options['size']))
+			$size .= ' size="'.intval($field->field_options['size']).'"';
+		if(!empty($field->field_options['maxlength']))
+			$size .= ' maxlength="'.intval($field->field_options['maxlength']).'"';
+		if(!empty($field->field_options['readonly']))
+			$size .= ' readonly="readonly"';
+		if(!empty($field->field_options['placeholder']))
+			$size .= ' placeholder="'.JText::_($field->field_options['placeholder']).'"';
+
 		$js = '';
 		if($inside && strlen($value) < 1){
 			$value = addslashes($this->trans($field->field_realname));
 			$this->excludeValue[$field->field_namekey] = $value;
 			$js = 'onfocus="if(this.value == \''.$value.'\') this.value = \'\';" onblur="if(this.value==\'\') this.value=\''.$value.'\';"';
 		}
-		$buffInput = '<input class="'.$this->class.'" id="'.$this->prefix.@$field->field_namekey.$this->suffix.'" '.$size.' '.$js.' '.$options.' type="'.$this->type.'" name="'.$map.'" value="'.$value.'"';
-		if(!empty($field->field_required))
-			$buffInput.=' aria-required="true" required="required" />';
-		else
-			$buffInput .= ' />';
-		return $buffInput;
+
+		if(!empty($field->field_required) && !empty($field->registration_page))
+			$size .= ' aria-required="true" required="required"';
+
+		return '<input class="'.$this->class.'" id="'.$this->prefix.@$field->field_namekey.$this->suffix.'"'.$size.$js.' '.$options.' type="'.$this->type.'" name="'.$map.'" value="'.$value.'" />';
 	}	
 }
 
@@ -153,7 +145,7 @@ class hikashopDropdownOverride extends hikashopDropdown {
 		} else {
 			$options = str_replace('class="', 'class="form-control ', $options);
 		}
-		$string .= '<select id="12'.$this->prefix.$field->field_namekey.$this->suffix.'" name="'.$map.'" '.$arg.$options.'>';
+		$string .= '<select id="'.$this->prefix.$field->field_namekey.$this->suffix.'" name="'.$map.'" '.$arg.$options.'>';
 		if(empty($field->field_value))
 			return $string.'</select>';
 

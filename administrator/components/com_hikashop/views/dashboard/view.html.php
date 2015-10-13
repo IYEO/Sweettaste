@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -145,7 +145,7 @@ class dashboardViewDashboard extends hikashopView {
 		if(hikashop_isAllowed($config->get('acl_plugins_view','all'))) $buttons[] = array('link'=>'plugins','level'=>0,'image'=>'plugin','text'=>JText::_('PLUGINS'));
 		if(hikashop_isAllowed($config->get('acl_view_view','all'))) $buttons[] = array('link'=>'view','level'=>0,'image'=>'view','text'=>JText::_('DISPLAY'));
 		if((!HIKASHOP_J16 || JFactory::getUser()->authorise('core.admin', 'com_hikashop')) && hikashop_isAllowed($config->get('acl_config_view','all'))) $buttons[] = array('link'=>'config','level'=>0,'image'=>'config','text'=>JText::_('HIKA_CONFIGURATION'));
-		if(hikashop_isAllowed($config->get('acl_help_view','all'))) $buttons[] = array('link'=>'documentation','level'=>0,'image'=>'install','text'=>JText::_('UPDATE_ABOUT'));
+		if(hikashop_isAllowed($config->get('acl_update_about_view','all'))) $buttons[] = array('link'=>'documentation','level'=>0,'image'=>'install','text'=>JText::_('UPDATE_ABOUT'));
 
 		$htmlbuttons = array();
 		foreach($buttons as $oneButton){

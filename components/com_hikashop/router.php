@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -38,22 +38,15 @@ function HikashopBuildRoute( &$query )
 					unset( $query['task'] );
 				}
 			}
-			else if(isset($query['view']) && isset($query['layout'])){
-				if($query['view']=='category' && $query['layout']=='listing'){
-					$segments[] = $categorySef;
-					unset( $query['layout'] );
-					unset( $query['view'] );
-				}
-				else if($query['view']=='product' && $query['layout']=='show'){
-					$segments[] = $productSef;
-					unset( $query['layout'] );
-					unset( $query['view'] );
-				}
-			}
 			if( ( isset($query['ctrl']) && $query['ctrl']=='checkout' || isset($query['view']) && $query['view']=='checkout' ) && !empty($query['Itemid']) && ( !isset($query['task']) && !isset($query['layout']) || (isset($query['task']) && $query['task']=='step' ) || (isset($query['layout']) && $query['layout']=='step' )) ) {
-				$menuClass = hikashop_get('class.menus');
-				$menu = $menuClass->get($query['Itemid']);
-				if(!empty($menu) && !empty($menu->link) && $menu->link =='index.php?option=com_hikashop&view=checkout&layout=step'){
+				if(empty($checkoutSef)){
+					$menuClass = hikashop_get('class.menus');
+					$menu = $menuClass->get($query['Itemid']);
+					if(!empty($menu) && !empty($menu->link) && $menu->link =='index.php?option=com_hikashop&view=checkout&layout=step'){
+						if(isset($query['ctrl'])) unset($query['ctrl']);
+						if(isset($query['view'])) unset($query['view']);
+					}
+				}else{
 					if(isset($query['ctrl'])) unset($query['ctrl']);
 					if(isset($query['view'])) unset($query['view']);
 					if(!empty($checkoutSef)) $segments[] = $checkoutSef;
@@ -85,10 +78,8 @@ function HikashopBuildRoute( &$query )
 			unset( $query['task'] );
 		}
 	}elseif(isset($query['view'])){
-		$segments[] = $query['view'];
 		unset( $query['view'] );
 		if(isset($query['layout'])){
-			$segments[] = $query['layout'];
 			unset( $query['layout'] );
 		}
 	}
@@ -126,9 +117,9 @@ function HikashopBuildRoute( &$query )
 
 	return $segments;
 }
+
 function HikashopParseRoute( $segments )
 {
-
 	$vars = array();
 	$check=false;
 	if(!empty($segments)){
@@ -139,6 +130,7 @@ function HikashopParseRoute( $segments )
 			if($config->get('activate_sef',1)){
 				$categorySef=$config->get('category_sef_name','category');
 				$productSef=$config->get('product_sef_name','product');
+				$checkoutSef=$config->get('checkout_sef_name','checkout');
 				$skip=false;
 				if(isset($segments[0])){
 					$file = HIKASHOP_CONTROLLER.$segments[0].'.php';
@@ -154,8 +146,20 @@ function HikashopParseRoute( $segments )
 
 				if(!$skip){
 
+					if(count($segments)==1){
+						if(empty($categorySef)){
+							$vars['ctrl']='category';
+							$vars['task']='listing';
+						}
+						elseif(empty($productSef)){
+							$vars['ctrl']='product';
+							$vars['task']='listing';
+						}
+					}
+
 					$i = 0;
-					foreach($segments as $name){
+
+					foreach($segments as $k => $name){
 						if(strpos($name,':')){
 							if(empty($productSef) && !$check){
 								$vars['ctrl']='product';
@@ -188,11 +192,18 @@ function HikashopParseRoute( $segments )
 							$vars['ctrl']='category';
 							$vars['task']='listing';
 							$check=true;
+						}else if($name==$checkoutSef && ( $name!= 'checkout' || !isset($segments[$k+1]) || $segments[$k+1] != 'notice' )){
+							$vars['ctrl']='checkout';
+							$vars['task']='step';
+							$check=true;
 						}else{
 							if(hikashop_retrieve_url_id($vars,$name)) continue;
 							$i++;
-							if($i == 1) $vars['ctrl'] = $name;
-							elseif($i == 2) $vars['task'] = $name;
+							if($i == 1){
+								$vars['ctrl'] = $name;
+								$vars['task'] = '';
+							}elseif($i == 2)
+								$vars['task'] = $name;
 							$check=true;
 						}
 					}
@@ -238,7 +249,6 @@ function HikashopParseRoute( $segments )
 function hikashop_retrieve_url_id(&$vars,$name){
 	$config =& hikashop_config();
 	if($config->get('sef_remove_id',0) && isset($vars['ctrl']) && isset($vars['task'])){
-
 		if($vars['ctrl']=='category' || ($vars['ctrl']=='product' && $vars['task']=='listing')){
 			$type = 'category';
 		}elseif($vars['ctrl']=='product' && $vars['task']=='show'){
@@ -250,30 +260,28 @@ function hikashop_retrieve_url_id(&$vars,$name){
 		$db = JFactory::getDBO();
 		$config =& hikashop_config();
 
-		if($config->get('alias_auto_fill',1)){
-			$class = hikashop_get('helper.translation');
-			if($class->isMulti()){
-				$trans_table = 'jf_content';
-				if($class->falang){
-					$trans_table = 'falang_content';
-				}
-				$db->setQuery('SELECT reference_id FROM '.hikashop_table($trans_table,false).' WHERE reference_table='.$db->Quote('hikashop_'.$type).' AND reference_field='.$db->Quote($type.'_alias').' AND value = '.$db->Quote(str_replace(':','-',$name)));
-				$retrieved_id = $db->loadResult();
-				if($retrieved_id){
-					$vars['cid'] = $retrieved_id;
-					$vars['name'] = $name;
-					return true;
-				}
+		$class = hikashop_get('helper.translation');
+		if($class->isMulti()){
+			$trans_table = 'jf_content';
+			if($class->falang){
+				$trans_table = 'falang_content';
 			}
-			$db->setQuery('SELECT '.$type.'_id FROM '.hikashop_table($type).' WHERE '.$type.'_alias = '.$db->Quote(str_replace(':','-',$name)));
+			$db->setQuery('SELECT reference_id FROM '.hikashop_table($trans_table,false).' WHERE reference_table='.$db->Quote('hikashop_'.$type).' AND reference_field='.$db->Quote($type.'_alias').' AND value = '.$db->Quote(str_replace(':','-',$name)));
 			$retrieved_id = $db->loadResult();
 			if($retrieved_id){
 				$vars['cid'] = $retrieved_id;
 				$vars['name'] = $name;
 				return true;
 			}
-
 		}
+		$db->setQuery('SELECT '.$type.'_id FROM '.hikashop_table($type).' WHERE '.$type.'_alias = '.$db->Quote(str_replace(':','-',$name)));
+		$retrieved_id = $db->loadResult();
+		if($retrieved_id){
+			$vars['cid'] = $retrieved_id;
+			$vars['name'] = $name;
+			return true;
+		}
+
 
 		$name_regex = '^ *p?'.str_replace(array('-',':'),'.+',$name).' *$';
 		$class = hikashop_get('helper.translation');

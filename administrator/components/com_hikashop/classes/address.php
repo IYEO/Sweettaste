@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -237,8 +237,8 @@ class hikashopAddressClass extends hikashopClass{
 			return false;
 		}
 		$this->get('reset_cache');
-		if(!empty($addressData->address_default) && !empty($oldData->address_id)){
-			$query = 'UPDATE '.hikashop_table('address').' SET address_default=0 WHERE address_user_id = '.(int)$oldData->address_user_id.' AND address_id != '.(int)$oldData->address_id;
+		if(!empty($addressData->address_default) && !empty($oldData)) {
+			$query = 'UPDATE '.hikashop_table('address').' SET address_default=0 WHERE address_user_id = '.(int)$oldData->address_user_id.' AND address_id != '.(int)$status;
 			$this->database->setQuery($query);
 			$this->database->query();
 		}

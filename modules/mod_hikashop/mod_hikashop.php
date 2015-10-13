@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -24,6 +24,24 @@ $module_options = $config->get($key_name);
 if(empty($module_options)){
 	$module_options = $config->get('default_params');
 }
+
+$data = $params->get('hikashopmodule');
+if(HIKASHOP_J30 && (empty($data) || !is_object($data))){
+	$db = JFactory::getDBO();
+	$query = 'SELECT params FROM '.hikashop_table('modules',false).' WHERE id = '.(int)$module->id;
+	$db->setQuery($query);
+	$itemData = json_decode($db->loadResult());
+	if(!empty($itemData->hikashopmodule) && is_object($itemData->hikashopmodule)){
+		$data = $itemData->hikashopmodule;
+		$params->set('hikashopmodule',$data);
+	}
+}
+if(!empty($data) && is_object($data)){
+	foreach($data as $k => $v){
+		$module_options[$k] = $v;
+	}
+}
+
 $type = $module_options['content_type'];
 if($type=='manufacturer') $type = 'category';
 
@@ -49,8 +67,4 @@ foreach(get_object_vars($module) as $k => $v){
 	}
 }
 $html = trim(hikashop_getLayout($type,'listing',$params,$js));
-if(!empty($html)){ ?>
-<div id="hikashop_module_<?php echo $module->id;?>" class="hikashop_module <?php echo @$module->params['moduleclass_sfx']; ?>">
-<?php echo $html; ?>
-</div>
-<?php } ?>
+require(JModuleHelper::getLayoutPath('mod_hikashop'));

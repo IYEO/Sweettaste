@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -50,7 +50,7 @@ defined('_JEXEC') or die('Restricted access');
 
 
 				$js.="
-				hikashop_options[".(int)$optionElement->product_id."]=".(float)$price.";";
+				hikashop_options[".(int)$optionElement->product_id."]=".(float)str_replace(',','.',$price).";";
 			}
 			$this->values[] = JHTML::_('select.option', $optionElement->product_id,$text);
 		}else{
@@ -94,7 +94,7 @@ defined('_JEXEC') or die('Restricted access');
 					$text.=' ( '.($positive?'+ ':'').$this->currencyHelper->format($price,$ok->price_currency_id).' )';
 
 					$js.="
-					hikashop_options[".(int)$variant->product_id."]=".(float)$price.";";
+					hikashop_options[".(int)$variant->product_id."]=".(float)str_replace(',','.',$price).";";
 				}
 
 				if($defaultValue && isset($variant->characteristics) && is_array($variant->characteristics) && count($variant->characteristics)){

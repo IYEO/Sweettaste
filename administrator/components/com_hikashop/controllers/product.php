@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -20,7 +20,7 @@ class ProductController extends hikashopController {
 
 	function __construct($config = array()){
 		parent::__construct($config);
-		$this->display=array(
+		$this->display = array(
 			'unpublish','publish',
 			'listing','show','cancel',
 			'selectcategory','addcategory',
@@ -104,6 +104,14 @@ class ProductController extends hikashopController {
 			$this->listing();
 	}
 
+	function save2new(){
+		$result = $this->store(true);
+		if($result){
+			JRequest::setVar('product_id', 0);
+		}
+		return $this->edit();
+	}
+
 	function copy() {
 		$products = JRequest::getVar('cid', array(), '', 'array');
 		$result = true;
@@ -125,6 +133,7 @@ class ProductController extends hikashopController {
 	}
 
 	function variant() {
+		hikashop_nocache();
 		JRequest::setVar('layout', 'variant');
 
 		$legacy = JRequest::getInt('legacy', 0);
@@ -140,6 +149,7 @@ class ProductController extends hikashopController {
 	}
 
 	public function variants() {
+		hikashop_nocache();
 		JRequest::setVar('layout', 'form_variants');
 
 		$product_id = JRequest::getInt('product_id', 0);
@@ -150,6 +160,12 @@ class ProductController extends hikashopController {
 					$variant_id = JRequest::getInt('variant_id');
 					$productClass = hikashop_get('class.product');
 					$ret = $productClass->setDefaultVariant($product_id, $variant_id);
+					break;
+
+				case 'publish':
+					$variant_id = JRequest::getInt('variant_id');
+					$productClass = hikashop_get('class.product');
+					$ret = $productClass->publishVariant($variant_id);
 					break;
 
 				case 'add':

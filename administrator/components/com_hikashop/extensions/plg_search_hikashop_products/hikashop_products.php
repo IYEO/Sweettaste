@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -293,10 +293,12 @@ class plgSearchHikashop_products extends JPlugin{
 					}
 				}
 				if(empty($row->product_canonical)){
-					$rows[$k]->href = 'index.php?option=com_hikashop&ctrl=product&task=show&name='.$row->alias.'&cid='.$row->id.$Itemid.$parent;
+					$rows[$k]->href = JRoute::_('index.php?option=com_hikashop&ctrl=product&task=show&name='.$row->alias.'&cid='.$row->id.$Itemid.$parent);
 				}else{
 					$rows[$k]->href = $row->product_canonical;
 				}
+				$rows[$k]->href = hikashop_cleanURL($rows[$k]->href);
+
 				$rows[$k]->section 	= JText::_( 'PRODUCT' );
 			}
 
@@ -319,7 +321,13 @@ class plgSearchHikashop_products extends JPlugin{
 							break;
 						}
 					}
-					if(!empty($rows[$k]->image)) continue;
+
+					if(!empty($rows[$k]->image))
+						continue;
+
+					if(!$variants)
+						continue;
+
 					foreach($images as $k2 => $image){
 						if($row->product_parent_id==$k2){
 							$result = $imageHelper->getThumbnail(@$image->file_path, array('width' => $width, 'height' => $height), $image_options);

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -121,6 +121,10 @@ class ModulesViewModules extends hikashopView{
 		$dispatcher = JDispatcher::getInstance();
 		$dispatcher->trigger('onHkContentParamsDisplay', array('module', $control, &$element, &$extra_blocks));
 		$this->assignRef('extra_blocks', $extra_blocks);
+
+		$this->type = 'cart';
+		if($element->module == 'mod_hikashop_wishlist')
+			$this->type = 'wishlist';
 
 		$js = null;
 		$jsHide="
@@ -351,9 +355,9 @@ class ModulesViewModules extends hikashopView{
 		if(!HIKASHOP_J16){
 			$query = 'SELECT a.name, a.id as itemid, b.title  FROM `#__menu` as a LEFT JOIN `#__menu_types` as b on a.menutype = b.menutype ORDER BY b.title ASC,a.ordering ASC';
 		}elseif(!HIKASHOP_J30){
-			$query = 'SELECT a.title as name, a.id as itemid, b.title  FROM `#__menu` as a LEFT JOIN `#__menu_types` as b on a.menutype = b.menutype WHERE a.client_id=0 ORDER BY b.title ASC,a.ordering ASC';
+			$query = 'SELECT a.title as name, a.id as itemid, b.title  FROM `#__menu` as a LEFT JOIN `#__menu_types` as b on a.menutype = b.menutype WHERE a.client_id=0 AND (a.link LIKE \'%view=product%\' OR a.link LIKE \'%view=category%\') ORDER BY b.title ASC,a.ordering ASC';
 		}else{
-			$query = 'SELECT a.title as name, a.id as itemid, b.title  FROM `#__menu` as a LEFT JOIN `#__menu_types` as b on a.menutype = b.menutype WHERE a.client_id=0 ORDER BY b.title ASC';
+			$query = 'SELECT a.title as name, a.id as itemid, b.title  FROM `#__menu` as a LEFT JOIN `#__menu_types` as b on a.menutype = b.menutype WHERE a.client_id=0 AND (a.link LIKE \'%view=product%\' OR a.link LIKE \'%view=category%\') ORDER BY b.title ASC';
 		}
 		$db 	= JFactory::getDBO();
 		$db->setQuery($query);
@@ -508,5 +512,95 @@ class ModulesViewModules extends hikashopView{
 				window.parent.hikashop.closeBox();
 		});";
 		$document->addScriptDeclaration($js);
+	}
+
+	function options(&$params){
+		$this->id = $params->get('id');
+		$this->name = str_replace('[]', '', $params->get('name'));
+		$this->element = $params->get('value');
+		$this->layoutType = hikashop_get('type.layout');
+		$this->orderdirType = hikashop_get('type.orderdir');
+		$this->childdisplayType = hikashop_get('type.childdisplay');
+		$this->orderType = hikashop_get('type.order');
+		$this->listType = hikashop_get('type.list');
+		$this->nameboxType = hikashop_get('type.namebox');
+		$this->effectType = hikashop_get('type.effect');
+		$this->directionType = hikashop_get('type.direction');
+		$this->transition_effectType = hikashop_get('type.transition_effect');
+		$this->slide_paginationType = hikashop_get('type.slide_pagination');
+		$this->positionType = hikashop_get('type.position');
+		$this->pricetaxType = hikashop_get('type.pricetax');
+		$this->discountDisplayType = hikashop_get('type.discount_display');
+		$this->priceDisplayType = hikashop_get('type.priceDisplay');
+		$this->colorType = hikashop_get('type.color');
+		$this->itemType = hikashop_get('type.item');
+		$this->contentType = hikashop_get('type.content');
+		$this->productSyncType = hikashop_get('type.productsync');
+		$this->arr = array(
+			JHTML::_('select.option',  '-1', JText::_( 'HIKA_INHERIT' ) ),
+			JHTML::_('select.option',  '1', JText::_( 'HIKASHOP_YES' ) ),
+			JHTML::_('select.option',  '0', JText::_( 'HIKASHOP_NO' ) ),
+		);
+		$this->arr[0]->class = 'btn-primary';
+		$this->arr[1]->class = 'btn-success';
+		$this->arr[2]->class = 'btn-danger';
+
+		$db = JFactory::getDBO();
+		$query = 'SELECT a.title as name, a.id as itemid, b.title  FROM `#__menu` as a LEFT JOIN `#__menu_types` as b on a.menutype = b.menutype WHERE a.client_id=0 AND (a.link LIKE \'%view=product%\' OR a.link LIKE \'%view=category%\') ORDER BY b.title ASC';
+		$db->setQuery($query);
+		$joomMenus = $db->loadObjectList();
+		$menuvalues = array();
+		$menuvalues[] = JHTML::_('select.option', '0',JText::_('HIKA_NONE'));
+		$lastGroup = '';
+		foreach($joomMenus as $oneMenu){
+			if($oneMenu->title != $lastGroup){
+				if(!empty($lastGroup)) $menuvalues[] = JHTML::_('select.option', '</OPTGROUP>');
+				$menuvalues[] = JHTML::_('select.option', '<OPTGROUP>',$oneMenu->title);
+				$lastGroup = $oneMenu->title;
+			}
+			$menuvalues[] = JHTML::_('select.option', $oneMenu->itemid,$oneMenu->name);
+		}
+		$this->assignRef('hikashop_menu',$menuvalues);
+
+		$cid = JRequest::getInt('id','');
+		if(empty($cid))
+			$cid = hikashop_getCID();
+
+		$module = $this->getModuleData($cid);
+		if(empty($this->element)) {
+			$this->element = $module->hikashop_params;
+		}
+
+		if(isset($this->element['content_type']))
+			$this->type = $this->element['content_type'];
+		elseif(isset($module->hikashop_params['content_type']))
+			$this->type = $module->hikashop_params['content_type'];
+		else
+			$this->type = 'product';
+
+		$this->noForm = true;
+		$config = hikashop_config();
+		$this->default_params = $config->get('default_params');
+	}
+
+	protected function getModuleData($id){
+		if(!empty($id)) {
+			$modulesClass = hikashop_get('class.modules');
+			$element = $modulesClass->get($id);
+			if(!empty($element->content_type) && $element->content_type != 'product') {
+				$app = JFactory::getApplication();
+				$app->enqueueMessage(JText::_('HIKA_MODULE_TYPE_NOT_SUPPORTED'), 'error');
+				if(!HIKASHOP_J16) {
+					$url = JRoute::_('index.php?option=com_modules&task=edit&cid[]='.$id, false);
+				} else {
+					$url = JRoute::_('index.php?option=com_modules&task=item.edit&id='.$id, false);
+				}
+				$app->redirect($url);
+			}
+		}
+		if(!isset($element->hikashop_params['layout_type']))
+			$element->hikashop_params['layout_type'] = 'div';
+
+		return $element;
 	}
 }

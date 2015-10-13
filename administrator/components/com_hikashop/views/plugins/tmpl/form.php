@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -122,6 +122,45 @@ if(!empty($this->plugin->pluginView)) {
 						<input type="text" name="data[payment][payment_params][payment_percentage]" value="<?php echo (float)@$this->element->payment_params->payment_percentage; ?>" />%
 					</td>
 				</tr>
+<!--jms2win_begin -->
+				<tr>
+					<td class="key">
+						<label for="data[payment][payment_params][payment_tax_id]"><?php
+							echo JText::_( 'PRODUCT_TAXATION_CATEGORY' );
+						?></label>
+					</td>
+					<td><?php
+						$categoryType = hikashop_get('type.categorysub');
+						$categoryType->type='tax';
+						$categoryType->field='category_id';
+
+						echo $categoryType->display('data[payment][payment_params][payment_tax_id]', @$this->element->payment_params->payment_tax_id, 'tax');
+					?></td>
+				</tr>
+				<tr style="display:none;">
+					<td class="key">
+						<label for="data[payment][payment_params][payment_algorithm]"><?php
+							echo JText::_( 'Payment algorithm' );
+						?></label>
+					</td>
+					<td><?php
+						$values = array(
+							JHTML::_('select.option', '0', JText::_('Default')),
+							JHTML::_('select.option', 'realcost', JText::_('Real cost')),
+						);
+
+						echo JHTML::_('select.genericlist', $values, "data[payment][payment_params][payment_algorithm]" , 'onchange="hika_payment_algorithm(this);"', 'value', 'text', @$this->element->payment_params->payment_algorithm );
+					?>
+<script type="text/javascript">
+function hika_payment_algorithm(el) {
+	var t = document.getElementById('hika_payment_algorithm_text');
+	if(!t) return;
+	t.style.display = (el.value == 3 || el.value == 4) ? '' : 'none';
+}
+</script>
+					</td>
+				</tr>
+<!-- jms2win_end -->
 <?php
 	}
 	if($this->plugin_type == 'shipping' && $this->multiple_interface) {

@@ -1,16 +1,17 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
 ?><?php
-class hikashopTranslationHelper{
+class hikashopTranslationHelper {
 	var $languages = array();
 	var $falang = false;
+
 	function hikashopTranslationHelper(){
 		$this->database = JFactory::getDBO();
 		$app = JFactory::getApplication();
@@ -165,7 +166,7 @@ class hikashopTranslationHelper{
 		ksort($element->translations);
 	}
 
-	function getTranslations(&$element){
+	function getTranslations(&$element) {
 		$transArray = JRequest::getVar('translation',array(),'','array',JREQUEST_ALLOWRAW);
 		foreach($transArray as $field => $trans){
 			foreach($trans as $lg => $value){
@@ -184,14 +185,14 @@ class hikashopTranslationHelper{
 				}
 			}
 		}
-		foreach($_POST as $name => $value){
-			if(preg_match('#^translation_([a-z_]+)_([0-9]+)$#i',$name,$match)){
-				$html_element = JRequest::getVar($name,'','','string',JREQUEST_ALLOWRAW);
-				if(!empty($html_element)){
+		foreach($_POST as $name => $value) {
+			if(preg_match('#^translation_([a-z_]+)_([0-9]+)$#i', $name, $match)) {
+				$html_element = JRequest::getVar($name, '', '', 'string', JREQUEST_ALLOWRAW);
+				if(!empty($html_element)) {
 					$obj = new stdClass();
 					$type = $match[1];
 					$obj->reference_field = $type;
-					$obj->language_id=$match[2];
+					$obj->language_id = $match[2];
 					$obj->value = $html_element;
 					$element->translations[$match[2]]->$type = $obj;
 				}
@@ -199,75 +200,104 @@ class hikashopTranslationHelper{
 		}
 	}
 
-	function handleTranslations($table,$id,&$element){
-		$table = 'hikashop_'.$table;
-		$transArray = JRequest::getVar('translation',array(),'','array',JREQUEST_ALLOWRAW);
+	function handleTranslations($table, $id, &$element, $table_prefix = 'hikashop_', $data = null) {
+		if(!empty($table_prefix))
+			$table = $table_prefix . $table;
+		else
+			$table = 'hikashop_' . $table;
+
+		if(empty($data) || $data === null)
+			$transArray = JRequest::getVar('translation', array(), '', 'array', JREQUEST_ALLOWRAW);
+		else
+			$transArray = $data;
+
 		$arrayToSearch = array();
 		$conditions = array();
-		foreach($transArray as $field => $trans){
-			foreach($trans as $lg => $value){
-				if(!empty($value)){
-					$lg = (int)$lg;
-					$field = hikashop_secureField($field);
-					$arrayToSearch[]=array('value'=>$value,'language_id'=>$lg,'reference_field'=>$field);
-					$conditions[] = ' language_id = '.$lg.' AND reference_field = '.$this->database->Quote($field).' AND reference_table = '.$this->database->Quote($table).' AND reference_id='.$id;
-				}
+		foreach($transArray as $field => $trans) {
+			foreach($trans as $lg => $value) {
+				if(empty($value))
+					continue;
+
+				$lg = (int)$lg;
+				$field = hikashop_secureField($field);
+				$arrayToSearch[] = array(
+					'value' => $value,
+					'language_id' => $lg,
+					'reference_field' => $field
+				);
+				$conditions[] = ' language_id = '.(int)$lg.' AND reference_field = '.$this->database->Quote($field).' AND reference_table = '.$this->database->Quote($table).' AND reference_id='.(int)$id;
 			}
 		}
-		foreach($_POST as $name => $value){
-			if(preg_match('#^translation_([a-z_]+)_([0-9]+)$#i',$name,$match)){
-				$html_element = JRequest::getVar($name,'','','string',JREQUEST_ALLOWRAW);
-				if(!empty($html_element)){
-					$lg = (int)$match[2];
-					$field = hikashop_secureField($match[1]);
-					$value = $html_element;
-					$arrayToSearch[]=array('value'=>$value,'language_id'=>$lg,'reference_field'=>$field);
-					$conditions[] = ' language_id = '.$lg.' AND reference_field = '.$this->database->Quote($field).' AND reference_table = '.$this->database->Quote($table).' AND reference_id='.$id;
-				}
+
+		if(empty($data) || $data === null) {
+			foreach($_POST as $name => $value){
+				if(!preg_match('#^translation_([a-z_]+)_([0-9]+)$#i', $name, $match))
+					continue;
+
+				$html_element = JRequest::getVar($name, '', '', 'string', JREQUEST_ALLOWRAW);
+				if(empty($html_element))
+					continue;
+
+				$lg = (int)$match[2];
+				$field = hikashop_secureField($match[1]);
+				$value = $html_element;
+				$arrayToSearch[] = array(
+					'value' => $value,
+					'language_id' => $lg,
+					'reference_field' => $field
+				);
+				$conditions[] = ' language_id = '.(int)$lg.' AND reference_field = '.$this->database->Quote($field).' AND reference_table = '.$this->database->Quote($table).' AND reference_id='.(int)$id;
 			}
 		}
-		if(!empty($arrayToSearch)){
-			$this->isMulti();
-			$trans_table = 'jf_content';
-			if($this->falang){
-				$trans_table = 'falang_content';
-			}
-			$query='SELECT * FROM '.hikashop_table($trans_table,false).' WHERE ('.implode(') OR (',$conditions).');';
-			$this->database->setQuery($query);
-			$entries = $this->database->loadObjectList('id');
-			$user = JFactory::getUser();
-			$userId = $user->get( 'id' );
-			$toInsert=array();
-			foreach($arrayToSearch as $item){
-				$already=false;
-				if(!empty($entries)){
-					foreach($entries as $entry_id => $entry){
-						if($item['language_id']==$entry->language_id &&$item['reference_field']==$entry->reference_field){
-							$query='UPDATE '.hikashop_table($trans_table,false).' SET value='.$this->database->Quote($item['value']).', modified_by='.$userId.', modified=NOW() WHERE id='.$entry_id.';';
-							$this->database->setQuery($query);
-							$this->database->query();
-							$already=true;
-							break;
-						}
+
+		if(empty($arrayToSearch))
+			return;
+
+		$this->isMulti();
+		$trans_table = 'jf_content';
+		if($this->falang)
+			$trans_table = 'falang_content';
+
+		$query = 'SELECT * FROM '.hikashop_table($trans_table,false).' WHERE ('.implode(') OR (',$conditions).');';
+		$this->database->setQuery($query);
+		$entries = $this->database->loadObjectList('id');
+
+		$user = JFactory::getUser();
+		$userId = $user->get( 'id' );
+		$toInsert = array();
+		foreach($arrayToSearch as $item) {
+			$already = false;
+			if(!empty($entries)) {
+				foreach($entries as $entry_id => $entry){
+					if($item['language_id'] == $entry->language_id && $item['reference_field'] == $entry->reference_field) {
+						$query = 'UPDATE '.hikashop_table($trans_table, false) .
+							' SET value='.$this->database->Quote($item['value']).', modified_by=' . (int)$userId.', modified=NOW()'.
+							' WHERE id = ' . (int)$entry_id . ';';
+						$this->database->setQuery($query);
+						$this->database->query();
+						$already = true;
+						break;
 					}
 				}
-				if(!$already){
-					$toInsert[]=$item;
-				}
 			}
-			if(!empty($toInsert)){
-				$conf =& hikashop_config();
-				$default_translation_publish = (int)$conf->get('default_translation_publish','0');
-				$rows = array();
-				foreach($toInsert as $item){
-					$field = $item['reference_field'];
-					$rows[]=$id.','.$item['language_id'].','.$this->database->Quote($table).','.$this->database->Quote($item['value']).','.$this->database->Quote($field).','.$this->database->Quote(md5($element->$field)).','.$default_translation_publish.','.$userId.',\'\',NOW()';
-				}
-				$query = 'INSERT IGNORE INTO '.hikashop_table($trans_table,false).' (reference_id,language_id,reference_table,value,reference_field,original_value,published,modified_by,original_text,modified) VALUES ('.implode('),(',$rows).');';
-				$this->database->setQuery($query);
-				$this->database->query();
+			if(!$already) {
+				$toInsert[] = $item;
 			}
 		}
+
+		if(empty($toInsert))
+			return;
+
+		$conf =& hikashop_config();
+		$default_translation_publish = (int)$conf->get('default_translation_publish', 1);
+		$rows = array();
+		foreach($toInsert as $item) {
+			$field = $item['reference_field'];
+			$rows[] = (int)$id.','.(int)$item['language_id'].','.$this->database->Quote($table).','.$this->database->Quote($item['value']).','.$this->database->Quote($field).','.$this->database->Quote(md5($element->$field)).','.(int)$default_translation_publish.','.(int)$userId.',\'\',NOW()';
+		}
+		$query = 'INSERT IGNORE INTO '.hikashop_table($trans_table, false).' (reference_id,language_id,reference_table,value,reference_field,original_value,published,modified_by,original_text,modified) VALUES ('.implode('),(',$rows).');';
+		$this->database->setQuery($query);
+		$this->database->query();
 	}
 
 	function deleteTranslations($table,$ids){

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -29,7 +29,12 @@ class updateController extends HikashopBridgeController {
 		$updateHelper->addJoomfishElements();
 		$updateHelper->addDefaultData();
 		$updateHelper->createUploadFolders();
-		$updateHelper->installMenu();
+		$lang = JFactory::getLanguage();
+		$code = $lang->getTag();
+		$updateHelper->installMenu($code);
+		if($code!='en-GB'){
+			$updateHelper->installMenu('en-GB');
+		}
 		$updateHelper->installTags();
 		$updateHelper->addUpdateSite();
 		$updateHelper->installExtensions();
@@ -318,7 +323,7 @@ class updateController extends HikashopBridgeController {
 		if (isset($_GET['step']))
 		{
 
-			$step = JRequest::getVar('step');
+			$step = JRequest::getInt('step');
 			$url = 'index.php?option=com_hikashop&ctrl=update&task=process_data_save&'.hikashop_getFormToken().'=1&step='.$step;
 			$redirect = 'index.php?option=com_hikashop&ctrl=product&task=add';
 			$error = false;
@@ -376,11 +381,13 @@ class updateController extends HikashopBridgeController {
 
 				case 2 : //Unzip
 					if(HIKASHOP_J30){
-						jimport('joomla.archive.zip');
+						jimport('joomla.archive.archive');
 					}else{
-						jimport('joomla.filesystem.archive.zip');
+						jimport('joomla.filesystem.archive');
 					}
-					$zip = new JArchiveZip();
+					$archiveClass = new JArchive();
+					$zip = $archiveClass->getAdapter('zip');
+
 					if(!$zip->extract($destination,$path))
 					{
 						$app->enqueueMessage(JText::sprintf('WIZZARD_DATA_ERROR','unzipping',$url), 'error');
@@ -429,7 +436,7 @@ class updateController extends HikashopBridgeController {
 				break;
 
 				case 4 : //exec script
-					$fh = fopen('../tmp/dataexample/script.sql', 'r+') or die("Can't open file");
+					$fh = fopen('../tmp/dataexample/script.sql', 'r+') or die("Can't open file /tmp/dataexample/script.sql");
 					$data = explode("\r\n",fread($fh,filesize('../tmp/dataexample/script.sql')));
 					$db = JFactory::getDBO();
 					foreach ($data as $d)

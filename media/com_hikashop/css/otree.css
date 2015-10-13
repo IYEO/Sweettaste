@@ -1,6 +1,6 @@
 /**
  * @package    HikaShop for Joomla!
- * @version    2.5.0
+ * @version    2.6.0
  * @author     hikashop.com
  * @copyright  (C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license    GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -70,3 +70,9 @@
 .oList tr.oListLine { }
 .oList tr.oListLine:hover { cursor:pointer; background-color:#0066CC; color: white; text-decoration:none; }
 .oList tr.oListLine:hover td { background-color:#0066CC; }
+
+.oList li.oListSelected a { background-color:#289CC9; color: white; text-decoration:none; }
+.oList tr.oListSelected { background-color:#289CC9; color: white; text-decoration:none; }
+.oList tr.oListSelected td { background-color:#289CC9; }
+
+.oList tr.oListBlocked { background-color:#f6f6f6; }

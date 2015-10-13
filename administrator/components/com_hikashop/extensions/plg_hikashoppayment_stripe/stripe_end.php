@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -12,13 +12,14 @@ defined('_JEXEC') or die('Restricted access');
 
 	if(!hkjQuery)
 		hkjQuery = jQuery.noConflict();
-	var stripe_plugin_is_init_correctly = false;
+
+	stripe_plugin_is_init_correctly = false;
 	try {
 		Stripe.setPublishableKey("'.trim($this->payment_params->publishable_key).'");
 		stripe_plugin_is_init_correctly = true;
-	} catch(err) {
-		if(err.message) alert(err.message);
-		else alert(err);
+	} catch(e) {
+		if(e.message) alert(e.message);
+		else alert(e);
 	}
 	hkjQuery(function($)
 	{

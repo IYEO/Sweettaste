@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -25,6 +25,9 @@ class VoteViewvote extends HikaShopView {
 		$db = JFactory::getDBO();
 		$config = hikashop_config();
 		$type_item = JRequest::getCmd('ctrl');
+		$ctrl_param = $this->params->get('main_ctrl','');
+		if(!empty($ctrl_param))
+			$type_item = $ctrl_param;
 		$row = new stdClass();
 		$elts = null;
 		$hikashop_vote_con_req_list = $config->get('show_listing_comment',0);
@@ -179,7 +182,9 @@ class VoteViewvote extends HikaShopView {
 		$doc->addScript(HIKASHOP_JS . 'vote.js');
 		$class = hikashop_get('class.vote');
 		$class->loadJS();
-		$type_item = JRequest::getCmd('ctrl');
+		$type_item = $this->params->get('vote_type','');
+		if(empty($type_item))
+			$type_item = JRequest::getCmd('ctrl');
 		$config = hikashop_config();
 		$db = JFactory::getDBO();
 		if(!empty($this->params)){

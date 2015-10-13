@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -30,6 +30,7 @@ class plgHikashoppaymentEpay extends hikashopPaymentPlugin
 		'instantcapture' => array('INSTANTCAPTURE', 'list', array('0' => 'HIKASHOP_NO', '1' => 'HIKASHOP_YES')),
 		'ownreceipt' => array('OWN_RECEIPT', 'list', array('0' => 'HIKASHOP_NO', '1' => 'HIKASHOP_YES')),
 		'debug' => array('DEBUG', 'boolean','0'),
+		'return_url' => array('RETURN_URL', 'input'),
 		'invalid_status' => array('INVALID_STATUS', 'orderstatus'),
 		'pending_status' => array('PENDING_STATUS', 'orderstatus'),
 		'verified_status' => array('VERIFIED_STATUS', 'orderstatus')

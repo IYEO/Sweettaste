@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -43,6 +43,7 @@ class hikashopMailClass {
 		$mail->subject = $config->get($name.'.subject');
 		$mail->html = $config->get($name.'.html');
 		$mail->published = $config->get($name.'.published',1);
+		$mail->email_log_published = $config->get($name.'.email_log_published',1);
 
 		$attach = $config->get($name.'.attach');
 		if(empty($attach)){
@@ -184,6 +185,9 @@ class hikashopMailClass {
 		if(isset($element->published)){
 			$configData[$element->mail_name.'.published']=(int)$element->published;
 		}
+		if(isset($element->email_log_published)){
+			$configData[$element->mail_name.'.email_log_published']=$element->email_log_published;
+		}
 
 		$config =& hikashop_config();
 		$config->save($configData);
@@ -226,6 +230,15 @@ class hikashopMailClass {
 
 		$preload = $this->getMailPath($mail->mail_name, 'preload');
 		$postload = $this->getMailPath($mail->mail_name, 'postload');
+
+		if($mail->mail_name=='order_status_notification' && !empty($data->order_status)){
+			$pathWithStatus = $this->getMailPath($mail->mail_name.'.'.$data->order_status, $type);
+			if(!empty($pathWithStatus)) $path = $pathWithStatus;
+			$preloadWithStatus = $this->getMailPath($mail->mail_name.'.'.$data->order_status, 'preload');
+			if(!empty($pathWithStatus)) $preload = $preloadWithStatus;
+			$postloadWithStatus = $this->getMailPath($mail->mail_name.'.'.$data->order_status, 'postload');
+			if(!empty($pathWithStatus)) $postload = $postloadWithStatus;
+		}
 
 		$currencyHelper = hikashop_get('class.currency');
 
@@ -380,6 +393,10 @@ class hikashopMailClass {
 	}
 
 	function getMailPath($mail_name, $type = 'html', $getModifiedFile = false) {
+		if(empty($this->mail_folder)) {
+			$config = hikashop_config();
+			$this->mail_folder = rtrim( str_replace( '{root}', JPATH_ROOT, $config->get('mail_folder',HIKASHOP_MEDIA.'mail'.DS)), '/\\').DS;
+		}
 		if(empty($this->mail_folder)) { $this->mail_folder = HIKASHOP_MEDIA.'mail'.DS; }
 
 		if(!file_exists($this->mail_folder.$mail_name.'.'.$type.'.php')) {

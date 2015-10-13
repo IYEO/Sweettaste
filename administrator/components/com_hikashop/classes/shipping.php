@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -286,7 +286,8 @@ class hikashopShippingClass extends hikashopClass{
 				foreach($group_usable_methods as $method) {
 					if(isset($method->shipping_warehouse_id) && $method->shipping_warehouse_id != $key)
 						$method = clone($method);
-					$group->shippings[] = $method->shipping_id;
+					if(!in_array($method->shipping_id, $group->shippings))
+						$group->shippings[] = $method->shipping_id;
 					$method->shipping_warehouse_id = $key;
 					$usable_methods[] = $method;
 				}
@@ -344,9 +345,12 @@ class hikashopShippingClass extends hikashopClass{
 
 			$dispatcher->trigger('onShippingDisplay', array(&$order, &$rates, &$usable_methods, &$errors));
 
+			uasort($usable_methods, array($this, "sortShipping"));
+
 			$g = reset($shipping_groups);
 			foreach($usable_methods as $method) {
-				$g->shippings[] = $method->shipping_id;
+				if(!in_array($method->shipping_id, $g->shippings))
+					$g->shippings[] = $method->shipping_id;
 				$method->shipping_warehouse_id = $key;
 			}
 		}
@@ -370,6 +374,29 @@ class hikashopShippingClass extends hikashopClass{
 			$app->setUserState(HIKASHOP_COMPONENT.'.shipping_cache.usable_methods', $order->cache->shipping);
 
 		return $usable_methods;
+	}
+
+	protected function sortShipping($a, $b) {
+		$sort_a = $a->shipping_ordering;
+		if(strpos($sort_a, '_') === false) $sort_a = array($sort_a, 0);
+		else $sort_a = explode('_', $sort_a, 2);
+
+		$sort_b = $b->shipping_ordering;
+		if(strpos($sort_b, '_') === false) $sort_b = array($sort_b, 0);
+		else $sort_b = explode('_', $sort_b, 2);
+
+		if((int)$sort_a[0] == (int)$sort_b[0] && (int)$sort_a[1] == (int)$sort_b[1]) {
+			$index_a = explode('-', $a->shipping_id, 2);
+			$index_b = explode('-', $b->shipping_id, 2);
+
+			if((int)$index_a[0] == (int)$index_b[0])
+				return ((int)$index_a[1] > (int)$index_b[1]) ? +1 : -1;
+			return ((int)$index_a[0] > (int)$index_b[0]) ? +1 : -1;
+		}
+
+		if((int)$sort_a[0] == (int)$sort_b[0])
+			return ((int)$sort_a[1] > (int)$sort_b[1]) ? +1 : -1;
+		return ((int)$sort_a[0] > (int)$sort_b[0]) ? +1 : -1;
 	}
 
 	function getShippingProductsData(&$order, $products = array()) {
@@ -517,8 +544,8 @@ class hikashopShippingClass extends hikashopClass{
 					}
 					elseif ($order->coupon->discount_percent_amount != 0)
 					{
-						$order->shipping_prices[$key]->all_with_tax *= $order->coupon->discount_percent_amount / 100;
-						$order->shipping_prices[$key]->all_without_tax *= $order->coupon->discount_percent_amount / 100;
+						$order->shipping_prices[$key]->all_with_tax -= $order->shipping_prices[$key]->all_with_tax * ($order->coupon->discount_percent_amount / 100);
+						$order->shipping_prices[$key]->all_without_tax -= $order->shipping_prices[$key]->all_without_tax * ($order->coupon->discount_percent_amount / 100);
 					}
 				}
 			}

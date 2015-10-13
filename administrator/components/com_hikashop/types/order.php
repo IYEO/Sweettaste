@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -40,17 +40,23 @@ class hikashopOrderType {
 		$this->values = array();
 		if($type == 'product') {
 			if(!$filter) {
-				$this->values[] = JHTML::_('select.option', 'ordering', JText::_('ORDERING'));
+				$this->values['ordering'] = JHTML::_('select.option', 'ordering', JText::_('ORDERING'));
 			} else {
-				$this->values[] = JHTML::_('select.option', 'all','all');
+				$this->values['all'] = JHTML::_('select.option', 'all','all');
 			}
 		}
 		if(!empty($object)) {
 			foreach(get_object_vars($object) as $key => $val) {
-				$this->values[] = JHTML::_('select.option', $key,$key);
+				$this->values[$key] = JHTML::_('select.option', $key,$key);
 			}
-			if(JRequest::getCmd('from_display',false) == false && $inherit)
-				$this->values[] = JHTML::_('select.option', 'inherit',JText::_('HIKA_INHERIT'));
+			if(JRequest::getCmd('from_display',false) == false && $inherit) {
+				$config = hikashop_config();
+				$defaultParams = $config->get('default_params');
+				$default = '';
+				if(isset($defaultParams['product_order']) && isset($this->values[$defaultParams['product_order']]))
+					$default = ' ('.$this->values[$defaultParams['product_order']]->text.')';
+				$this->values[] = JHTML::_('select.option', 'inherit', JText::_('HIKA_INHERIT').$default);
+			}
 		}
 
 	}

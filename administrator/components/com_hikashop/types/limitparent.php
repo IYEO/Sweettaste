@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -11,8 +11,9 @@ defined('_JEXEC') or die('Restricted access');
 class hikashopLimitparentType{
 	function load($type,$object){
 		$this->values = array();
-		$fieldClass = hikashop_get('class.field');
-		$fields = $fieldClass->getData('',$type);
+		$db = JFactory::getDBO();
+		$db->setQuery('SELECT * FROM #__hikashop_field WHERE field_table='.$db->Quote($type));
+		$fields = $db->loadObjectList();
 		if(!empty($fields)){
 			foreach($fields as $field){
 				if(is_object($object) && isset($object->field_namekey) && $object->field_namekey == $field->field_namekey) continue;

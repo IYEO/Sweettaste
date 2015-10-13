@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -515,11 +515,13 @@ class UserViewUser extends hikashopView {
 			$email_link = hikashop_completeLink('order&task=mail&user_id='.$user_id,true);
 		}else{
 			$url_link = JRoute::_('index.php?option=com_users&task=user.edit&id='.$user->user_cms_id );
-			$email_link = 'index.php?option=com_hikashop&ctrl=order&task=mail&tmpl=component&user_id='.$user_id;
+			$email_link = hikashop_completeLink('order&task=mail&user_id='.$user_id,true);
 		}
+		$history_link = empty($this->user->user_email) ? '' : hikashop_completeLink('email_log&search='.$this->user->user_email);
 		$this->toolbar = array(
 			array('name' => 'link', 'icon' => 'upload', 'alt' => JText::_('JOOMLA_USER_OPTIONS'), 'url' => $url_link,'display'=>!empty($user->user_cms_id)),
 			array('name' => 'popup', 'icon' => 'send', 'alt' => JText::_('HIKA_EMAIL'), 'url' => $email_link,'display'=>!empty($user_id)),
+			array('name' => 'link', 'icon' => 'send', 'alt' => JText::_('EMAIL_HISTORY'), 'url' => $history_link,'display'=>!empty($user_id) && hikashop_level(2)),
 			'save',
 			'apply',
 			'cancel',
@@ -583,15 +585,15 @@ class UserViewUser extends hikashopView {
 		$namekey = JRequest::getCmd('namekey','');
 		if(!empty($namekey)){
 
-			$field_namekey = JRequest::getString('field_namekey', '');
+			$field_namekey = JRequest::getCmd('field_namekey', '');
 			if(empty($field_namekey))
 				$field_namekey = 'address_state';
 
-			$field_id = JRequest::getString('field_id', '');
+			$field_id = JRequest::getCmd('field_id', '');
 			if(empty($field_id))
 				$field_id = 'address_state';
 
-			$field_type = JRequest::getString('field_type', '');
+			$field_type = JRequest::getCmd('field_type', '');
 			if(empty($field_type))
 				$field_type = 'address';
 

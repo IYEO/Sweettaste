@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -22,18 +22,22 @@ if(!hikashop_acl('product/edit/variants') || empty($this->product->product_id))
 	<div style="clear:both"></div>
 </div>
 <div id="hikashop_product_variant_creation_container"></div>
-<table class="<?php if(!HIKASHOP_RESPONSIVE) echo 'hikam_table '; ?>table table-striped table-hover" style="width:100%;">
+<table id="hikashop_product_variant_list_table" class="<?php if(!HIKASHOP_RESPONSIVE) echo 'hikam_table '; ?>table table-striped table-hover" style="width:100%;">
 	<thead>
 		<tr>
-			<th style="width:25px"></th>
+			<th style="width:25px; text-align:center">
+				<input onchange="window.hikashop.checkAll(this, 'hikashop_product_variant_checkbox_');" type="checkbox" id="hikashop_product_variant_checkbox_general" value=""/>
+			</th>
 			<th style="width:25px"></th>
 <?php
 	$default_variants = array();
+	$characteristics = array();
 	foreach($this->product->characteristics as $characteristic) {
 		if((int)$characteristic->characteristic_parent_id > 0) {
 			$default_variants[(int)$characteristic->characteristic_id] = (int)$characteristic->characteristic_id;
 			continue;
 		}
+		$characteristics[(int)$characteristic->characteristic_id] = (int)$characteristic->characteristic_id;
 
 ?>			<th><?php echo $characteristic->characteristic_value; ?></th>
 <?php
@@ -47,6 +51,9 @@ if(!hikashop_acl('product/edit/variants') || empty($this->product->product_id))
 	</thead>
 	<tbody>
 <?php
+	$tab_notice_msg = '';
+	$tab_variant_counter_color = (count($this->product->variants) > 1) ? 'green' : (count($this->product->variants) == 0 ? 'red' : 'orange');
+	$default_found = false;
 	$k = 0;
 	foreach($this->product->variants as $variant) {
 	?>	<tr class="row<?php echo $k; ?>" id="hikashop_product_variant_line_<?php echo $variant->product_id; ?>"> <!--style="cursor:pointer" onclick="return window.productMgr.editVariant(<?php echo $variant->product_id; ?>);">-->
@@ -67,9 +74,12 @@ if(!hikashop_acl('product/edit/variants') || empty($this->product->product_id))
 <?php
 		}
 		$variant_default = ($cpt == count($default_variants)) ? 'icon-publish' : 'icon-unpublish';
+		if($variant_default == 'icon-publish')
+			$default_found = true;
+
 ?>			<td style="cursor:pointer" onclick="return window.productMgr.editVariant(<?php echo $variant->product_id; ?>);"><?php echo $this->currencyClass->displayPrices(@$variant->prices);?></td>
 			<td style="cursor:pointer" onclick="return window.productMgr.editVariant(<?php echo $variant->product_id; ?>);"><?php echo (($variant->product_quantity == -1) ? JText::_('UNLIMITED') : $variant->product_quantity); ?></td>
-			<td style="text-align:center"><?php echo $this->toggleClass->display('product_published', $variant->product_published); ?></td>
+			<td style="text-align:center" href="#" onclick="return window.productMgr.publishVariant(event, <?php echo $variant->product_id; ?>);"><?php echo $this->toggleClass->display('product_published', $variant->product_published); ?></td>
 			<td style="text-align:center">
 				<div class="toggle_loading"><a class="<?php echo $variant_default; ?>" href="#" onclick="return window.productMgr.setDefaultVariant(event, <?php echo $variant->product_id; ?>);"></a></div>
 			</td>
@@ -77,23 +87,40 @@ if(!hikashop_acl('product/edit/variants') || empty($this->product->product_id))
 <?php
 		$k = 1 - $k;
 	}
+
+	if(count($this->product->variants) > 0 && !$default_found) {
+		$tab_variant_counter_color = 'red';
+		$tab_notice_msg = ' - ' . JText::_('HIKA_NOT_DEFAULT_VARIANT');
+	}
 ?>
 	</tbody>
 </table>
 <?php if(JRequest::getCmd('tmpl', '') != 'component') { ?>
 <script type="text/javascript">
+window.hikashop.ready(function(){
+	var el = document.getElementById('hikashop_product_variant_label');
+	if(el)
+		el.innerHTML = '<span class="hk-label hk-label-<?php echo $tab_variant_counter_color; ?>"><?php echo count($this->product->variants) . $tab_notice_msg; ?></span>';
+});
 window.productMgr.variantEdition = {
 	current: null,
 	loading: false,
 	checked: null
 };
 window.productMgr.refreshVariantList = function() {
-	var w = window, o = w.Oby,
+	var w = window, o = w.Oby, t = this,
 		url_list = '<?php echo hikashop_completeLink('product&task=variants&product_id='.$this->product->product_id.'&'.hikashop_getFormToken().'=1',true,false,true); ?>';
-	o.xRequest(url_list, {update:'hikashop_product_variant_list'});
-}
+	o.xRequest(url_list, {update:'hikashop_product_variant_list'}, function(x,p) {
+		if(!t.variantEdition.current)
+			return;
+		setTimeout(function(){
+			var l = document.getElementById('hikashop_product_variant_line_' + t.variantEdition.current);
+			if(l) window.Oby.addClass(l, 'selectedVariant');
+		},10);
+	});
+};
 window.productMgr.editVariant = function(id) {
-	var w = window, o = w.Oby, d = document, t = this,
+	var w = window, o = w.Oby, d = document, t = this, l = null,
 		el = d.getElementById('hikashop_product_variant_edition'),
 		url = '<?php echo hikashop_completeLink('product&task=variant&product_id='.$this->product->product_id.'&cid={CID}',true,false,true); ?>';
 
@@ -103,9 +130,16 @@ window.productMgr.editVariant = function(id) {
 	if(w.productMgr.variantEdition.loading == true)
 		return false;
 
+	if(t.variantEdition.current) {
+		l = d.getElementById('hikashop_product_variant_line_' + t.variantEdition.current);
+		if(l) o.removeClass(l, 'selectedVariant');
+	}
 	if(t.variantEdition.current && window.productMgr.closeVariantEditor) {
 		try { window.productMgr.closeVariantEditor(); } catch(err){}
 	}
+
+	l = d.getElementById('hikashop_product_variant_line_' + id);
+	if(l) o.addClass(l, 'selectedVariant');
 
 	w.productMgr.variantEdition.current = id;
 	var url = url.replace('{CID}',id);
@@ -137,6 +171,10 @@ window.productMgr.closeVariant = function() {
 		setTimeout(function() {
 			el.innerHTML = '';
 		}, 10);
+	}
+	if(t.variantEdition.current) {
+		var l = d.getElementById('hikashop_product_variant_line_' + t.variantEdition.current);
+		if(l) window.Oby.removeClass(l, 'selectedVariant');
 	}
 	t.variantEdition.current = null;
 	t.variantEdition.loading = false;
@@ -179,6 +217,17 @@ window.productMgr.saveVariant = function(id) {
 	});
 	return false;
 };
+window.productMgr.publishVariant = function(ev, id) {
+	var event = ev || window.event;
+	event.stopPropagation();
+	event.preventDefault();
+
+	var w = window, o = w.Oby, d = document,
+		url = '<?php echo hikashop_completeLink('product&task=variants&subtask=publish&product_id='.$this->product->product_id.'&variant_id={CID}&'.hikashop_getFormToken().'=1',true,false,true); ?>';
+	url = url.replace('{CID}', id);
+	o.xRequest(url, {update:'hikashop_product_variant_list'});
+	return false;
+};
 window.productMgr.setDefaultVariant = function(ev, id) {
 	var event = ev || window.event;
 	event.stopPropagation();
@@ -198,16 +247,20 @@ window.productMgr.checkVariant = function(el, id) {
 	if(el.checked) {
 		if(ve.checked === null)
 			ve.checked = [];
-		ve.checked.push(id);
+		if(ve.checked.indexOf(id) < 0)
+			ve.checked.push(id);
 	} else {
-		for(var i = (ve.checked.length - 1); i >= 0; i--) {
-			if(ve.checked[i] == id) {
-				ve.checked.splice(i, 1);
-				break;
-			}
-		}
-		if(ve.checked.length == 0)
+		if(ve.checked === null)
+			ve.checked = [];
+		var p = ve.checked.indexOf(id);
+		if(p >= 0)
+			ve.checked.splice(p, 1);
+		if(ve.checked.length == 0) {
 			ve.checked = null;
+			var e = d.getElementById('hikashop_product_variant_checkbox_general');
+			if(e)
+				e.checked = false;
+		}
 	}
 	tool.style.display = (ve.checked && ve.checked.length > 0) ? '' : 'none';
 };
@@ -230,11 +283,26 @@ window.productMgr.populateVariants = function(mode) {
 			alert('<?php echo str_replace("'", "\\'", JText::_('PLEASE_SELECT_SOMETHING')); ?>');
 			return false;
 		}
-		data = o.getFormData(el);
+
 		for(var i = ve.checked.length - 1; i >= 0; i--) {
 			data += '&cid[]=' + ve.checked[i];
 		}
 	}
+	if(mode && mode == 'add') {
+		var characteristics = [<?php echo implode(',', $characteristics); ?>];
+		rawData = data;
+		if(rawData.indexOf('data[variant_add]') < 0)
+			rawData = decodeURI(rawData);
+		if(rawData.indexOf('data[variant_add]') >= 0) {
+			for(var i = characteristics.length - 1; i >= 0; i--) {
+				if(rawData.indexOf('data[variant_add][' + characteristics[i] + '][]') >= 0)
+					continue;
+				alert('<?php echo str_replace("'", "\\'", JText::_('PLEASE_SELECT_A_VALUE_FOR_EACH_CHARACTERISTIC')); ?>');
+				return false;
+			}
+		}
+	}
+
 	o.xRequest('<?php echo hikashop_completeLink('product&task=variants&subtask=populate&product_id='.$this->product->product_id.'&'.hikashop_getFormToken().'=1',true,false,true); ?>',
 		{mode: 'POST', data: data},
 		function(x,p) {
@@ -285,5 +353,8 @@ window.productMgr.deleteVariants = function(el, id) {
 <script type="text/javascript">
 if(window.productMgr.variantEdition)
 	window.productMgr.variantEdition.checked = null;
+var el = document.getElementById('hikashop_product_variant_label');
+if(el)
+	el.innerHTML = '<span class="hk-label hk-label-<?php echo $tab_variant_counter_color; ?>"><?php echo count($this->product->variants) . $tab_notice_msg; ?></span>';
 </script>
 <?php }

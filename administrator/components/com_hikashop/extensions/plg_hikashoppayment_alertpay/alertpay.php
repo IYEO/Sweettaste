@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.5.0
+ * @version	2.6.0
  * @author	hikashop.com
  * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -34,9 +34,9 @@ class plgHikashoppaymentAlertpay extends hikashopPaymentPlugin
 	function  __construct(&$subject, $config){
 		$lang = JFactory::getLanguage();
 		$locale=strtoupper(substr($lang->get('tag'),0,2));
-		$this->pluginConfig['notification'][0] =  JText::sprintf('STATUS_URL','Payza');
+		$this->pluginConfig['notification'][0] =  JText::sprintf('ALLOW_NOTIFICATIONS_FROM_X','Payza');
 		$this->pluginConfig['status_url'][0] = JText::sprintf('STATUS_URL','Payza');
-		$this->pluginConfig['status_url'][2] = HIKASHOP_LIVE.'index.php?option=com_hikashop&ctrl=checkout&task=notify&notif_payment=alertpay&tmpl=component&lang='.strtolower($locale);
+		$this->pluginConfig['status_url'][2] = htmlentities(HIKASHOP_LIVE.'index.php?option=com_hikashop&ctrl=checkout&task=notify&notif_payment=alertpay&tmpl=component&lang='.strtolower($locale));
 		return parent::__construct($subject, $config);
 	}
 
