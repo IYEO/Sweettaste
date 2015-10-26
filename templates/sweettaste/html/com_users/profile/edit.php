@@ -10,11 +10,16 @@
 defined('_JEXEC') or die;
 
 //$this->form->reset( true ); // reset the form xml loaded by the view
-$this->form->loadFile( dirname(__FILE__) . DS . "profile.xml"); // load in our own version of profile.xml
+$this->form->loadFile( dirname(__FILE__) . DS . "profile.xml"); // override profile.xml
 
 JHtml::_('behavior.keepalive');
+JHtml::_('jquery.framework');
 JHtml::_('behavior.formvalidator');
 JHtml::_('formbehavior.chosen', 'select');
+
+//Initialize Bootstrap tooltips for labels (ver.2):
+$doc = JFactory::getDocument();
+$doc->addScriptDeclaration('jQuery(function () {jQuery(\'.hasTooltip\').tooltip({html:true}); })');
 
 // Load user_profile plugin language
 $lang = JFactory::getLanguage();

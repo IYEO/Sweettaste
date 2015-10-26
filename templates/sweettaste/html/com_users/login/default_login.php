@@ -11,7 +11,10 @@ defined('_JEXEC') or die;
 
 JHtml::_('behavior.keepalive');
 JHtml::_('behavior.formvalidator');
-//JHtml::script('system/validate.js', false, true);
+
+//Initialize Bootstrap tooltips (ver.3):
+$doc = JFactory::getDocument();
+$doc->addScriptDeclaration('jQuery(function () {jQuery(\'[data-toggle="tooltip"]\').tooltip(); })');
 ?>
 
 <div class="login<?php echo $this->pageclass_sfx?> col-xs-12 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-4 col-lg-4 col-lg-offset-4 auth well">
@@ -45,7 +48,7 @@ JHtml::_('behavior.formvalidator');
 				<?php if (!$field->hidden) : ?>				    
 					<div class="form-group">				
 						<?php
-						  $field->labelclass = 'control-label'; 
+						  $field->labelclass = 'control-label';
 						  echo $field->label; ?>
 						<div class="input-group">
 							<?php if ($field->name === 'username') {
@@ -54,20 +57,20 @@ JHtml::_('behavior.formvalidator');
 							    <span class="input-group-addon"><span class="glyphicon glyphicon-user"></span></span>
 							<?php } elseif ($field->name === 'password') { 
 							    $field->class = $field->class.' form-control'; ?>
-                                <span class="input-group-addon"><span class="glyphicon glyphicon-lock"></span></span>                                
-                            <?php }  
+                                                            <span class="input-group-addon"><span class="glyphicon glyphicon-lock"></span></span>
+                                                        <?php }
                             
 							echo $field->input; ?>
 							
 							<?php if ($field->name === 'username') { ?>
 							    <span class="input-group-addon">
-                                    <a title="<?php echo JText::_('COM_USERS_LOGIN_REMIND'); ?>" href="<?php echo JRoute::_('index.php?option=com_users&view=remind'); ?>"><span class="glyphicon glyphicon-question-sign"></span></a>                
-                                </span>                                   
-                            <?php } elseif ($field->name === 'password') { ?>
-                                <span class="input-group-addon">
-                                    <a title="<?php echo JText::_('COM_USERS_LOGIN_RESET'); ?>" href="<?php echo JRoute::_('index.php?option=com_users&view=reset'); ?>"><span class="glyphicon glyphicon-question-sign"></span></a>                
-                                </span>                                
-                            <?php } ?>							
+                                                                <a title="<?php echo JText::_('COM_USERS_LOGIN_REMIND'); ?>" href="<?php echo JRoute::_('index.php?option=com_users&view=remind'); ?>" data-toggle="tooltip"><span class="glyphicon glyphicon-question-sign"></span></a>
+                                                            </span> <?php
+                                                        } elseif ($field->name === 'password') { ?>
+                                                            <span class="input-group-addon">
+                                                                <a title="<?php echo JText::_('COM_USERS_LOGIN_RESET'); ?>" href="<?php echo JRoute::_('index.php?option=com_users&view=reset'); ?>" data-toggle="tooltip"><span class="glyphicon glyphicon-question-sign"></span></a>
+                                                            </span>                                
+                                                    <?php } ?>							
 						</div>
 					</div>
 				<?php endif; ?>

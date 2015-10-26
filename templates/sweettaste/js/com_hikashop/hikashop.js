@@ -1,6 +1,6 @@
 /**
  * @package    HikaShop for Joomla!
- * @version    2.3.5
+ * @version    2.6.0
  * @author     hikashop.com
  * @copyright  (C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
  * @license    GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -9,7 +9,7 @@
 	function preventDefault() { this.returnValue = false; }
 	function stopPropagation() { this.cancelBubble = true; }
 	var Oby = {
-		version: 20140908,
+		version: 20150320,
 		ajaxEvents : {},
 
 		hasClass : function(o,n) {
@@ -167,19 +167,19 @@
 			options.mode = options.mode || 'GET';
 			options.update = options.update || false;
 			xhr.onreadystatechange = function() {
-				if(xhr.readyState == 4) {
-					if( xhr.status == 200 || (xhr.status == 0 && xhr.responseText > 0) || !cbError ) {
-						if(cb)
-							cb(xhr,options.params);
-						if(options.update)
-							t.updateElem(options.update, xhr.responseText);
-					} else {
-						cbError(xhr,options.params);
-					}
+				if(xhr.readyState != 4)
+					return;
+				if( xhr.status == 200 || (xhr.status == 0 && xhr.responseText > 0) || !cbError ) {
+					if(cb)
+						cb(xhr,options.params);
+					if(options.update)
+						t.updateElem(options.update, xhr.responseText);
+				} else {
+					cbError(xhr,options.params);
 				}
 			};
 			xhr.open(options.mode, url, true);
-			if( options.mode.toUpperCase() == 'POST' ) {
+			if(options.mode.toUpperCase() == 'POST' && typeof(options.data) == 'string') {
 				xhr.setRequestHeader("Content-type","application/x-www-form-urlencoded");
 			}
 			xhr.send( options.data );
@@ -194,7 +194,7 @@
 			for(var t in typelist ) {
 				t = typelist[t];
 				var inputs = target.getElementsByTagName(t);
-				for(var i = inputs.length - 1; i >= 0; i--) {
+				for(var i = 0; i < inputs.length; i++) {
 					if( inputs[i].name && !inputs[i].disabled ) {
 						var evalue = inputs[i].value, etype = '';
 						if( t == 'input' )
@@ -235,6 +235,55 @@
 				d.head.appendChild(script);
 				d.head.removeChild(script);
 			}
+		},
+		ease : function(v) {
+			return 1+Math.pow(v-1,3);
+		},
+		easeInOut : function(t,s,dt,du) {
+			return dt/2 * (1 - Math.cos(Math.PI*t/du)) + s;
+		},
+		scrollTo : function(name, anim, visible, margin) {
+			var t = this, d = document, w = window,
+				elem = d.getElementById(name);
+			if(!elem)
+				return;
+			if(margin === undefined) margin = 0;
+			if(!anim) {
+				window.scrollTo(0, elem.offsetTop - margin);
+				return;
+			}
+			if( t.anim && t.anim.timer )
+				clearInterval( t.anim.timer );
+			t.anim = { timer:null, s:null, dt:0, du:500, t:0, inc:10 };
+			if( w.scrollY )
+				t.anim.s = w.scrollY;
+			else if( d.documentElement.scrollTop )
+				t.anim.s = d.documentElement.scrollTop;
+			else
+				t.anim.s = d.body.scrollTop;
+			if(visible) {
+				if( d.documentElement.scrollTop )
+					h = d.documentElement.clientHeight;
+				else
+					h = d.body.clientHeight;
+				if(t.anim.s <= elem.offsetTop && (t.anim.s + h - 150) > elem.offsetTop)
+					return;
+			}
+			t.anim.dt = elem.offsetTop - t.anim.s - margin;
+			var o = this;
+			t.anim.timer = setInterval( function() {
+				var a = o.anim;
+				if( !a || !a.timer )
+					return;
+				a.t += a.inc;
+				if( a.t < a.du ) {
+					window.scrollTo(0, o.easeInOut(a.t, a.s, a.dt, a.du), false, margin);
+				} else {
+					window.scrollTo(0, a.s + a.dt, false, margin);
+					clearInterval(a.timer);
+					a.timer = null;
+				}
+			}, t.anim.inc );
 		}
 	};
 	if((typeof(window.Oby) == 'undefined') || window.Oby.version < Oby.version) {
@@ -314,7 +363,7 @@
 					tableUser = tplLine.parentNode;
 			if(!tplLine) return;
 			trLine = tplLine.cloneNode(true);
-			tableUser.appendChild(trLine);
+			tableUser.insertBefore(trLine, tplLine);
 			trLine.style.display = "";
 			trLine.id = "";
 			if(id)
@@ -322,11 +371,15 @@
 			for(var i = tplLine.cells.length - 1; i >= 0; i--) {
 				if(trLine.cells[i]) {
 					for(var k in htmlblocks) {
+						if(!htmlblocks.hasOwnProperty(k))
+							continue;
 						trLine.cells[i].innerHTML = trLine.cells[i].innerHTML.replace(new RegExp("{"+k+"}","g"), htmlblocks[k]);
 						trLine.cells[i].innerHTML = trLine.cells[i].innerHTML.replace(new RegExp("%7B"+k+"%7D","g"), htmlblocks[k]);
 					}
 					if(extraData) {
 						for(var k in extraData) {
+							if(!extraData.hasOwnProperty(k))
+								continue;
 							trLine.cells[i].innerHTML = trLine.cells[i].innerHTML.replace(new RegExp('{'+k+'}','g'), extraData[k]);
 							trLine.cells[i].innerHTML = trLine.cells[i].innerHTML.replace(new RegExp('%7B'+k+'%7D','g'), extraData[k]);
 						}
@@ -384,23 +437,21 @@
 		},
 		checkAll: function(checkbox, stub) {
 			stub = stub || 'cb';
-			if(checkbox.form) {
-				var cb = checkbox.form, c = 0;
-				for(var i = 0, n = cb.elements.length; i < n; i++) {
-					var e = cb.elements[i];
-					if (e.type == checkbox.type) {
-						if ((stub && e.id.indexOf(stub) == 0) || !stub) {
-							e.checked = checkbox.checked;
-							c += (e.checked == true ? 1 : 0);
-						}
-					}
+			if(!checkbox.form)
+				return false;
+			var o = window.Oby, cb = checkbox.form, c = 0;
+			for(var i = 0, n = cb.elements.length; i < n; i++) {
+				var e = cb.elements[i];
+				if (e != checkbox && e.type == checkbox.type && ((stub && e.id.indexOf(stub) == 0) || !stub)) {
+					e.checked = checkbox.checked;
+					o.fireEvent(e, 'change');
+					c += (e.checked == true ? 1 : 0);
 				}
-				if (cb.boxchecked) {
-					cb.boxchecked.value = c;
-				}
-				return true;
 			}
-			return false;
+			if (cb.boxchecked) {
+				cb.boxchecked.value = c;
+			}
+			return true;
 		},
 		submitform: function(task, form, extra) {
 			var d = document;
@@ -454,7 +505,10 @@
 					var id = elem.getAttribute('id');
 					jQuery('#modal-' + id).modal('show');
 					if(url) {
-						jQuery('#modal-' + id + '-container').find('iframe').attr('src', url);
+						if(document.getElementById('modal-' + id + '-container'))
+							jQuery('#modal-' + id + '-container').find('iframe').attr('src', url);
+						else
+							jQuery('#modal-' + id).find('iframe').attr('src', url);
 					}
 				}
 			} catch(e) {}
@@ -479,11 +533,18 @@
 		},
 		submitPopup: function(id, task, form) {
 			var d = document, t = this, el = d.getElementById('modal-'+id+'-iframe');
+			if(!el) {
+				if(document.getElementById('modal-' + id + '-container'))
+					el = jQuery('#modal-' + id + '-container').find('iframe').get(0);
+				else
+					el = jQuery('#modal-' + id).find('iframe').get(0);
+			}
 			if(el && el.contentWindow.hikashop) {
 				if(task === undefined) task = null;
 				if(form === undefined) form = 'adminForm';
 				el.contentWindow.hikashop.submitform(task, form);
 			}
+			return false;
 		},
 		tabSelect: function(m,c,id) {
 			var d = document, sub = null;
@@ -578,13 +639,181 @@
 			if(!window.jQuery)
 				return false;
 			jQuery('.no-chzn').each(function(i,el) {
-				var id = el.getAttribute('id');
-				id = id.replace('{','_').replace('}','_');
-				var chzn = jQuery('#'+id+'_chzn');
+				var id = el.getAttribute('id'), chzn;
+				if(id) {
+					id = id.replace('{','_').replace('}','_');
+					chzn = jQuery('#'+id+'_chzn');
+				} else {
+					chzn = el.nextSibling;
+				}
 				if(chzn) chzn.remove();
 				jQuery(el).removeClass('chzn-done').show();
 			});
 			return true;
+		},
+		switchTab: function(el) {
+			if(!el || !el.parentNode || !el.parentNode.parentNode) return false;
+			var d = document, w = window, o = w.Oby,
+				c = el.parentNode.parentNode,
+				r = c.getAttribute('rel'),
+				current = el.getAttribute('rel'),
+				dest = null;
+			if(!r || r.substring(0,5) != 'tabs:') return false;
+			if(current.substring(0,4) != 'tab:') return false;
+			var id = r.substring(5),
+				tabs = c.childNodes;
+			current = current.substring(4);
+			dest = d.getElementById(id + current);
+			if(!dest) return false;
+			for(var k = 0; k < tabs.length; k++) {
+				if(!tabs[k] || tabs[k].nodeName.toLowerCase() != 'li') continue;
+				var l = tabs[k].childNodes[0], lr = l.getAttribute('rel');
+				if(!lr || lr.substring(0,4) != 'tab:') continue;
+				var lid = lr.substring(4);
+				if(lid == current) continue;
+				o.removeClass(tabs[k], 'active');
+				var ld = d.getElementById(id + lid);
+				if(ld) ld.style.display = 'none';
+			}
+			dest.style.display = '';
+			o.addClass(el.parentNode, 'active');
+			return false;
+		},
+		dlTitle: function(parent) {
+			var t = this, d = document;
+			if(parent && typeof(parent) == 'string')
+				parent = d.getElementById(parent);
+			if(!parent)
+				parent = d;
+			var dt = d.getElementsByTagName('dt'), val = null,
+				hkTip = (typeof(hkjQuery) != "undefined" && hkjQuery().hktooltip);
+			for(var i = 0; i < dt.length; i++) {
+				if(dt[i].offsetWidth < dt[i].scrollWidth && !dt[i].getAttribute('title')) {
+					val = (dt[i].innerText !== undefined) ? dt[i].innerText : dt[i].textContent;
+
+					if(hkTip) {
+						dt[i].setAttribute('data-title', val);
+						hkjQuery(dt[i]).hktooltip({"html": true,"container": "body"});
+					} else
+						dt[i].setAttribute('title', val);
+				}
+			}
+		},
+		checkConsistency: function() {
+			if(!document.querySelectorAll)
+				return;
+			var s = null, elems = null,
+				parents = document.querySelectorAll('[data-consistencyheight]');
+			if(!parents || !parents.length)
+				return;
+			for(var i = parents.length - 1; i >= 0; i--) {
+				s = parents[i].getAttribute('data-consistencyheight');
+				if(s == '' || s == 'true')
+					continue;
+				var reg = new RegExp('^\.[-_a-z0-9]+$', 'i');
+				if(reg.test(s) && document.getElementsByClassName)
+					elems = parents[i].getElementsByClassName(s.substring(1));
+				else
+					elems = parents[i].querySelectorAll(s);
+				if(!elems || !elems.length)
+					continue;
+				this.setConsistencyHeight(elems);
+				parents[i].setAttribute('data-consistencyheight', '');
+			}
+		},
+		setConsistencyHeight: function(elems, mode) {
+			if(!elems || !elems.length || elems.length == 0)
+				return;
+			var maxHeight = 0, cpt = 0;
+			for(var i = elems.length - 1; i >= 0; i--) {
+				if(maxHeight > 0 && elems[i].clientHeight < maxHeight) {
+					cpt++;
+				} else if(elems[i].clientHeight > maxHeight) {
+					maxHeight = elems[i].clientHeight;
+					cpt++;
+				}
+			}
+			if(cpt <= 1)
+				return;
+			for(var i = elems.length - 1; i >= 0; i--) {
+				if(mode !== undefined && mode == 'min')
+					elems[i].style.minHeight = maxHeight + 'px';
+				else
+					elems[i].style.height = maxHeight + 'px';
+			}
+		},
+		toggleField: function(new_value, namekey, field_type, id, prefix) {
+			var d = document, checked = 0, size = 0, obj = null, specialField = false,
+				checkedGood = 0, count = 0, el = null,
+				arr = d.getElementsByName('data['+field_type+']['+namekey+'][]');
+
+			if(!arr)
+				return false;
+
+			if(!this.fields_data && window.hikashopFieldsJs)
+				this.fields_data = window.hikashopFieldsJs;
+
+			if(this.fields_data === undefined || this.fields_data[field_type] === undefined)
+				return false;
+
+			size = (arr[0] && arr[0].length !== undefined) ? arr[0].length : arr.length;
+
+			if(prefix === undefined || !prefix || prefix.length == 0 || prefix.substr(-1) != '_')
+				prefix = 'hikashop_';
+
+			for(var c = 0; c < size; c++) {
+				if(arr && arr[0] != undefined && arr[0].length != undefined)
+					obj = d.getElementsByName('data['+field_type+']['+namekey+'][]').item(0).item(c);
+				else
+					obj = d.getElementsByName('data['+field_type+']['+namekey+'][]').item(c);
+
+				if(obj.checked || obj.selected)
+					checked++;
+
+				if(obj.type && obj.type == 'checkbox')
+					specialField = true;
+			}
+
+			var data = this.fields_data[field_type][namekey];
+			for(var k in data) {
+				if(typeof data[k] != 'object')
+					continue;
+
+				for(var l in data[k]) {
+					if(typeof data[k][l] != 'string')
+						continue;
+
+					count++;
+					newEl = d.getElementById(namekey + '_' + k);
+					if(newEl && (newEl.checked || newEl.selected))
+						checkedGood++;
+				}
+			}
+
+			specialField = specialField || (arr[0] && arr[0].length && count > 1);
+
+			for(var j in data) {
+				if(typeof data[j] != 'object')
+					continue;
+				for(var i in data[j]) {
+					if(typeof data[j][i] != 'string')
+						continue;
+
+					var elementName = prefix+field_type + '_' + data[j][i];
+					if(id)
+						elementName = elementName + '_' + id;
+					el = document.getElementById(elementName);
+					if(!el)
+						continue;
+					if( (specialField && checkedGood == count && checkedGood == checked && new_value != '') || (!specialField && j == new_value) ) {
+						el.style.display = '';
+						this.toggleField(el.value, data[j][i], field_type, id, prefix);
+					} else {
+						el.style.display = 'none';
+						this.toggleField('', data[j][i], field_type, id, prefix);
+					}
+				}
+			}
 		}
 	};
 	window.hikashop = hikashop;
@@ -624,101 +853,20 @@ function submitform(pressbutton) {
 function hikashopCheckChangeForm(type, form) {
 	if(!form)
 		return true;
-	var d = document, varform = document[form], ActiveLoginTab = false;
-	
-	jQuery(function () {
-	  jQuery('[data-toggle="tooltip"]').tooltip()
-	})				
-	
-	if ((form=='hikashop_checkout_form') && ((type=='register') || (type=='user'))) {
-		el = d.getElementById("login");		
-	    if (el.className.match(/(^| )active($| )/)) ActiveLoginTab = true;
-	    
-	    if (ActiveLoginTab) {
-	    	el = d.getElementById("username");
-	    	if (!jQuery(el).hasClass("required")) {
-	    		el.setAttribute("required", "required");
-	    		el.setAttribute("aria-required", "true");
-	    		jQuery(el).addClass("required");
-    		}
-	    	
-	    	el = d.getElementById("passwd");
-	    	if (!jQuery(el).hasClass("required")) {
-	    		el.setAttribute("required", "required");
-	    		el.setAttribute("aria-required", "true");
-	    		jQuery(el).addClass("required");
-	    	}	    		
-	    	
-	    	el = d.getElementById("register_email");	    	
-	    	if (jQuery(el).hasClass("required")) { 
-		    	el.removeAttribute("required");
-		    	el.removeAttribute("aria-required");
-				jQuery(el).removeClass("required");
-	    	}
-	    	
-	    	el = d.getElementById("register_password");
-	    	if (jQuery(el).hasClass("required")) {
-	    		el.removeAttribute("required");
-		    	el.removeAttribute("aria-required");
-	    		jQuery(el).removeClass("required");
-    		}
-	    	
-	    	el = d.getElementById("register_password2");
-	    	if (jQuery(el).hasClass("required")) {
-	    		el.removeAttribute("required");
-		    	el.removeAttribute("aria-required");
-	    		jQuery(el).removeClass("required");
-    		}
-	    } else {	    	
-	    	el = d.getElementById("register_email");	    	
-	    	if (!jQuery(el).hasClass("required")) {	    		
-	    		el.setAttribute("required", "required");
-	    		el.setAttribute("aria-required", "true");
-	    		jQuery(el).addClass("required");
-    		}
-	    	
-	    	el = d.getElementById("register_password");
-	    	if (!jQuery(el).hasClass("required")) {	    		
-	    		el.setAttribute("required", "required");
-	    		el.setAttribute("aria-required", "true");
-	    		jQuery(el).addClass("required");
-    		}	    	
-	    	
-	    	el = d.getElementById("register_password2");
-	    	if (!jQuery(el).hasClass("required")) {	    		
-	    		el.setAttribute("required", "required");
-	    		el.setAttribute("aria-required", "true");
-	    		jQuery(el).addClass("required");
-    		}
-	    	
-	    	el = d.getElementById("username");
-	    	if (jQuery(el).hasClass("required")) {
-		    	el.removeAttribute("required");
-		    	el.removeAttribute("aria-required");
-				jQuery(el).removeClass("required");		    	
-	    	}
-	    	
-	    	el = d.getElementById("passwd");
-	    	if (jQuery(el).hasClass("required")) { 
-		    	el.removeAttribute("required");
-		    	el.removeAttribute("aria-required");
-				jQuery(el).removeClass("required");		    	
-	    	}
-	    }	    	    
-	}
+	var varform = document[form];
 
 	if(typeof(hikashopFieldsJs) == 'undefined' || typeof(hikashopFieldsJs['reqFieldsComp']) == 'undefined' || typeof(hikashopFieldsJs['reqFieldsComp'][type]) == 'undefined' || hikashopFieldsJs['reqFieldsComp'][type].length <= 0)
 		return true;
 
-	
-	for(var i = 0; i <= hikashopFieldsJs['reqFieldsComp'][type].length - 1; i++) {
+	var d = document;
+	for(var i = 0; i < hikashopFieldsJs['reqFieldsComp'][type].length; i++) {
 		elementName = 'data['+type+']['+hikashopFieldsJs['reqFieldsComp'][type][i]+']';
 		if(typeof(varform.elements[elementName]) == 'undefined')
 			elementName = type+'_'+hikashopFieldsJs['reqFieldsComp'][type][i];
 
 		elementToCheck = varform.elements[elementName];
 		elementId = 'hikashop_'+type+'_'+ hikashopFieldsJs['reqFieldsComp'][type][i];
-		el = d.getElementById(elementId);		
+		el = d.getElementById(elementId);
 
 		if(elementToCheck && (typeof el == 'undefined' || el == null || typeof el.style == 'undefined' || el.style.display!='none') && !hikashopCheckField(elementToCheck,type,i,elementName,varform.elements)) {
 			if(typeof(hikashopFieldsJs['entry_id']) == 'undefined')
@@ -728,7 +876,7 @@ function hikashopCheckChangeForm(type, form) {
 				elementName = 'data['+type+'][entry_'+j+']['+hikashopFieldsJs['reqFieldsComp'][type][i]+']';
 				elementToCheck = varform.elements[elementName];
 				elementId = 'hikashop_'+type+'_'+ hikashopFieldsJs['reqFieldsComp'][type][i] + '_' + j;
-				el = d.getElementById(elementId);				
+				el = d.getElementById(elementId);
 				if(elementToCheck && (typeof el == 'undefined' || el == null || typeof el.style == 'undefined' || el.style.display != 'none') && !hikashopCheckField(elementToCheck,type,i,elementName,varform.elements)) {
 					return false;
 				}
@@ -747,65 +895,25 @@ function hikashopCheckChangeForm(type, form) {
 			simplified_pwd = d.getElementById('data[register][registration_method]3');
 
 		if((simplified_pwd && simplified_pwd.checked) || (register && register.checked) || (!simplified_pwd && !register)) {
-			if (!ActiveLoginTab) {
 			// check password
-				if(typeof(varform.elements['data[register][password]']) != 'undefined' && typeof(varform.elements['data[register][password2]']) != 'undefined') {
-					passwd = varform.elements['data[register][password]'];
-					passwd2 = varform.elements['data[register][password2]'];                                        
-					if(passwd.value != passwd2.value) {
-						if (jQuery(passwd).closest("div.form-group").hasClass("has-success")) jQuery(passwd).closest("div.form-group").removeClass("has-success");
-						if (!jQuery(passwd).closest("div.form-group").hasClass("has-error")) jQuery(passwd).closest("div.form-group").addClass("has-error");
-						
-						if (jQuery(passwd2).closest("div.form-group").hasClass("has-success")) jQuery(passwd2).closest("div.form-group").removeClass("has-success");
-						if (!jQuery(passwd2).closest("div.form-group").hasClass("has-error")) jQuery(passwd2).closest("div.form-group").addClass("has-error");
-						
-						if (!jQuery(passwd2).attr("data-toggle")) jQuery(passwd2).attr("data-toggle", "tooltip").attr("data-placement", "bottom");						
-						jQuery(passwd2).tooltip({animation: true, title: hikashopFieldsJs['password_different'], delay: {show: "200", "hide": 100}});
-						jQuery(passwd2).tooltip("show");
-						return false;
-					} else {
-						if (jQuery(passwd).closest("div.form-group").hasClass("has-error")) {
-							jQuery(passwd).closest("div.form-group").removeClass("has-error");
-							jQuery(passwd).closest("div.form-group").addClass("has-success");
-						}
-						if (jQuery(passwd2).closest("div.form-group").hasClass("has-error")) {
-							jQuery(passwd2).closest("div.form-group").removeClass("has-error");
-							jQuery(passwd2).closest("div.form-group").addClass("has-success");
-						}
-						
-						/*if (jQuery(passwd).attr("data-toggle")) {
-							jQuery(passwd).tooltip("destroy");
-							jQuery(passwd).removeAttr("data-toggle data-placement data-original-title");
-						}*/
-						
-						if (jQuery(passwd2).attr("data-toggle")) {
-							jQuery(passwd2).tooltip("destroy");
-							jQuery(passwd2).removeAttr("data-toggle data-placement data-original-title");
-						}
-					}					
+			if(typeof(varform.elements['data[register][password]']) != 'undefined' && typeof(varform.elements['data[register][password2]']) != 'undefined') {
+				passwd = varform.elements['data[register][password]'];
+				passwd2 = varform.elements['data[register][password2]'];
+				if(passwd.value != passwd2.value) {
+					alert(hikashopFieldsJs['password_different']);
+					return false;
 				}
-			} else {
-				var ReqElements = varform.getElementsByClassName("required");
-				for(var i = 0; i < ReqElements.length; i++) {
-					elementToCheck = ReqElements[i];
-					elementName = ReqElements[i].name;
-					if(elementToCheck && (typeof el == 'undefined' || el == null || typeof el.style == 'undefined' || el.style.display != 'none') && !hikashopCheckField(elementToCheck,type,1,elementName,varform.elements))
-						return false;
-				}
-				
-				
 			}
 		}
 
-		//check email		
-		/*var emailField = varform.elements['data[register][email]'];		
+		//check email
+		var emailField = varform.elements['data[register][email]'];
 		emailField.value = emailField.value.replace(/ /g,"");
-		var filter = /^([a-z0-9_'&\.\-\+])+\@(([a-z0-9\-])+\.)+([a-z0-9]{2,10})+$/i;
+		var filter = /^([a-z0-9_'&\.\-\+])+\@(([a-z0-9\-])+\.)+([a-z0-9]{2,14})+$/i;
 		if(!emailField || !filter.test(emailField.value)) {
 			alert(hikashopFieldsJs['valid_email']);
 			return false;
-		}*/
-		
+		}
 	} else if(type == 'address' && typeof(varform.elements['data[address][address_telephone]']) != 'undefined') {
 		var phoneField = varform.elements['data[address][address_telephone]'], filter = /[0-9]+/i;
 		if(phoneField) {
@@ -821,9 +929,7 @@ function hikashopCheckChangeForm(type, form) {
 }
 
 function hikashopCheckField(elementToCheck, type, i, elementName, form) {
-	/*$elementToCheck = jQuery(elementToCheck);*/
-	
-	if((!elementToCheck) || (!(jQuery(elementToCheck).hasClass("required"))))
+	if(!elementToCheck)
 		return true;
 
 	var d = document, isValid = false;
@@ -837,18 +943,20 @@ function hikashopCheckField(elementToCheck, type, i, elementName, form) {
 						isValid = true;
 				}
 			}
-		} else if(elementToCheck.value.length > 0) {
-			isValid = true;
-			//check email
-			if (elementToCheck.id == 'register_email') {
-				var emailField = true;
-				//elementToCheck.value = emailField.value.replace(/ /g,"");
-				var filter = /^([a-z0-9_'&\.\-\+])+\@(([a-z0-9\-])+\.)+([a-z0-9]{2,10})+$/i;
-				if(!elementToCheck || !filter.test(elementToCheck.value))
-					isValid = false;
+		} else if(elementToCheck.value.length > 0){
+			var found = false;
+			for(var j in hikashopFieldsJs['regexFieldsComp'][type]) {
+				if(hikashopFieldsJs['regexFieldsComp'][type][j] == hikashopFieldsJs['reqFieldsComp'][type][i]) found = j;
 			}
-		} /*else if(elementToCheck.value.length = 0)
-			isValid = false;*/
+			if(typeof(hikashopFieldsJs['regexFieldsComp']) != 'undefined' && typeof(hikashopFieldsJs['regexFieldsComp'][type]) != 'undefined' && found){
+				myregexp = new RegExp(hikashopFieldsJs['regexValueFieldsComp'][type][found]);
+				if(myregexp.test(elementToCheck.value)){
+					isValid = true;
+				}
+			}else{
+				isValid = true;
+			}
+		}
 	} else {
 		for(var a = elementToCheck.length - 1; a >= 0; a--) {
 			 if(elementToCheck[a].checked && elementToCheck[a].value.length > 0)
@@ -876,45 +984,19 @@ function hikashopCheckField(elementToCheck, type, i, elementName, form) {
 		window.Oby.addClass(elementToCheck, 'invalid');
 		return true;
 	}
-	
 	if(!isValid) {
 		window.Oby.addClass(elementToCheck, 'invalid');
-		if (jQuery(elementToCheck).closest("div.form-group").hasClass("has-success")) jQuery(elementToCheck).closest("div.form-group").removeClass("has-success");
-		if (!jQuery(elementToCheck).closest("div.form-group").hasClass("has-error")) jQuery(elementToCheck).closest("div.form-group").addClass("has-error");
-		
-		if (!jQuery(elementToCheck).attr("data-toggle"))
-			jQuery(elementToCheck).attr("data-toggle", "tooltip").attr("data-placement", "bottom");
-			
-		if (jQuery(elementToCheck).attr('name') == 'username' || jQuery(elementToCheck).attr('name') == 'passwd') {
-			jQuery(elementToCheck).tooltip({animation: true, title: Joomla.JText._("JLIB_FORM_FIELD_INVALID"), delay: {show: "200", "hide": 100}});
-		} else {		
-			if (emailField) {
-				jQuery(elementToCheck).tooltip({animation: true, title: hikashopFieldsJs['valid_email'], delay: {show: "200", "hide": 100}});
-				emailField = false;
-			} 
-			else {
-				jQuery(elementToCheck).tooltip({animation: true, title: hikashopFieldsJs['validFieldsComp'][type][i], delay: {show: "200", "hide": 100}});
-			}
-		}
-		jQuery(elementToCheck).tooltip("show");
-		jQuery(elementToCheck).focus();
-		//alert(hikashopFieldsJs['validFieldsComp'][type][i]);
+		alert(hikashopFieldsJs['validFieldsComp'][type][i]);
 		return false;
 	} else {
 		window.Oby.removeClass(elementToCheck, 'invalid');
-		
-		if (jQuery(elementToCheck).closest("div.form-group").hasClass("has-error")) {
-			jQuery(elementToCheck).closest("div.form-group").removeClass("has-error");
-			jQuery(elementToCheck).closest("div.form-group").addClass("has-success");
-		}		
-		
-		jQuery(elementToCheck).tooltip("destroy");
-		
-		jQuery(elementToCheck).removeAttr("data-toggle data-placement data-original-title");
 	}
 	return true;
 }
 
+window.hikashop.ready(function(){
+	window.hikashop.checkConsistency();
+});
 if(window.jQuery && typeof(jQuery.noConflict) == "function" && !window.hkjQuery) {
 	window.hkjQuery = jQuery.noConflict();
 }

@@ -12,15 +12,17 @@ if (is_object($menu)) {
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<?php echo $this->language; ?>" lang="<?php echo $this->language; ?>" >
 	<head>
             <meta http-equiv="X-UA-Compatible" content="IE=edge">
-            <meta name="viewport" content="width=device-width, initial-scale=1">		
-            <jdoc:include type="head" />
+            <meta name="viewport" content="width=device-width, initial-scale=1">
             <?php
-            JHtml::stylesheet($this->baseurl . 'templates/' . $this->template . '/css/template.css');
-            JHtml::_('jquery.framework');            
-            JHtml::script('bootstrap.min.js', false, true);
-            //JHtml::script('com_hikashop/hikashop.js', false, true);
-            JFactory::getDocument()->addScriptVersion($this->baseurl . 'templates/' . $this->template . '/js/com_hikashop/hikashop.js','v=251');
-            ?>            
+                // Add JavaScript Frameworks and stylesheets:
+                JHtml::stylesheet($this->baseurl . 'templates/' . $this->template . '/css/template.css');
+                JHtml::_('jquery.framework');
+                //JHtml::_('bootstrap.framework');
+                JHtml::script('bootstrap.min.js', false, true);
+                //JHtml::script('com_hikashop/hikashop.js', false, true);
+                //JFactory::getDocument()->addScriptVersion($this->baseurl . 'templates/' . $this->template . '/js/com_hikashop/hikashop.js','v=251');            
+            ?>
+            <jdoc:include type="head" />            
 	</head>
 	<body <?php echo $pageclass ? 'class='.htmlspecialchars($pageclass) : ''; ?>>
             <nav class="navbar navbar-default navbar-fixed-top" role="navigation">

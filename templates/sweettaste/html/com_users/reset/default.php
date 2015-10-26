@@ -9,10 +9,17 @@
 
 defined('_JEXEC') or die;
 
+$this->form->reset(true); // reset the form xml loaded by the view
+$this->form->loadFile( dirname(__FILE__) . DS . "reset_request.xml"); // override reset_request.xml
+
 JHtml::_('behavior.keepalive');
 JHtml::_('behavior.formvalidator');
+
+//Initialize Bootstrap tooltips for labels (ver.2):
+$doc = JFactory::getDocument();
+$doc->addScriptDeclaration('jQuery(function () {jQuery(\'.hasTooltip\').tooltip({html:true}); })');
 ?>
-<div class="reset<?php echo $this->pageclass_sfx?> col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-6 col-lg-offset-3 well auth">
+<div class="reset<?php echo $this->pageclass_sfx?> col-xs-12 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-4 col-lg-4 col-lg-offset-4 well auth">
     <?php if ($this->params->get('show_page_heading')) : ?>
     <div class="page-header">
         <h1>
@@ -21,23 +28,31 @@ JHtml::_('behavior.formvalidator');
     </div>
     <?php endif; ?>
 
-    <form id="user-registration" action="<?php echo JRoute::_('index.php?option=com_users&task=reset.request'); ?>" method="post" class="form-validate form-horizontal">
+    <form id="user-registration" action="<?php echo JRoute::_('index.php?option=com_users&task=reset.request'); ?>" method="post" class="form-validate">
         <?php foreach ($this->form->getFieldsets() as $fieldset) : ?>
             <fieldset>
                 <p class="text-justify"><?php echo JText::_($fieldset->label); ?></p>
                 <?php foreach ($this->form->getFieldset($fieldset->name) as $name => $field) : ?>
-                    <div class="form-group">						
-                    <?php 
-                        if ($field->fieldname == "captcha") :
-                            $field->labelclass = $field->labelclass.' hidden';
-                        else :
-                            $field->labelclass = $field->labelclass.' col-xs-12 col-sm-6 col-md-6 col-lg-5 control-label';
-                        endif;                        
-                        echo $field->label; ?>
-                        <div class="col-xs-12 col-sm-6 col-md-6 col-lg-7">
-                            <?php 
+                    <div class="form-group">
+                        <?php                                     
+                        if ($field->fieldname == "email") : 
+                            $addon = '<span class="input-group-addon"><span class="glyphicon glyphicon-envelope"></span></span>';
+                            $recaptcha_area = '';
+                            $field->labelclass = $field->labelclass . ' control-label';
                             $field->class = $field->class.' form-control';
-                            echo $field->input; ?>
+                        else :
+                            $addon = '';
+                            $recaptcha_area = 'class="recaptcha-area"';
+                            $field->labelclass = $field->labelclass . ' hidden';
+                        endif;
+                        echo $field->label; ?>
+
+                        <div class="input-group">
+                            <?php
+                            echo $addon; ?>
+                            <div <?php echo $recaptcha_area?>>
+                            <?php echo $field->input; ?>
+                            </div>
                         </div>
                     </div>
                 <?php endforeach; ?>

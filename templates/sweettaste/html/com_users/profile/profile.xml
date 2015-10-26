@@ -17,25 +17,13 @@
 		/>
 
 		<field
-			name="username"
-			type="email"			
-			description="COM_USERS_DESIRED_USERNAME"
-			filter="email"
-			label="COM_USERS_PROFILE_USERNAME_LABEL"
-			message="COM_USERS_PROFILE_USERNAME_MESSAGE"
-			required="true"
-			validate="email"                        
-		/>
-
-		<field
 			name="password1"
 			type="password"
 			autocomplete="off"
 			class="validate-password"
 			description="COM_USERS_DESIRED_PASSWORD"
 			filter="raw"
-			label="COM_USERS_PROFILE_PASSWORD1_LABEL"
-			size="30"
+			label="COM_USERS_PROFILE_PASSWORD1_LABEL"			
 			validate="password"
 		/>
 
@@ -48,8 +36,7 @@
 			field="password1"
 			filter="raw"
 			label="COM_USERS_PROFILE_PASSWORD2_LABEL"
-			message="COM_USERS_PROFILE_PASSWORD1_MESSAGE"
-			size="30"
+			message="COM_USERS_PROFILE_PASSWORD1_MESSAGE"			
 			validate="equals"
 		/>
 
@@ -60,8 +47,7 @@
 			filter="string"
 			label="COM_USERS_PROFILE_EMAIL1_LABEL"
 			message="COM_USERS_PROFILE_EMAIL1_MESSAGE"
-			required="true"
-			size="30"
+			required="true"			
 			unique="true"
 			validate="email"
 		/>
@@ -74,8 +60,7 @@
 			filter="string"
 			label="COM_USERS_PROFILE_EMAIL2_LABEL"
 			message="COM_USERS_PROFILE_EMAIL2_MESSAGE"
-			required="true"
-			size="30"
+			required="true"			
 			validate="equals"
 		/>
 	</fieldset>
