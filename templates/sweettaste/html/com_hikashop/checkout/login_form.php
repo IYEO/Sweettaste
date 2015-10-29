@@ -59,6 +59,9 @@ if(!HIKASHOP_RESPONSIVE) {
                 </label>
             </div>	
 	<?php endif; ?>	
+    <div class="help-block">
+        <span class="glyphicon glyphicon-asterisk"></span><?php echo JText::_('REQUIRED_FIELDS_HELP_TEXT')?>
+    </div>
 	<div class="row">
         <div class="form-group">
             <div class="col-md-6 col-lg-9">

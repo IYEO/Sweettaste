@@ -14,6 +14,7 @@
 			filter="string"
 			label="COM_USERS_PROFILE_NAME_LABEL"
 			required="true"
+                        hint="COM_USERS_PROFILE_NAME_PLACEHOLDER"
 		/>
 
 		<field
@@ -21,10 +22,11 @@
 			type="password"
 			autocomplete="off"
 			class="validate-password"
-			description="COM_USERS_DESIRED_PASSWORD"
+			description="COM_USERS_PASSWORD_INPUT_DESCRIPTION"
 			filter="raw"
-			label="COM_USERS_PROFILE_PASSWORD1_LABEL"			
+			label="COM_USERS_PROFILE_PASSWORD1_LABEL"
 			validate="password"
+                        hint="COM_USERS_PASSWORD_PLACEHOLDER"
 		/>
 
 		<field
@@ -38,6 +40,7 @@
 			label="COM_USERS_PROFILE_PASSWORD2_LABEL"
 			message="COM_USERS_PROFILE_PASSWORD1_MESSAGE"			
 			validate="equals"
+                        hint="COM_USERS_PROFILE_PASSWORD2_PLACEHOLDER"
 		/>
 
 		<field
@@ -50,6 +53,7 @@
 			required="true"			
 			unique="true"
 			validate="email"
+                        hint="COM_USERS_PROFILE_EMAIL_DESC_PLACEHOLDER"
 		/>
 
 		<field
@@ -62,6 +66,7 @@
 			message="COM_USERS_PROFILE_EMAIL2_MESSAGE"
 			required="true"			
 			validate="equals"
+                        hint="COM_USERS_PROFILE_EMAIL_DESC_PLACEHOLDER"
 		/>
 	</fieldset>
 	

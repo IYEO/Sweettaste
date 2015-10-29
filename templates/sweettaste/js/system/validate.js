@@ -51,8 +51,8 @@ var JFormValidator = function() {
 				$label.attr("aria-invalid", "false")
 			}*/
 			
-			$(function () {
-			  $('[data-toggle="tooltip"]').tooltip();
+			jQuery(function () {
+			  jQuery('[data-toggle="tooltip"]').tooltip();
 			});
 			
 			$el.tooltip("destroy");
@@ -117,7 +117,7 @@ var JFormValidator = function() {
                         if (label) {
                             error.error.push(message + label.text().replace("*", ""));
                             jQuery(invalid[i]).attr("data-toggle", "tooltip").attr("data-placement", "bottom");
-                            jQuery(invalid[i]).tooltip({container: "body", animation: true, title: message + label.text().replace("*", ""), delay: {show: "200", "hide": 100}});
+                            jQuery(invalid[i]).tooltip({html: true, container: "body", animation: true, title: message + label.text().replace("*", ""), delay: {show: "200", "hide": 100}});
                         }                        
                     }                    
                     jQuery(invalid).tooltip("show");

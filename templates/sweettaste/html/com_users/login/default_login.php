@@ -9,12 +9,17 @@
 
 defined('_JEXEC') or die;
 
+$this->form->reset(true); // reset the form xml loaded by the view
+$this->form->loadFile( dirname(__FILE__) . DS . "login.xml"); // override login.xml
+
 JHtml::_('behavior.keepalive');
+JHtml::_('jquery.framework');
 JHtml::_('behavior.formvalidator');
 
-//Initialize Bootstrap tooltips (ver.3):
+//Initialize Bootstrap tooltips for labels (ver.2):
 $doc = JFactory::getDocument();
 $doc->addScriptDeclaration('jQuery(function () {jQuery(\'[data-toggle="tooltip"]\').tooltip(); })');
+//$doc->addScriptDeclaration('jQuery(function () {jQuery(\'.hasTooltip\').tooltip({html:true}); })');
 ?>
 
 <div class="login<?php echo $this->pageclass_sfx?> col-xs-12 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-4 col-lg-4 col-lg-offset-4 auth well">
@@ -74,8 +79,7 @@ $doc->addScriptDeclaration('jQuery(function () {jQuery(\'[data-toggle="tooltip"]
 						</div>
 					</div>
 				<?php endif; ?>
-			<?php endforeach; ?>
-
+			<?php endforeach; ?>                        
 			<?php if ($this->tfa): ?>
 				<div class="form-group">					
 					<?php echo $this->form->getField('secretkey')->label; ?>					
@@ -92,8 +96,10 @@ $doc->addScriptDeclaration('jQuery(function () {jQuery(\'[data-toggle="tooltip"]
 				    <?php echo JText::_('COM_USERS_LOGIN_REMEMBER_ME') ?>
 				</label>
 			</div>
-			<?php endif; ?>			
-			               
+			<?php endif; ?>
+            <div class="help-block">
+                <span class="glyphicon glyphicon-asterisk"></span><?php echo JText::_('REQUIRED_FIELDS_HELP_TEXT')?>
+            </div>
             <div class="row">
                 <div class="col-md-12">
                     <?php

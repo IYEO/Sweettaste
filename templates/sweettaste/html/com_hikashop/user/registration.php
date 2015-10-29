@@ -88,6 +88,9 @@ if(!$this->simplified_registration || $this->simplified_registration == 3){ ?>
             <input id="register_password2" type="password" name="data[register][password2]" value="" class="form-control inputbox required validate-passverify" />
         </div>
     </div>
+    <div class="help-block">
+        <span class="glyphicon glyphicon-asterisk"></span><?php echo JText::_('REQUIRED_FIELDS_HELP_TEXT')?>
+    </div>
 <?php }?>
 	<?php
 		$this->setLayout('custom_fields');

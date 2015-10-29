@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+	<fieldset name="credentials" label="COM_USERS_LOGIN_DEFAULT_LABEL">
+		<field
+			name="username"
+			type="text"
+			class="validate-username"
+                        description="COM_USERS_LOGIN_USERNAME_DESCRIPTION"
+			filter="username"
+			label="COM_USERS_LOGIN_USERNAME_LABEL"
+			required="true"
+			validate="username"
+			autofocus="true"
+                        hint="HIKA_USER_NAME"
+		/>
+
+		<field
+			name="password"
+			type="password"                        
+			class="validate-password"
+                        description="COM_USERS_DESIRED_PASSWORD"
+			required="true"
+			filter="raw"
+			label="JGLOBAL_PASSWORD"
+                        hint="COM_USERS_PASSWORD_PLACEHOLDER"
+		/>
+		</fieldset>
+
+		<field
+			name="secretkey"
+			type="text"
+			class=""
+			required="false"
+			filter="int"
+			label="JGLOBAL_SECRETKEY"			
+		/>
+
+	<fieldset>
+		<field
+			name="return"
+			type="hidden"
+		/>
+	</fieldset>
+</form>

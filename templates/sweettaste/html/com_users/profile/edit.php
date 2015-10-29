@@ -19,7 +19,8 @@ JHtml::_('formbehavior.chosen', 'select');
 
 //Initialize Bootstrap tooltips for labels (ver.2):
 $doc = JFactory::getDocument();
-$doc->addScriptDeclaration('jQuery(function () {jQuery(\'.hasTooltip\').tooltip({html:true}); })');
+//$doc->addScriptDeclaration('jQuery(function () {jQuery(\'.hasTooltip\').tooltip({html:true}); })');
+$doc->addScriptDeclaration('jQuery(function () {jQuery(\'[data-toggle="tooltip"]\').tooltip(); })');
 
 // Load user_profile plugin language
 $lang = JFactory::getLanguage();
@@ -62,26 +63,22 @@ $lang->load('plg_user_profile', JPATH_ADMINISTRATOR);
 			<legend>
                             <?php echo JText::_($fieldset->label); ?>
 			</legend>
-			<?php endif;?>
+			<?php endif;?>                    
 			<?php // Iterate through the fields in the set and display them. ?>
 			<?php foreach ($fields as $field) : ?>
 			<?php // If the field is hidden, just display the input. ?>
 				<?php if ($field->hidden) : ?>
 					<?php echo $field->input; ?>
-				<?php else : ?>
+				<?php else : ?>                                        
 					<div class="form-group">
                                             <?php 
                                             $field->labelclass = $field->labelclass . ' control-label';
                                             echo $field->label;
                                             $field->class = $field->class.' form-control';
-                                            ?>
-                                            <?php if (!$field->required && $field->type != 'Spacer') : ?>
-                                                    <span class="optional"><?php echo JText::_('COM_USERS_OPTIONAL'); ?></span>
-                                            <?php endif; ?>
-
+                                            ?>                                            
                                             <?php if ($field->fieldname == 'password1') : ?>
                                                     <?php // Disables autocomplete ?> <input type="text" style="display:none">
-                                            <?php endif; ?>                                            
+                                            <?php endif; ?>
                                             <?php echo $field->input; ?>
 					</div>
 				<?php endif;?>
@@ -89,7 +86,9 @@ $lang->load('plg_user_profile', JPATH_ADMINISTRATOR);
 		</fieldset>
 		<?php endif;?>
 	<?php endforeach;?>
-
+        <div class="help-block">
+            <span class="glyphicon glyphicon-asterisk"></span><?php echo JText::_('REQUIRED_FIELDS_HELP_TEXT')?>
+        </div>
 	<?php if (count($this->twofactormethods) > 1) : ?>
 		<fieldset>
 			<legend><?php echo JText::_('COM_USERS_PROFILE_TWO_FACTOR_AUTH'); ?></legend>

@@ -17,7 +17,8 @@ JHtml::_('behavior.formvalidator');
 
 //Initialize Bootstrap tooltips for labels (ver.2):
 $doc = JFactory::getDocument();
-$doc->addScriptDeclaration('jQuery(function () {jQuery(\'.hasTooltip\').tooltip({html:true}); })');
+$doc->addScriptDeclaration('jQuery(function () {jQuery(\'[data-toggle="tooltip"]\').tooltip(); })');
+//$doc->addScriptDeclaration('jQuery(function () {jQuery(\'.hasTooltip\').tooltip({html:true}); })');
 ?>
 <div class="reset<?php echo $this->pageclass_sfx?> col-xs-12 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-4 col-lg-4 col-lg-offset-4 well auth">
     <?php if ($this->params->get('show_page_heading')) : ?>
@@ -34,7 +35,7 @@ $doc->addScriptDeclaration('jQuery(function () {jQuery(\'.hasTooltip\').tooltip(
                 <p class="text-justify"><?php echo JText::_($fieldset->label); ?></p>
                 <?php foreach ($this->form->getFieldset($fieldset->name) as $name => $field) : ?>
                     <div class="form-group">
-                        <?php                                     
+                        <?php
                         if ($field->fieldname == "email") : 
                             $addon = '<span class="input-group-addon"><span class="glyphicon glyphicon-envelope"></span></span>';
                             $recaptcha_area = '';
