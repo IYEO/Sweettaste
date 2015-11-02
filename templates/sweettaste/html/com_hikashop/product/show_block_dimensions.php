@@ -62,6 +62,5 @@ if($this->config->get('manufacturer_display', 0) && !empty($this->element->produ
 	}
 	$categoryClass = hikashop_get('class.category');
 	$categoryClass->addAlias($manufacturer);
-    //echo JText::_('MANUFACTURER').': '.'<a href="'.hikashop_completeLink('category&task=listing&cid='.$manufacturer->category_id.'&name='.$manufacturer->alias.'&Itemid='.$Itemid).'">'.$manufacturer->category_name.'</a>';
 	echo '<a href="'.hikashop_contentLink('category&task=listing&cid='.$manufacturer->category_id.'&name='.$manufacturer->alias.'&Itemid='.$Itemid,$manufacturer).'">'.$manufacturer->category_name.'</a>';
     }

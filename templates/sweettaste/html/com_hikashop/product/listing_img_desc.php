@@ -32,15 +32,27 @@ if($this->config->get('thumbnail',1)){
 	$this->image->main_thumbnail_x = $main_thumb_x;
 	$this->image->main_thumbnail_y = $main_thumb_y; ?>  
     <!-- EO PRODUCT IMG -->
+    
+    <?php 
+        if($this->params->get('link_to_product_page',1)){ ?> 
+            </a><?php 
+        } ?>
     <div class="caption">
         <!-- PRODUCT MANUFACTURER -->
         <h3>        	
-        	<?php        		 
-        		if($this->config->get('manufacturer_display', 0) && !empty($this->row->product_manufacturer_id)){
-				$class = hikashop_get('class.category');
-				$manufacturer = $class->get($this->row->product_manufacturer_id);				
-				echo $manufacturer->category_name;
-			} ?>
+        <?php        		 
+            if($this->config->get('manufacturer_display', 0) && !empty($this->row->product_manufacturer_id)){
+                $class = hikashop_get('class.category');                                
+                $manufacturer = $class->get($this->row->product_manufacturer_id); 
+                $menuClass = hikashop_get('class.menus');
+                $Itemid = $menuClass->loadAMenuItemId('manufacturer','listing');
+                if(empty($Itemid)){
+                    $Itemid = $menuClass->loadAMenuItemId('','');
+                }
+                $categoryClass = hikashop_get('class.category');
+                $categoryClass->addAlias($manufacturer);    
+                echo '<a href="'.hikashop_contentLink('category&task=listing&cid='.$manufacturer->category_id.'&name='.$manufacturer->alias.'&Itemid='.$Itemid,$manufacturer).'">'.$manufacturer->category_name.'</a>';
+            } ?>
         </h3>
         <!-- EO PRODUCT MANUFACTURER -->
         
@@ -117,11 +129,7 @@ if($this->config->get('thumbnail',1)){
                 <?php
                 } 
             ?>  
-    </div>
-    <?php 
-        if($this->params->get('link_to_product_page',1)){ ?> 
-            </a><?php 
-        } 
+    </div> <?php
     }
     ?>
 		
