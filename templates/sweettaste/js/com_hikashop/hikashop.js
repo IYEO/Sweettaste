@@ -986,10 +986,29 @@ function hikashopCheckField(elementToCheck, type, i, elementName, form) {
 	}
 	if(!isValid) {
 		window.Oby.addClass(elementToCheck, 'invalid');
-		alert(hikashopFieldsJs['validFieldsComp'][type][i]);
+                
+                if (jQuery(elementToCheck).closest("div.form-group").hasClass("has-success")) jQuery(elementToCheck).closest("div.form-group").removeClass("has-success");
+		if (!jQuery(elementToCheck).closest("div.form-group").hasClass("has-error")) jQuery(elementToCheck).closest("div.form-group").addClass("has-error");
+		
+		if (!jQuery(elementToCheck).attr("data-toggle"))
+                    jQuery(elementToCheck).attr("data-toggle", "tooltip").attr("data-placement", "bottom");
+                
+                jQuery(elementToCheck).tooltip({animation: true, title: hikashopFieldsJs['validFieldsComp'][type][i], delay: {show: "200", "hide": 100}});
+                jQuery(elementToCheck).tooltip("show");
+		jQuery(elementToCheck).focus();
+		//alert(hikashopFieldsJs['validFieldsComp'][type][i]);
 		return false;
 	} else {
 		window.Oby.removeClass(elementToCheck, 'invalid');
+                
+                if (jQuery(elementToCheck).closest("div.form-group").hasClass("has-error")) {
+			jQuery(elementToCheck).closest("div.form-group").removeClass("has-error");
+			jQuery(elementToCheck).closest("div.form-group").addClass("has-success");
+		}		
+		
+		jQuery(elementToCheck).tooltip("destroy");
+		
+		jQuery(elementToCheck).removeAttr("data-toggle data-placement data-original-title");
 	}
 	return true;
 }

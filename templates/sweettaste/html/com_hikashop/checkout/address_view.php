@@ -64,9 +64,13 @@ if(!empty($this->addresses)) {
 		<td>
 			<span class="hikashop_checkout_<?php echo $this->type;?>_address_buttons">
 <?php if($nb_addresses>1){ ?>
-					<a title="<?php echo JText::_('HIKA_DELETE'); ?>" class="hikashop_checkout_<?php echo $this->type;?>_address_delete" href="<?php echo hikashop_completeLink('checkout&step='.$this->step.'&redirect=checkout&task=deleteaddress&address_id='.$address->address_id.'&'.hikashop_getFormToken().'=1'.$this->url_itemid);?>"><img alt="<?php echo JText::_('HIKA_DELETE'); ?>" src="<?php echo HIKASHOP_IMAGES; ?>delete.png" border="0" /></a>
+    <a title="<?php echo JText::_('HIKA_DELETE'); ?>" class="hikashop_checkout_<?php echo $this->type;?>_address_delete" href="<?php echo hikashop_completeLink('checkout&step='.$this->step.'&redirect=checkout&task=deleteaddress&address_id='.$address->address_id.'&'.hikashop_getFormToken().'=1'.$this->url_itemid);?>">
+        <span class="glyphicon glyphicon-trash" title="<?php echo JText::_('HIKA_DELETE'); ?>"></span>
+    </a>
 <?php } ?>
-				<a id="hikashop_checkout_<?php echo $this->type;?>_address_edit_<?php echo $address->address_id; ?>" title="<?php echo JText::_('HIKA_EDIT'); ?>" class="hikashop_checkout_<?php echo $this->type;?>_address_edit" rel="{handler: 'iframe', size: {x: 450, y: 480}}" href="<?php echo hikashop_completeLink('address&task=edit&redirect=checkout&address_id='.$address->address_id.'&step='.$this->step.'&type='.$this->type.$this->url_itemid,true);?>" onclick="return hikashopEditAddress(this,<?php echo (int)$same_address?>,false);"><img alt="<?php echo JText::_('HIKA_EDIT'); ?>" src="<?php echo HIKASHOP_IMAGES; ?>edit.png" border="0" /></a>
+<a id="hikashop_checkout_<?php echo $this->type;?>_address_edit_<?php echo $address->address_id; ?>" title="<?php echo JText::_('HIKA_EDIT'); ?>" class="hikashop_checkout_<?php echo $this->type;?>_address_edit" rel="{handler: 'iframe', size: {x: 450, y: 480}}" href="<?php echo hikashop_completeLink('address&task=edit&redirect=checkout&address_id='.$address->address_id.'&step='.$this->step.'&type='.$this->type.$this->url_itemid,true);?>" onclick="return hikashopEditAddress(this,<?php echo (int)$same_address?>,false);">
+    <span class="glyphicon glyphicon-pencil" title="<?php echo JText::_('HIKA_EDIT'); ?>"></span>
+</a>
 			</span>
 		</td>
 	</tr>

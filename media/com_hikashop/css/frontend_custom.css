@@ -418,7 +418,9 @@ a.hikashop_compare_button, a.hikashop_compare_button:hover{
 .hikashop_checkout_billing_address_info{color:#333; font-size:12px}
 
 @media only screen and (max-width: 480px) {
- #hikashop_checkout_address td{ display:block !important; }
+ #hikashop_checkout_address td{
+    display:block !important;    
+ }
 }
 
 .hikashop_checkout_payment_name{
@@ -434,7 +436,7 @@ a.hikashop_compare_button, a.hikashop_compare_button:hover{
 	box-shadow: 0px 0px 8px rgba(255, 0, 0, 0.6),0px 1px 1px rgba(255, 0, 0, 0.2) inset !important;
 }
 
-
+#hikashop_shipping_methods {margin-bottom: 10px}
 #hikashop_shipping_methods ul.hikashop_shipping_products {
 	margin: 5px 0px;
 	padding: 0px;
@@ -2469,7 +2471,6 @@ form {margin:0px !important}
 
 .checkout_billing_address_radio, .checkout_shipping_address_radio {float:left}
 .hika_edit{text-align:right}
-.hika_edit span{display:none}
 .hikashop_address_content{display:block; clear:both; color:#777777; margin:15px 0px 0px 0px}
 #hikashop_checkout_billing_address_selection a{margin:0px}
 .address_selection, #hikashop_checkout_selected_billing_address, #hikashop_checkout_selected_shipping_address{border:1px solid #ddd; border-radius:4px; padding:15px; margin:0px 0px 10px 0px; background:#F8F8F8;
@@ -2536,3 +2537,6 @@ background: linear-gradient(top, #ffffff, #f8f8f8);}
 .hikashop_show_cart_quantity_td{min-width: 60px;}
 .hikashop_show_cart_quantity_td input{float: left;}
 .hikashop_show_cart_quantity_td div{float: none;}
+
+.hikashop_field_dropdown {margin-bottom: 5px}
+.admintable td.key {vertical-align: middle}

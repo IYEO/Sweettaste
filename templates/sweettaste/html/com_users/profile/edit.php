@@ -18,9 +18,9 @@ JHtml::_('behavior.formvalidator');
 JHtml::_('formbehavior.chosen', 'select');
 
 //Initialize Bootstrap tooltips for labels (ver.2):
-$doc = JFactory::getDocument();
-//$doc->addScriptDeclaration('jQuery(function () {jQuery(\'.hasTooltip\').tooltip({html:true}); })');
-$doc->addScriptDeclaration('jQuery(function () {jQuery(\'[data-toggle="tooltip"]\').tooltip(); })');
+//$doc = JFactory::getDocument();
+////$doc->addScriptDeclaration('jQuery(function () {jQuery(\'.hasTooltip\').tooltip({html:true}); })');
+//$doc->addScriptDeclaration('jQuery(function () {jQuery(\'[data-toggle="tooltip"]\').tooltip(); })');
 
 // Load user_profile plugin language
 $lang = JFactory::getLanguage();

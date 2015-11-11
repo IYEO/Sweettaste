@@ -25,14 +25,22 @@ $delete_url = 'address&task=delete&subtask='.$this->type.'&cid='.$this->address_
 <?php
 	if(!isset($this->edit) || $this->edit !== true ) {
 ?>		<div class="hika_edit">
-			<a href="<?php echo hikashop_completeLink($update_url, true);?>" id="<?php echo $uniq_id; ?>_edit" onclick="return window.hikashop.get(this,'<?php echo $this->fieldset_id; ?>');"><img src="<?php echo HIKASHOP_IMAGES; ?>edit.png" alt=""/><span><?php echo JText::_('HIKA_EDIT'); ?></span></a>
-			<a href="<?php echo hikashop_completeLink($delete_url, true);?>" id="<?php echo $uniq_id; ?>_delete" onclick="return window.addressMgr.delete(this,<?php echo $this->address_id; ?>,'<?php echo $uniq_id; ?>','<?php echo $this->type; ?>');"><img src="<?php echo HIKASHOP_IMAGES; ?>delete.png" alt=""/><span><?php echo JText::_('HIKA_DELETE'); ?></span></a>
+			<a href="<?php echo hikashop_completeLink($update_url, true);?>" id="<?php echo $uniq_id; ?>_edit" onclick="return window.hikashop.get(this,'<?php echo $this->fieldset_id; ?>');">
+                            <span class="glyphicon glyphicon-pencil" title="<?php echo JText::_('HIKA_EDIT'); ?>"></span>
+                        </a>
+			<a href="<?php echo hikashop_completeLink($delete_url, true);?>" id="<?php echo $uniq_id; ?>_delete" onclick="return window.addressMgr.delete(this,<?php echo $this->address_id; ?>,'<?php echo $uniq_id; ?>','<?php echo $this->type; ?>');">
+                            <span class="glyphicon glyphicon-trash" title="<?php echo JText::_('HIKA_DELETE'); ?>"></span>
+                        </a>
 		</div>
 <?php
 	} else {
 ?>		<div class="hika_edit">
-			<a href="<?php echo hikashop_completeLink($save_url, true);?>" onclick="return window.hikashop.form(this,'<?php echo $this->fieldset_id; ?>');"><img src="<?php echo HIKASHOP_IMAGES; ?>ok.png" alt=""/><span><?php echo JText::_('HIKA_SAVE'); ?></span></a>
-			<a href="<?php echo hikashop_completeLink($show_url, true);?>" onclick="return window.hikashop.get(this,'<?php echo $this->fieldset_id; ?>');"><img src="<?php echo HIKASHOP_IMAGES; ?>cancel.png" alt=""/><span><?php echo JText::_('HIKA_CANCEL'); ?></span></a>
+			<a href="<?php echo hikashop_completeLink($save_url, true);?>" onclick="return window.hikashop.form(this,'<?php echo $this->fieldset_id; ?>');">
+                            <span class="glyphicon glyphicon-ok" title="<?php echo JText::_('HIKA_SAVE'); ?>"></span>
+                        </a>
+			<a href="<?php echo hikashop_completeLink($show_url, true);?>" onclick="return window.hikashop.get(this,'<?php echo $this->fieldset_id; ?>');">
+                            <span class="glyphicon glyphicon-remove-circle" title="<?php echo JText::_('HIKA_CANCEL'); ?>"></span>
+                        </a>
 		</div>
 <?php
 	}
@@ -41,6 +49,7 @@ $delete_url = 'address&task=delete&subtask='.$this->type.'&cid='.$this->address_
 $display = 'field_backend';
 if(isset($this->edit) && $this->edit === true ) {
 ?>
+    
 <table class="admintable table">
 <?php
 	foreach($this->fields as $field){

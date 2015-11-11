@@ -16,8 +16,8 @@ JHtml::_('behavior.keepalive');
 JHtml::_('behavior.formvalidator');
 
 //Initialize Bootstrap tooltips for labels (ver.2):
-$doc = JFactory::getDocument();
-$doc->addScriptDeclaration('jQuery(function () {jQuery(\'[data-toggle="tooltip"]\').tooltip(); })');
+//$doc = JFactory::getDocument();
+//$doc->addScriptDeclaration('jQuery(function () {jQuery(\'[data-toggle="tooltip"]\').tooltip(); })');
 //$doc->addScriptDeclaration('jQuery(function () {jQuery(\'.hasTooltip\').tooltip({html:true}); })');
 ?>
 <div class="reset<?php echo $this->pageclass_sfx?> col-xs-12 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-4 col-lg-4 col-lg-offset-4 well auth">
@@ -58,7 +58,10 @@ $doc->addScriptDeclaration('jQuery(function () {jQuery(\'[data-toggle="tooltip"]
                     </div>
                 <?php endforeach; ?>
             </fieldset>
-        <?php endforeach; ?>        
+        <?php endforeach; ?>
+        <div class="help-block">
+            <span class="glyphicon glyphicon-asterisk"></span><?php echo JText::_('REQUIRED_FIELDS_HELP_TEXT')?>
+        </div>
         <button type="submit" class="btn btn-primary btn-lg pull-right validate"><?php echo JText::_('JSUBMIT'); ?></button>
         <?php echo JHtml::_('form.token'); ?>
     </form>

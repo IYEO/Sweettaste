@@ -10,8 +10,8 @@
 defined('_JEXEC') or die;
 
 //Initialize Bootstrap tooltips for labels (ver.2):
-$doc = JFactory::getDocument();
-$doc->addScriptDeclaration('jQuery(function () {jQuery(\'[data-toggle="tooltip"]\').tooltip(); })');
+//$doc = JFactory::getDocument();
+//$doc->addScriptDeclaration('jQuery(function () {jQuery(\'[data-toggle="tooltip"]\').tooltip(); })');
 //$doc->addScriptDeclaration('jQuery(function () {jQuery(\'.hasTooltip\').tooltip({html:true}); })');
 
 JHtml::_('behavior.keepalive');

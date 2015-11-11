@@ -11,7 +11,7 @@ defined('_JEXEC') or die('Restricted access');
 if(empty($this->rates)) {
 	return;
 }
-?><div class="hikashop_shipping_methods" id="hikashop_shipping_methods">
+?><div class="col-xs-12 col-sm-12 col-md-12 col-lg-12" id="hikashop_shipping_methods">
 	<fieldset>
 		<legend><?php echo JText::_('HIKASHOP_SHIPPING_METHOD');?></legend>
 <?php

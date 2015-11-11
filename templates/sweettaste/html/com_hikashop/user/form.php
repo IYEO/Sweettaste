@@ -15,7 +15,7 @@ if(!empty($Itemid)){
 }
 ?>
 <form action="<?php echo hikashop_completeLink('user&task=register'.$url_itemid); ?>" method="post" name="hikashop_registration_form" enctype="multipart/form-data" onsubmit="hikashopSubmitForm('hikashop_registration_form'); return false;">
-	<div class="auth hikashop_user_registration_page col-xs-12 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-4 col-lg-4 col-lg-offset-4 well">	    
+	<div class="auth hikashop_user_registration_page col-xs-12 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-4 col-lg-4 col-lg-offset-4 well">
 		<fieldset class="input">    			
 			<?php
 			$this->setLayout('registration');

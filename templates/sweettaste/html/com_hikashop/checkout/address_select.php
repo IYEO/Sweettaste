@@ -60,7 +60,7 @@ if($address_selector == 2) {
 		}
 	}
 	$values[] = JHTML::_('select.option', 0, JText::_('HIKASHOP_NEW_ADDRESS_ITEM'));
-	echo JHTML::_('select.genericlist', $values, 'hikashop_address_'.$this->type, 'class="hikashop_field_dropdown" onchange="window.localPage.switchAddr(this, \''.$this->type.'\');"', 'value', 'text', $current, 'hikashop_checkout_address_'.$this->type.'_selector');
+	echo JHTML::_('select.genericlist', $values, 'hikashop_address_'.$this->type, 'class="hikashop_field_dropdown form-control" onchange="window.localPage.switchAddr(this, \''.$this->type.'\');"', 'value', 'text', $current, 'hikashop_checkout_address_'.$this->type.'_selector');
 ?><div id="hikashop_checkout_selected_<?php echo $this->type; ?>_address">
 <?php
 	if(isset($this->addresses[$current]))

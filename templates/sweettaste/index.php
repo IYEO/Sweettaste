@@ -20,7 +20,10 @@ if (is_object($menu)) {
                 //JHtml::_('bootstrap.framework');
                 JHtml::script('bootstrap.min.js', false, true);
                 //JHtml::script('com_hikashop/hikashop.js', false, true);
-                //JFactory::getDocument()->addScriptVersion($this->baseurl . 'templates/' . $this->template . '/js/com_hikashop/hikashop.js','v=251');            
+                JFactory::getDocument()->addScriptVersion($this->baseurl . 'templates/' . $this->template . '/js/com_hikashop/hikashop.js','v=261');
+                
+                //Initialize Bootstrap tooltips (ver.3):
+                JFactory::getDocument()->addScriptDeclaration('jQuery(function () {jQuery(\'[data-toggle="tooltip"]\').tooltip() });');
             ?>
             <jdoc:include type="head" />            
 	</head>
