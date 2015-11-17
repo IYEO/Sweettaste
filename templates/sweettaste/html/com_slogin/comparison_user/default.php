@@ -11,10 +11,11 @@
 // No direct access to this file
 defined('_JEXEC') or die;
 JHtml::_('behavior.keepalive');
+JHtml::_('jquery.framework');
 JHtml::_('behavior.formvalidator');
 
 ?>
-<div class="col-xs-12 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-4 col-lg-4 col-lg-offset-4 well auth">    
+<div class="col-xs-12 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-4 col-lg-4 col-lg-offset-4 well auth">
     <form action="<?php echo JRoute::_('index.php?option=com_slogin&task=join_mail'); ?>" method="post" class="form-validate">
         <fieldset>
             <legend><?php echo JText::_('COM_SLOGIN_COMPARISON'); ?></legend>
@@ -67,6 +68,16 @@ JHtml::_('behavior.formvalidator');
                     </span>
                     <input type="text" name="jform[email]" id="jform_email" value="<?php echo $this->email ?>" readonly class="form-control validate-email required" aria-required="true" required="required" />
                 </div>
+            </div>
+            <?php
+                //Import Recaptcha
+                JPluginHelper::importPlugin('captcha');
+                $dispatcher = JDispatcher::getInstance();
+                $dispatcher->trigger('onInit','dynamic_recaptcha');
+            ?>
+
+            <div class="form-group">                
+                <div id="dynamic_recaptcha"></div>
             </div>
         </fieldset>
         <button type="submit" class="btn btn-primary btn-lg pull-right validate"><?php echo JText::_('COM_SLOGIN_SUBMIT'); ?></button>

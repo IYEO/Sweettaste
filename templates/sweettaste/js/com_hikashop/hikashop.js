@@ -867,7 +867,7 @@ function hikashopCheckChangeForm(type, form) {
 		elementToCheck = varform.elements[elementName];
 		elementId = 'hikashop_'+type+'_'+ hikashopFieldsJs['reqFieldsComp'][type][i];
 		el = d.getElementById(elementId);
-
+                                
 		if(elementToCheck && (typeof el == 'undefined' || el == null || typeof el.style == 'undefined' || el.style.display!='none') && !hikashopCheckField(elementToCheck,type,i,elementName,varform.elements)) {
 			if(typeof(hikashopFieldsJs['entry_id']) == 'undefined')
 				return false;
@@ -900,9 +900,29 @@ function hikashopCheckChangeForm(type, form) {
 				passwd = varform.elements['data[register][password]'];
 				passwd2 = varform.elements['data[register][password2]'];
 				if(passwd.value != passwd2.value) {
-					alert(hikashopFieldsJs['password_different']);
-					return false;
-				}
+					//alert(hikashopFieldsJs['password_different']);
+                                        
+                                        
+                                    if (jQuery(passwd2).closest("div.form-group").hasClass("has-success")) jQuery(passwd2).closest("div.form-group").removeClass("has-success");
+                                    if (!jQuery(passwd2).closest("div.form-group").hasClass("has-error")) jQuery(passwd2).closest("div.form-group").addClass("has-error");
+
+                                    if (!jQuery(passwd2).attr("data-toggle"))
+                                        jQuery(passwd2).attr("data-toggle", "tooltip").attr("data-placement", "bottom");
+
+                                    jQuery(passwd2).tooltip({animation: true, title: hikashopFieldsJs['password_different'], delay: {show: "200", "hide": 100}});
+                                    jQuery(passwd2).tooltip("show");
+                                    jQuery(passwd2).focus();
+                                    return false;
+                                } else {
+                                    if (jQuery(passwd2).closest("div.form-group").hasClass("has-error")) {
+                                            jQuery(passwd2).closest("div.form-group").removeClass("has-error");
+                                            jQuery(passwd2).closest("div.form-group").addClass("has-success");
+                                    }
+
+                                    jQuery(passwd2).tooltip("destroy");
+
+                                    jQuery(passwd2).removeAttr("data-toggle data-placement data-original-title");
+                                }	
 			}
 		}
 
@@ -911,8 +931,28 @@ function hikashopCheckChangeForm(type, form) {
 		emailField.value = emailField.value.replace(/ /g,"");
 		var filter = /^([a-z0-9_'&\.\-\+])+\@(([a-z0-9\-])+\.)+([a-z0-9]{2,14})+$/i;
 		if(!emailField || !filter.test(emailField.value)) {
-			alert(hikashopFieldsJs['valid_email']);
-			return false;
+			//alert(hikashopFieldsJs['valid_email']);
+                        
+                        
+                    if (jQuery(emailField).closest("div.form-group").hasClass("has-success")) jQuery(emailField).closest("div.form-group").removeClass("has-success");
+                    if (!jQuery(emailField).closest("div.form-group").hasClass("has-error")) jQuery(emailField).closest("div.form-group").addClass("has-error");
+
+                    if (!jQuery(emailField).attr("data-toggle"))
+                        jQuery(emailField).attr("data-toggle", "tooltip").attr("data-placement", "bottom");
+
+                    jQuery(emailField).tooltip({animation: true, title: hikashopFieldsJs['valid_email'], delay: {show: "200", "hide": 100}});
+                    jQuery(emailField).tooltip("show");
+                    jQuery(emailField).focus();
+                    return false;
+                } else {
+                    if (jQuery(emailField).closest("div.form-group").hasClass("has-error")) {
+                            jQuery(emailField).closest("div.form-group").removeClass("has-error");
+                            jQuery(emailField).closest("div.form-group").addClass("has-success");
+                    }
+                    
+                    jQuery(emailField).tooltip("destroy");
+		
+                    jQuery(emailField).removeAttr("data-toggle data-placement data-original-title");
 		}
 	} else if(type == 'address' && typeof(varform.elements['data[address][address_telephone]']) != 'undefined') {
 		var phoneField = varform.elements['data[address][address_telephone]'], filter = /[0-9]+/i;

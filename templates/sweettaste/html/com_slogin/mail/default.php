@@ -29,7 +29,7 @@ JHTML::_('behavior.formvalidator');
                 </label>                
                 <div>                    
                     <input type="text" name="name" id="name" class="form-control validate-name required"
-                       value="<?php echo $this->name; ?>" />
+                           value="<?php echo $this->name; ?>" placeholder="<?php echo JText::_('COM_SLOGIN_MAIL_NAME_PLACEHOLDER'); ?>" />
                 </div>                
             </div>
             <div class="form-group">
@@ -42,7 +42,7 @@ JHTML::_('behavior.formvalidator');
                         <span class="glyphicon glyphicon-user"></span>
                     </span>
                     <input type="text" name="username" id="username" class="form-control validate-username required"
-                       value="<?php echo $this->username; ?>" />
+                       value="<?php echo $this->username; ?>" placeholder="<?php echo JText::_('COM_SLOGIN_MAIL_USERNAME_PLACEHOLDER'); ?>" />
                 </div>
             </div>
             <div class="form-group">
@@ -55,7 +55,7 @@ JHTML::_('behavior.formvalidator');
                         <span class="glyphicon glyphicon-envelope"></span>
                     </span>
                     <input type="email" name="email" id="email"
-                       value="<?php echo $this->email; ?>" class="form-control validate-email required" />
+                           value="<?php echo $this->email; ?>" class="form-control validate-email required" placeholder="<?php echo JText::_ ('COM_SLOGIN_MAIL_EMAIL_PLACEHOLDER'); ?>" />
                 </div>                
             </div>
             
@@ -66,7 +66,7 @@ JHTML::_('behavior.formvalidator');
                 $dispatcher->trigger('onInit','dynamic_recaptcha');
             ?>
 
-            <div class="form-group">
+            <div class="form-group">                
                 <div id="dynamic_recaptcha"></div>
             </div>
             <div class="help-block">
