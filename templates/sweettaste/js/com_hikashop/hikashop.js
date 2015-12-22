@@ -900,8 +900,7 @@ function hikashopCheckChangeForm(type, form) {
 				passwd = varform.elements['data[register][password]'];
 				passwd2 = varform.elements['data[register][password2]'];
 				if(passwd.value != passwd2.value) {
-					//alert(hikashopFieldsJs['password_different']);
-                                        
+					//alert(hikashopFieldsJs['password_different']);                                    
                                         
                                     if (jQuery(passwd2).closest("div.form-group").hasClass("has-success")) jQuery(passwd2).closest("div.form-group").removeClass("has-success");
                                     if (!jQuery(passwd2).closest("div.form-group").hasClass("has-error")) jQuery(passwd2).closest("div.form-group").addClass("has-error");
@@ -909,7 +908,7 @@ function hikashopCheckChangeForm(type, form) {
                                     if (!jQuery(passwd2).attr("data-toggle"))
                                         jQuery(passwd2).attr("data-toggle", "tooltip").attr("data-placement", "bottom");
 
-                                    jQuery(passwd2).tooltip({animation: true, title: hikashopFieldsJs['password_different'], delay: {show: "200", "hide": 100}});
+                                    jQuery(passwd2).tooltip({container: "body", animation: true, title: hikashopFieldsJs['password_different'], delay: {show: "200", "hide": 100}});
                                     jQuery(passwd2).tooltip("show");
                                     jQuery(passwd2).focus();
                                     return false;
@@ -919,7 +918,7 @@ function hikashopCheckChangeForm(type, form) {
                                             jQuery(passwd2).closest("div.form-group").addClass("has-success");
                                     }
 
-                                    jQuery(passwd2).tooltip("destroy");
+                                    jQuery(passwd2).tooltip("hide");
 
                                     jQuery(passwd2).removeAttr("data-toggle data-placement data-original-title");
                                 }	
@@ -932,7 +931,7 @@ function hikashopCheckChangeForm(type, form) {
 		var filter = /^([a-z0-9_'&\.\-\+])+\@(([a-z0-9\-])+\.)+([a-z0-9]{2,14})+$/i;
 		if(!emailField || !filter.test(emailField.value)) {
 			//alert(hikashopFieldsJs['valid_email']);
-                        
+                        //Joomla.renderMessages(hikashopFieldsJs['valid_email']);
                         
                     if (jQuery(emailField).closest("div.form-group").hasClass("has-success")) jQuery(emailField).closest("div.form-group").removeClass("has-success");
                     if (!jQuery(emailField).closest("div.form-group").hasClass("has-error")) jQuery(emailField).closest("div.form-group").addClass("has-error");
@@ -940,7 +939,7 @@ function hikashopCheckChangeForm(type, form) {
                     if (!jQuery(emailField).attr("data-toggle"))
                         jQuery(emailField).attr("data-toggle", "tooltip").attr("data-placement", "bottom");
 
-                    jQuery(emailField).tooltip({animation: true, title: hikashopFieldsJs['valid_email'], delay: {show: "200", "hide": 100}});
+                    jQuery(emailField).tooltip({container: "body", animation: true, title: hikashopFieldsJs['valid_email'], delay: {show: "200", "hide": 100}});
                     jQuery(emailField).tooltip("show");
                     jQuery(emailField).focus();
                     return false;
@@ -950,7 +949,7 @@ function hikashopCheckChangeForm(type, form) {
                             jQuery(emailField).closest("div.form-group").addClass("has-success");
                     }
                     
-                    jQuery(emailField).tooltip("destroy");
+                    jQuery(emailField).tooltip("hide");
 		
                     jQuery(emailField).removeAttr("data-toggle data-placement data-original-title");
 		}
@@ -1033,7 +1032,7 @@ function hikashopCheckField(elementToCheck, type, i, elementName, form) {
 		if (!jQuery(elementToCheck).attr("data-toggle"))
                     jQuery(elementToCheck).attr("data-toggle", "tooltip").attr("data-placement", "bottom");
                 
-                jQuery(elementToCheck).tooltip({animation: true, title: hikashopFieldsJs['validFieldsComp'][type][i], delay: {show: "200", "hide": 100}});
+                jQuery(elementToCheck).tooltip({container: "body", animation: true, title: hikashopFieldsJs['validFieldsComp'][type][i], delay: {show: "200", "hide": 100}});
                 jQuery(elementToCheck).tooltip("show");
 		jQuery(elementToCheck).focus();
 		//alert(hikashopFieldsJs['validFieldsComp'][type][i]);
@@ -1046,7 +1045,7 @@ function hikashopCheckField(elementToCheck, type, i, elementName, form) {
 			jQuery(elementToCheck).closest("div.form-group").addClass("has-success");
 		}		
 		
-		jQuery(elementToCheck).tooltip("destroy");
+		jQuery(elementToCheck).tooltip("hide");
 		
 		jQuery(elementToCheck).removeAttr("data-toggle data-placement data-original-title");
 	}
