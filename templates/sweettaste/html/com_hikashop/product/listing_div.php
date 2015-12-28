@@ -10,8 +10,7 @@ defined('_JEXEC') or die('Restricted access');
 ?><?php
 JHtml::_('jquery.framework');
 JFactory::getDocument()->addScript('http://imagesloaded.desandro.com/imagesloaded.pkgd.min.js', "text/javascript");
-JFactory::getDocument()->addScript('https://cdnjs.cloudflare.com/ajax/libs/masonry/3.3.0/masonry.pkgd.min.js', "text/javascript");
-
+JFactory::getDocument()->addScript('https://cdnjs.cloudflare.com/ajax/libs/masonry/3.3.2/masonry.pkgd.min.js', "text/javascript");
 $app = JFactory::getApplication();
 $mainDivName = $this->params->get('main_div_name');
 $carouselEffect = $this->params->get('carousel_effect');

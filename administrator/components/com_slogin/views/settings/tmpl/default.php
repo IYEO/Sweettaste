@@ -26,7 +26,7 @@ $sess = JFactory::getSession();
 <div class="span12">
     <div class="row">
         <div class="span7">
-             <h2><?php echo JText::_('COM_SLOGIN_USER_STRUCTURE'); ?></h2>
+             <h2 class="text-center"><?php echo JText::_('COM_SLOGIN_USER_STRUCTURE'); ?></h2>
             <div id="pie_chartdiv" style="width:100%; height:350px;"></div>
         </div>
         <div class="span5">
@@ -120,7 +120,7 @@ $sess = JFactory::getSession();
                     <tr>
                         <td><?php echo $i ?></td>
                         <td><?php echo $plugin->name ?></td>
-                        <td><?php echo $plugin->enabled ? JText::_('JYES') : JText::_('JNO'); ?></td>
+                        <td><?php echo !empty($plugin->enabled) ? JText::_('JYES') : JText::_('JNO'); ?></td>
                         <td>
                             <a target="_blank" href="<?php echo $plugin->link; ?>">
                                 <?php echo JText::_('COM_SLOGIN_PLUGIN_BUY'); ?>
