@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -52,9 +52,11 @@ a:visited{cursor:pointer;color:#2d9cbb;text-decoration:none;border:none;}
 <h1 style="color:#1c8faf !important;font-size:16px;font-weight:bold; border-bottom:1px solid #ddd; padding-bottom:10px">
 	{TXT:CONTACT_TITLE}
 </h1>
+<!--{IF:PRODUCT}-->
 <h2 style="color:#1c8faf !important;font-size:12px;font-weight:bold; padding-bottom:10px">
 	{TXT:FOR_PRODUCT}
 </h2>
+<!--{ENDIF:PRODUCT}-->
 							</div>
 						</td>
 						<td class="w20" width="20"></td>

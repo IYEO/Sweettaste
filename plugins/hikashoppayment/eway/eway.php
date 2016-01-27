@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -107,16 +107,7 @@ class plgHikashoppaymentEway extends hikashopPaymentPlugin
 				$history->amount= round($order->cart->full_total->prices[0]->price_value_with_tax,2) . $this->currency->currency_code;
 				$history->data = '';
 
-				$email = new stdClass();
-				$email->subject = JText::sprintf('PAYMENT_NOTIFICATION_FOR_ORDER','eWAY','Accepted',$order->order_number);
-				$url = HIKASHOP_LIVE.'administrator/index.php?option=com_hikashop&ctrl=order&task=listing';
-				$order_text = "\r\n".JText::sprintf('NOTIFICATION_OF_ORDER_ON_WEBSITE',$order->order_number,HIKASHOP_LIVE);
-				$order_text .= "\r\n".str_replace('<br/>',"\r\n",JText::sprintf('ACCESS_ORDER_WITH_LINK',$url));
-				$body = str_replace('<br/>',"\r\n",JText::sprintf('PAYMENT_NOTIFICATION_STATUS','eWAY','Accepted')).' '.JText::sprintf('ORDER_STATUS_CHANGED',$order->order_status)."\r\n\r\n".$order_text;
-				$email->body = $body;
-
-				$this->modifyOrder($order,$this->payment_params->verified_status,$history,$email);
-
+				$this->modifyOrder($order, $this->payment_params->verified_status, $history, true);
 				break;
 		}
 		return true;

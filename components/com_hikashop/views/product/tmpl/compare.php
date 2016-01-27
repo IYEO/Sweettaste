@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -168,6 +168,7 @@ $history = -1;
 					<input type="hidden" name="add" value="1"/>
 					<input type="hidden" name="ctrl" value="product"/>
 					<input type="hidden" name="task" value="updatecart"/>
+					<input type="hidden" name="cart_type" value="cart"/>
 					<input type="hidden" name="return_url" value="<?php echo urlencode(base64_encode(urldecode($this->redirect_url)));?>"/>
 				</form>
 			</td><?php
@@ -252,7 +253,7 @@ $history = -1;
 			<input type="hidden" name="add" value="1"/>
 			<input type="hidden" name="ctrl" value="cart"/>
 			<input type="hidden" name="task" value="addtocart"/>
-			<input type="hidden" name="cart_type" value="cart"/>
+			<input type="hidden" name="cart_type" value="wishlist"/>
 			<input type="hidden" name="cart_id" value="compare"/>
 			<input type="hidden" name="action" value="<?php echo JURI::getInstance()->toString(); ?>"/>
 		</form>

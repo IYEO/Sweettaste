@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -158,7 +158,8 @@ class MassactionViewMassaction extends hikashopView{
 		$dispatcher = JDispatcher::getInstance();
 		$dispatcher->trigger('onMassactionTableLoad', array( &$tables ) );
 		$loadedData = $element;
-		foreach($tables as $k => $table){
+
+		foreach($tables as $k => $table) {
 			$tables[$k]->triggers = array();
 			$tables[$k]->triggers_html = array();
 			$dispatcher->trigger('onMassactionTableTriggersLoad', array( &$tables[$k], &$tables[$k]->triggers,&$tables[$k]->triggers_html, &$loadedData) );
@@ -188,31 +189,28 @@ class MassactionViewMassaction extends hikashopView{
 		$this->assignRef('tables',$tables);
 		$this->assignRef('loadedData',$loadedData);
 
-
 		$js = "
-
-			function updateMassAction(type,table,filterNum){
-				var w = window, d = w.document, currentFilterType = d.getElementById(type+table+'type'+filterNum).value;
-				if(!currentFilterType){
-					d.getElementById(table+type+'area_'+filterNum).innerHTML = '';
-					if(type=='filter') d.getElementById(table+'countresult_'+filterNum).innerHTML = '';
-					return;
-				}
-				var filterArea = table+type+'__num__'+currentFilterType;
-				if(d.getElementById(filterArea))
-						w.Oby.updateElem( d.getElementById(table+type+'area_'+filterNum), d.getElementById(filterArea).innerHTML.replace(/__num__/g,filterNum));
-				else d.getElementById(table+type+'area_'+filterNum).innerHTML = '';
-			}
-
-			";
+function updateMassAction(type,table,filterNum){
+	var w = window, d = w.document, currentFilterType = d.getElementById(type+table+'type'+filterNum).value;
+	if(!currentFilterType){
+		d.getElementById(table+type+'area_'+filterNum).innerHTML = '';
+		if(type=='filter') d.getElementById(table+'countresult_'+filterNum).innerHTML = '';
+		return;
+	}
+	var filterArea = table+type+'__num__'+currentFilterType;
+	if(d.getElementById(filterArea))
+			w.Oby.updateElem( d.getElementById(table+type+'area_'+filterNum), d.getElementById(filterArea).innerHTML.replace(/__num__/g,filterNum));
+	else d.getElementById(table+type+'area_'+filterNum).innerHTML = '';
+}
+";
 		 $js .="
-			var numTriggers = {};
-			var numFilters = {};
-			var numActions = {};
-			var triggerId = {};
-			var filterId = {};
-			var actionId = {};
-		";
+var numTriggers = {};
+var numFilters = {};
+var numActions = {};
+var triggerId = {};
+var filterId = {};
+var actionId = {};
+";
 
 		foreach($tables as $k => $table){
 			if(empty($loadedData->massaction_triggers) || $table->table != $loadedData->massaction_table){

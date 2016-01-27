@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -41,8 +41,14 @@ class plgHikashoppaymentSagepay extends hikashopPaymentPlugin
 			'1' => 'Authenticate',
 			'2' => 'Deferred'
 		)),
+		'sendemail' => array('SagePay send email', 'list', array(
+			'0' => 'None',
+			'1' => 'Vendor',
+			'2' => 'Vendor and Customer'
+		)),
 		'cancel_url' => array('CANCEL_URL', 'input'),
 		'return_url' => array('RETURN_URL', 'input'),
+		'vendor_email' => array('PAYMENT_EMAIL_ADDRESS', 'input'),
 		'invalid_status' => array('INVALID_STATUS', 'orderstatus'),
 		'verified_status' => array('VERIFIED_STATUS', 'orderstatus'),
 		'pending_status' => array('PENDING_STATUS', 'orderstatus')
@@ -51,16 +57,21 @@ class plgHikashoppaymentSagepay extends hikashopPaymentPlugin
 	function onAfterOrderConfirm(&$order,&$methods,$method_id) {
 		parent::onAfterOrderConfirm($order,$methods,$method_id);
 
-		if(!function_exists('mcrypt_encrypt')){
+		if(!function_exists('mcrypt_encrypt')) {
 			$this->app->enqueueMessage('The SagePay payment plugin requires the PHP extension Mcrypt to be installed and activated on your server. Please contact your hosting company to set it up');
 			return false;
 		}
 
-		$viewType='end';
+		$viewType = 'end';
 
-		$server_url = HIKASHOP_LIVE.'index.php';
-
-		$return_url_p = 'option=com_hikashop&ctrl=checkout&task=notify&notif_payment=sagepay&notif_id='.$method_id.'&tmpl=component&lang='.$this->locale.$this->url_itemid;
+		$notif_file = JPATH_ROOT.DS.'sagepay_'.(int)$method_id.'.php';
+		jimport('joomla.filesystem.file');
+		if(!JFile::exists($notif_file)) {
+			$e = new stdClass();
+			$e->payment_id = (int)$method_id;
+			$this->generateRootFile($e);
+		}
+		$notif_url = HIKASHOP_LIVE.'sagepay_'.(int)$method_id.'.php';
 
 		$address1 = ''; $address2 = '';
 		$address1 = @$order->cart->billing_address->address_street;
@@ -77,7 +88,9 @@ class plgHikashoppaymentSagepay extends hikashopPaymentPlugin
 			$ship_address1 = substr($ship_address1, 0, 100);
 		}
 
-		$sendEmail = 0;
+		$sendEmail = (int)@$this->payment_params->sendemail;
+		if($sendEmail < 0 || $sendEmail > 2)
+			$sendEmail = 0;
 		if(empty($order->cart->billing_address->address_post_code)){
 			$billing_code = '0000';
 		}else{
@@ -90,11 +103,11 @@ class plgHikashoppaymentSagepay extends hikashopPaymentPlugin
 		}
 		$postData = array(
 			'VendorTxCode' => $order->order_id,
-			'Amount' => round($order->cart->full_total->prices[0]->price_value_with_tax,(int)$this->currency->currency_locale['int_frac_digits']),
+			'Amount' => round($order->cart->full_total->prices[0]->price_value_with_tax, (int)$this->currency->currency_locale['int_frac_digits']),
 			'Currency' => $this->currency->currency_code,
 			'Description' => $order->order_number,
-			'SuccessURL' => $server_url . '?' . $return_url_p,
-			'FailureURL' => $server_url . '?' . $return_url_p,
+			'SuccessURL' => $notif_url,
+			'FailureURL' => $notif_url . '?user_cancel=1',
 			'CustomerName' => @$order->cart->billing_address->address_firstname . ' ' . @$order->cart->billing_address->address_lastname,
 			'SendEMail' => $sendEmail,
 
@@ -120,6 +133,10 @@ class plgHikashoppaymentSagepay extends hikashopPaymentPlugin
 			'ApplyAVSCV2' => 0,
 			'Apply3DSecure' => 0,
 		);
+
+		if(!empty($this->payment_params->vendor_email)){
+			$postData['VendorEmail'] = $this->payment_params->vendor_email;
+		}
 
 		$bxml = '<basket>';
 
@@ -167,14 +184,14 @@ class plgHikashoppaymentSagepay extends hikashopPaymentPlugin
 		$postData = implode('&',$t);
 		unset($t);
 
-		$txtypes = array(
+		$txTypes = array(
 			0 => 'PAYMENT',
 			1 => 'AUTHENTICATE',
 			2 => 'DEFERRED'
 		);
-		$txType = $txtypes[0];
+		$txType = $txTypes[0];
 		if(isset( $txTypes[ (int)@$this->payment_params->txtype ] ))
-			$txType = $txtypes[(int)@$this->payment_params->txtype];
+			$txType = $txTypes[(int)@$this->payment_params->txtype];
 
 		$this->vars = array(
 			'navigate' => '',
@@ -198,7 +215,7 @@ class plgHikashoppaymentSagepay extends hikashopPaymentPlugin
 		}
 
 		if($this->payment_params->debug) {
-			print_r($postData)."\n\n\n";
+			$this->writeToLog('SagePay Post Data' . "\r\n" . htmlentities($postData)."\r\n" );
 		}
 
 		return $this->showPage($viewType);
@@ -214,6 +231,8 @@ class plgHikashoppaymentSagepay extends hikashopPaymentPlugin
 		$crypt = null;
 		if(!empty($_REQUEST['crypt']))
 			$crypt = $_REQUEST['crypt'];
+		if(empty($crypt) && !empty($_GET['crypt']))
+			$crypt = $_GET['crypt'];
 		if(empty($crypt))
 			$crypt = JRequest::getString('crypt', null, 'default', JREQUEST_ALLOWRAW);
 
@@ -224,13 +243,17 @@ class plgHikashoppaymentSagepay extends hikashopPaymentPlugin
 
 		$httpsHikashop = HIKASHOP_LIVE;
 		if( $this->payment_params->debug ) {
+			$this->writeToLog('Received data from SagePay'."\r\n".'crypt: '.htmlentities($crypt)."\r\nData:\r\n".htmlentities($data));
 			$httpsHikashop = str_replace('https://','http://', HIKASHOP_LIVE);
 		}
 
 		$cancel_url = $httpsHikashop.'index.php?option=com_hikashop&ctrl=order&task=cancel_order';
 
+		$user_cancel = JRequest::getInt('user_cancel', 0);
+
 		if( strpos($data, 'Status') === false ) {
-			$this->app->enqueueMessage('Error while processing encrypted data');
+			if(empty($user_cancel))
+				$this->app->enqueueMessage('Error while processing encrypted data');
 			$this->app->redirect($cancel_url);
 			return false;
 		}
@@ -316,6 +339,37 @@ class plgHikashoppaymentSagepay extends hikashopPaymentPlugin
 		$element->payment_params->invalid_status = 'cancelled';
 		$element->payment_params->pending_status = 'created';
 		$element->payment_params->verified_status = 'confirmed';
+	}
+
+	public function onPaymentConfigurationSave(&$element) {
+		$ret = parent::onPaymentConfigurationSave($element);
+		$this->generateRootFile($element);
+		return $ret;
+	}
+
+	protected function generateRootFile($element) {
+		jimport('joomla.filesystem.file');
+		$lang = JFactory::getLanguage();
+		$locale = strtolower(substr($lang->get('tag'), 0, 2));
+
+		$opts = array(
+			'option' => 'com_hikashop',
+			'tmpl' => 'component',
+			'ctrl' => 'checkout',
+			'task' => 'notify',
+			'notif_payment' => $this->name,
+			'format' => 'html',
+			'local' => $locale,
+			'notif_id' => $element->payment_id,
+		);
+		$content = '<?php' . "\r\n";
+		foreach($opts as $k => $v) {
+			$v = str_replace(array('\'','\\'), '', $v);
+			$content .= '$_GET[\''.$k.'\']=\''.$v.'\';'."\r\n".
+						'$_REQUEST[\''.$k.'\']=\''.$v.'\';'."\r\n";
+		}
+		$content .= 'include(\'index.php\');'."\r\n";
+		JFile::write(JPATH_ROOT.DS.$this->name.'_'.$element->payment_id.'.php', $content);
 	}
 
 	function simpleXor($in, $k) {

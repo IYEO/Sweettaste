@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -148,11 +148,13 @@ foreach($this->order->products as $k => $product) {
 				if($download_number_limit<=$file->download_number){
 					$fileHtml .= ' / <b>'.JText::_('MAX_REACHED_NO_DOWNLOAD').'</b>';
 				}else{
-					$fileHtml .= ' / '.JText::sprintf('X_DOWNLOADS_LEFT',$download_number_limit-$file->download_number);
+					$fileHtml .= ' / '.JText::sprintf('X_DOWNLOADS_LEFT',$download_number_limit - $file->download_number);
 				}
 				if($file->download_number){
 					$fileHtml .= '<a href="'.hikashop_completeLink('file&task=resetdownload&file_id='.$file->file_id.'&order_id='.$this->order->order_id.'&'.hikashop_getFormToken().'=1&return='.urlencode(base64_encode(hikashop_completeLink('order&task=edit&cid='.$this->order->order_id,false,true)))).'"><img src="'.HIKASHOP_IMAGES.'delete.png" alt="'.JText::_('HIKA_DELETE').'" /></a>';
 				}
+			} else {
+				$fileHtml .= ' / ' . JText::sprintf('X_DOWNLOADS_MADE', $file->download_number);
 			}
 			$file_pos = '';
 			if($file->file_pos > 0) {

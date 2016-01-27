@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -15,6 +15,8 @@ class plgQuickiconHikaShop  extends JPlugin {
 	}
 
 	public function onGetIcons($context) {
+		if(!defined('DS'))
+			define('DS',DIRECTORY_SEPARATOR);
 		$hikashopHelper = rtrim(JPATH_ADMINISTRATOR,DS).DS.'components'.DS.'com_hikashop'.DS.'helpers'.DS.'helper.php';
 		if($context != $this->params->get('context', 'mod_quickicon') || !file_exists($hikashopHelper) || !JFactory::getUser()->authorise('core.manage', 'com_hikashop')) {
 			return;

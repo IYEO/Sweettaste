@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -263,7 +263,8 @@ class hikashopMailClass {
 			echo $this->processMailTemplate($mail, $data, $texts, $vars, $templates);
 		}
 
-		return ob_get_clean();
+		$ret = ob_get_clean();
+		return trim($ret);
 	}
 
 	function processMailTemplate(&$mail, &$data, $texts, $vars, $templates = array()) {

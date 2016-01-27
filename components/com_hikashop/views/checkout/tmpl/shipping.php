@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -63,10 +63,8 @@ if(empty($this->rates)) {
 		}
 
 if(!HIKASHOP_RESPONSIVE) { ?>
-		</ul>
 		<table>
 <?php } else { ?>
-		</ul>
 <div class="controls">
 	<div class="hika-radio">
 		<table class="hikashop_shipping_methods_table table table-striped table-hover">
@@ -219,6 +217,14 @@ if(!HIKASHOP_RESPONSIVE) { ?>
 		$k = 1-$k;
 	}
 	if($several_groups && empty($group_rates)) {
+		$shippable_products = false;
+		foreach($group->products as $group_product){
+			if(isset($group_product->product_weight) && $group_product->product_weight > 0) {
+				$shippable_products = true;
+				break;
+			}
+		}
+		if(!$shippable_products){
 ?>
 		<tr>
 			<td colspan="3">
@@ -227,6 +233,16 @@ if(!HIKASHOP_RESPONSIVE) { ?>
 			</td>
 		</tr>
 <?php
+		} else {
+?>
+		<tr>
+			<td colspan="3">
+				<?php echo JText::_('NO_SHIPPING_AVAILABLE_FOR_WAREHOUSE'); ?>
+				<input type="radio" style="display:none;" name="hikashop_shipping_<?php echo $shipping_group_key; ?>" value="-_<?php echo $shipping_group_key; ?>" checked="checked" />
+			</td>
+		</tr>
+<?php
+		}
 	}
 
 	if(!HIKASHOP_RESPONSIVE) {

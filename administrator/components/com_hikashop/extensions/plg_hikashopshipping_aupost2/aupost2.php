@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -46,6 +46,21 @@ class plgHikashopshippingAupost2 extends hikashopShippingPlugin {
 		'INTL_SERVICE_RPI' => 10,
 		'INTL_SERVICE_AIR_MAIL' => 11,
 		'INTL_SERVICE_SEA_MAIL' => 12);
+
+	var $shipping_names = array(
+			'AUS_PARCEL_REGULAR' => 'Parcel Post (your own packaging)',
+			'AUS_PARCEL_REGULAR_SATCHEL_500G' => 'Parcel Post Small Satchel',
+			'AUS_PARCEL_EXPRESS' => 'Express Post (your own packaging)',
+			'AUS_PARCEL_EXPRESS_SATCHEL_500G' => 'Express Post Small Satchel',
+			'INTL_SERVICE_ECI_PLATINUM' => 'Express Courier International Platinum',
+			'INTL_SERVICE_ECI_M' => 'Express Courier International Merchandise',
+			'INTL_SERVICE_ECI_D' => 'Express Courier International Documents',
+			'INTL_SERVICE_EPI' => 'Express Post International',
+			'INTL_SERVICE_PTI' => 'Pack and Track International',
+			'INTL_SERVICE_RPI' => 'Registered Post International',
+			'INTL_SERVICE_AIR_MAIL' => 'Air Mail',
+			'INTL_SERVICE_SEA_MAIL' => 'Sea Mail',
+		);
 
 	function processPackageLimit($limit_key, $limit_value, $product, $qty, $package, $units) {
 		switch ($limit_key) {
@@ -472,21 +487,23 @@ class plgHikashopshippingAupost2 extends hikashopShippingPlugin {
 					if(empty($rates[$service->code])) {
 						$info = new stdClass();
 						$info = (!HIKASHOP_PHP5) ? $rate : clone($rate);
-						$info->shipping_name .=' '.$service->name;
+						$shipping_name = JText::_($service->code.'_NAME');
+						if($shipping_name != $service->code.'_NAME')
+							$info->shipping_name .=' '.$shipping_name;
+						else
+							$info->shipping_name .=' '.$service->name;
 						if (!empty($rate->shipping_description))
 							$info->shipping_description = $rate->shipping_description . ' ';
 						else {
 							$shipping_description = JText::_($service->code.'_DESCRIPTION');
-							if($shipping_description == $service->code.'_DESCRIPTION') {
+							if($shipping_description != $service->code.'_DESCRIPTION')
 								$info->shipping_description .= $shipping_description;
-							}
-							$info->shipping_description=$shipping_description;
 						}
 						$info->shipping_id .= '-' . $this->shipping_types[$service->code];
 						$rates[$service->code]=$info;
 					} else {
 						$shipping_description = JText::_($service->code.'_DESCRIPTION');
-						if($shipping_description ==$service->code.'_DESCRIPTION'){ $shipping_description = ''; }
+						if($shipping_description == $service->code.'_DESCRIPTION'){ $shipping_description = ''; }
 						if(empty($shipping_description)){ $shipping_description = $rate->shipping_description; }
 						if(!empty($shipping_description)){ $shipping_description .= '<br/>'; }
 						if($nb_package > 1 && (isset($rate->shipping_params->shipping_group) && $rate->shipping_params->shipping_group)) $rates[$service->code]->shipping_description = $shipping_description . JText::sprintf('X_PACKAGES', $nb_package);
@@ -510,41 +527,10 @@ class plgHikashopshippingAupost2 extends hikashopShippingPlugin {
 	function shippingMethods(&$main) {
 		$methods = array();
 
-		if(!empty($main->shipping_params->AUS_PARCEL_REGULAR))
-			$methods[$main->shipping_id.'-1'] = $main->shipping_name.' '.JText::_('AUS_PARCEL_REGULAR');
-
-		if(!empty($main->shipping_params->AUS_PARCEL_REGULAR_SATCHEL_500G))
-			$methods[$main->shipping_id.'-2'] = $main->shipping_name.' '.JText::_('AUS_PARCEL_REGULAR_SATCHEL_500G');
-
-		if(!empty($main->shipping_params->AUS_PARCEL_EXPRESS))
-			$methods[$main->shipping_id.'-3'] = $main->shipping_name.' '.JText::_('AUS_PARCEL_EXPRESS');
-
-		if(!empty($main->shipping_params->AUS_PARCEL_EXPRESS_SATCHEL_500G))
-			$methods[$main->shipping_id.'-4'] = $main->shipping_name.' '.JText::_('AUS_PARCEL_EXPRESS_SATCHEL_500G');
-
-		if(!empty($main->shipping_params->INTL_SERVICE_ECI_PLATINUM))
-			$methods[$main->shipping_id.'-5'] = $main->shipping_name.' '.JText::_('INTL_SERVICE_ECI_PLATINUM');
-
-		if(!empty($main->shipping_params->INTL_SERVICE_ECI_M))
-			$methods[$main->shipping_id.'-6'] = $main->shipping_name.' '.JText::_('INTL_SERVICE_ECI_M');
-
-		if(!empty($main->shipping_params->INTL_SERVICE_ECI_D))
-			$methods[$main->shipping_id.'-7'] = $main->shipping_name.' '.JText::_('INTL_SERVICE_ECI_D');
-
-		if(!empty($main->shipping_params->INTL_SERVICE_EPI))
-			$methods[$main->shipping_id.'-8'] = $main->shipping_name.' '.JText::_('INTL_SERVICE_EPI');
-
-		if(!empty($main->shipping_params->INTL_SERVICE_PTI))
-			$methods[$main->shipping_id.'-9'] = $main->shipping_name.' '.JText::_('INTL_SERVICE_PTI');
-
-		if(!empty($main->shipping_params->INTL_SERVICE_RPI))
-			$methods[$main->shipping_id.'-10'] = $main->shipping_name.' '.JText::_('INTL_SERVICE_RPI');
-
-		if(!empty($main->shipping_params->INTL_SERVICE_AIR_MAIL))
-			$methods[$main->shipping_id.'-11'] = $main->shipping_name.' '.JText::_('INTL_SERVICE_AIR_MAIL');
-
-		if(!empty($main->shipping_params->INTL_SERVICE_SEA_MAIL))
-			$methods[$main->shipping_id.'-12'] = $main->shipping_name.' '.JText::_('INTL_SERVICE_SEA_MAIL');
+		foreach($this->shipping_types as $value => $key){
+			if(!empty($main->shipping_params->$value))
+				$methods[$main->shipping_id.'-'.$key] = $this->shipping_names[$value];
+		}
 
 		return $methods;
 	}

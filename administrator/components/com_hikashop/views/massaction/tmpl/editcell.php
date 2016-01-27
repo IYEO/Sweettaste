@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -238,7 +238,7 @@ switch($this->type){
 				$params = array($name,$row->$column,true,true,$cpt.$id_td);
 				$params = array('class'=>$this->status,'params'=>$params);
 				echo $this->displayField('custom',$params);
-				echo '<INPUT type="checkbox" name="checkbox" value="notification">'.JText::_( 'NOTIFICATION' );
+				echo '<input type="checkbox" name="checkbox" value="notification">'.JText::_( 'NOTIFICATION' );
 				echo '<br/>';
 			}
 		}else if(!isset($this->ids)){

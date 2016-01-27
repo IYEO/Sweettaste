@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -918,7 +918,7 @@ class hikashopImportvm2Helper extends hikashopImportHelper
 		$max = 0;
 
 		$this->db->setQuery(
-			'SELECT vmp.virtuemart_product_id, vmm.file_meta, vmm.file_url '.
+			'SELECT vmp.virtuemart_product_id, vmm.file_meta, vmm.file_url, vmm.file_title '.
 			'FROM `'.$this->vmprefix.'virtuemart_products` vmp '.
 			"INNER JOIN `".$this->vmprefix."virtuemart_product_medias` vmpm ON vmp.virtuemart_product_id = vmpm.virtuemart_product_id ".
 			"INNER JOIN `".$this->vmprefix."virtuemart_medias` vmm ON vmpm.virtuemart_media_id = vmm.virtuemart_media_id ".
@@ -943,6 +943,16 @@ class hikashopImportvm2Helper extends hikashopImportHelper
 					$result = $this->copyFile($this->copyImgDir,$c->file_meta, $this->options->uploadfolder.$file_name);
 					if($result){
 						$meta_files[] = $this->db->Quote($c->file_meta);
+					}
+				}
+				if(!$result && !empty($c->file_title) ) {
+					$file_name = str_replace('\\','/',$c->file_title);
+					if( strpos($file_name,'/') !== false ) {
+						$file_name = substr($file_name, strrpos($file_name,'/'));
+					}
+					$result = $this->copyFile($this->copyImgDir,$c->file_title, $this->options->uploadfolder.$file_name);
+					if($result){
+						$meta_files[] = $this->db->Quote($c->file_title);
 					}
 				}
 				if(!$result && !empty($c->file_url)){

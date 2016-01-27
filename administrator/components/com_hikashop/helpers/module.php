@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -178,6 +178,7 @@ class hikashopModuleHelper{
 					}
 				}
 			}
+
 			jimport('joomla.html.parameter');
 			if (is_object( $menu )) {
 				if(HIKASHOP_J30 && (($menu->query['view'] == 'category' && (!$menu->params->get('hk_category',false) || !$menu->params->get('hk_product',false))) || ($menu->query['view'] == 'product' && !$menu->params->get('hk_product',false)))){
@@ -190,6 +191,7 @@ class hikashopModuleHelper{
 					if(isset($itemData->hk_product))
 						$menu->params->set('hk_product', $itemData->hk_product);
 				}
+
 				$obj->params = new HikaParameter( $menu->params );
 				$obj->params->set('id',$menu->id);
 				if(version_compare(JVERSION,'1.6','<')){

@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -52,6 +52,8 @@ class hikashopPopupHelper {
 				return $this->displayBootstrap($text, $title, $url, $id, $params);
 			case 'mootools':
 				return $this->displayMootools($text, $title, $url, $id, $params);
+			case 'vex':
+				return $this->displayVex($text, $title, $url, $id, $params);
 		}
 
 		$plugins = $this->getPlugins();
@@ -177,14 +179,14 @@ class hikashopPopupHelper {
 		$onClick = '';
 		if($params['dynamicUrl']) {
 			if(!$isOnclick)
-				$onClick = ' onclick="this.href=' . str_replace('"', '\"', $url) . '; return window.hikashop.openBox(this,this.href,false);"';
+				$onClick = ' onclick="this.href=' . str_replace('"', '\"', $url) . '; return window.hikashop.openBox(this,this.href);"';
 			$isOnclick = true;
 			$url = '#';
 		}
 
 		$a = $params['attr'];
 		if(!empty($id) && !$isOnclick && empty($params['footer']))
-			$onClick = ' onclick="return window.hikashop.openBox(this,null,false);"';
+			$onClick = ' onclick="return window.hikashop.openBox(this);"';
 
 		if(!empty($params['footer']) && $params['footer'] === true) {
 			static $createBoxInit = false;
@@ -221,9 +223,9 @@ window.localPage.createBox = function(el,href,options) {
 				$onClick=' onclick="return window.localPage.createBox(this,this.href,this.rel);"';
 			}
 			$title = str_replace("'", "\\'", JText::_($title));
-			$html = '<a '.$a.$onClick.' id="'.$id.'" href="'.$url.'" rel="{title:\''.$title.'\',size:{x:'.$params['width'].',y:'.$params['height'].'}}">';
+			$html = '<a '.$a.$onClick.' id="'.$id.'" href="'.$url.'" data-hk-popup="squeezebox" data-squeezebox="{title:\''.$title.'\',size:{x:'.$params['width'].',y:'.$params['height'].'}}">';
 		} else {
-			$html = '<a '.$a.$onClick.' id="'.$id.'" href="'.$url.'" rel="{handler: \'iframe\', size: {x: '.$params['width'].', y: '.$params['height'].'}}">';
+			$html = '<a '.$a.$onClick.' id="'.$id.'" href="'.$url.'" data-hk-popup="squeezebox" data-squeezebox="{handler: \'iframe\', size: {x: '.$params['width'].', y: '.$params['height'].'}}">';
 		}
 
 		if($params['type'] == 'button')
@@ -233,6 +235,41 @@ window.localPage.createBox = function(el,href,options) {
 			$html .= '</button>';
 		$html .= '</a>';
 
+		return $html;
+	}
+
+	function displayVex($text, $title, $url, $id, $params) {
+		if(!isset($params['attr'])) $params['attr'] = '';
+		if(!isset($params['icon'])) $params['icon'] = '';
+		if(!isset($params['type'])) $params['type'] = 'button';
+		if(!isset($params['dynamicUrl'])) $params['dynamicUrl'] = false;
+
+		$isOnclick = (strpos($params['attr'], 'onclick="') !== false);
+
+		$html = '';
+		hikashop_loadJsLib('vex');
+		if($text === null)
+			return $html;
+
+		$onClick = '';
+		if($params['dynamicUrl']) {
+			if(!$isOnclick)
+				$onClick = ' onclick="this.href=' . str_replace('"', '\"', $url) . '; return window.hikashop.openBox(this,this.href,false);"';
+			$isOnclick = true;
+			$url = '#';
+		}
+
+		$a = $params['attr'];
+		if(!empty($id) && !$isOnclick)
+			$onClick = ' onclick="return window.hikashop.openBox(this);"';
+
+		$html = '<a '.$a.$onClick.' id="'.$id.'" href="'.$url.'" data-hk-popup="vex" data-vex="{x:'.$params['width'].', y:'.$params['height'].'}">';
+		if($params['type'] == 'button')
+			$html .= '<button class="btn" onclick="return false">';
+		$html .= $text;
+		if($params['type'] == 'button')
+			$html .= '</button>';
+		$html .= '</a>';
 		return $html;
 	}
 
@@ -267,14 +304,14 @@ window.localPage.createBox = function(el,href,options) {
 		$isOnclick = (strpos($attr, 'onclick="') !== false);
 		$onClick = '';
 		if(!$isOnclick)
-			$onClick = ' onclick="SqueezeBox.fromElement(this,{parse:\'rel\'});return false;"';
+			$onClick = ' onclick="SqueezeBox.fromElement(this,{parse:\'data-rel\'});return false;"';
 
 		if(!empty($id))
 			$id = ' id="'.$id.'"';
 		else
 			$id = '';
 
-		$html = '<a '.$attr.$onClick.$id.' href="'.$url.'" rel="{handler:\'image\'}" target="_blank">'.$content.'</a>';
+		$html = '<a '.$attr.$onClick.$id.' href="'.$url.'" data-rel="{handler:\'image\'}" target="_blank">'.$content.'</a>';
 		return $html;
 	}
 

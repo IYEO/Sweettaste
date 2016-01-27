@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -944,6 +944,7 @@ class checkoutController extends hikashopController {
 		$app = JFactory::getApplication();
 		$shippingClass = hikashop_get('class.shipping');
 		$methods =& $shippingClass->getShippings($cart);
+
 		if(empty($methods))
 			return false;
 
@@ -1040,13 +1041,29 @@ class checkoutController extends hikashopController {
 		}else{
 			$shipping_done=true;
 		}
-		if(!$shipping_done){
-			$cart = $this->initCart();
-			if(!$cart->has_shipping){
-				return true;
-			}
-			$app->enqueueMessage( JText::_('SELECT_SHIPPING') );
+		$cart = $this->initCart();
+
+		if(!$cart->has_shipping){
+			return true;
 		}
+
+		$config =& hikashop_config();
+		$force_shipping = $config->get('force_shipping');
+		if(!empty($cart->shipping_groups) && count($cart->shipping_groups) > 1) {
+			foreach($cart->shipping_groups as $shipping_group){
+				if(empty($shipping_group->products) || !empty($shipping_group->shippings))
+					continue;
+
+				if($force_shipping)
+					$shipping_done=false;
+
+				foreach($shipping_group->products as $group_product){
+					if(isset($group_product->product_weight) && $group_product->product_weight > 0)
+						$shipping_done=false;
+				}
+			}
+		}
+
 		return $shipping_done;
 	}
 

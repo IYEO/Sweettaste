@@ -1,15 +1,16 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
 ?><?php
 class plgSearchHikashop_products extends JPlugin{
-	function plgSearchHikashop_products(&$subject, $config){
+
+	function __construct(&$subject, $config){
 		$this->loadLanguage('plg_search_hikashop_products');
 		$this->loadLanguage('plg_search_hikashop_products_override');
 		parent::__construct($subject, $config);
@@ -19,7 +20,7 @@ class plgSearchHikashop_products extends JPlugin{
 				jimport('joomla.html.parameter');
 				$this->params = new JParameter($plugin->params);
 			} else {
-				$this->params = new JRegistry($plugin->params);
+				$this->params = new JRegistry(@$plugin->params);
 			}
 		}
 	}

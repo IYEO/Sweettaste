@@ -18,11 +18,11 @@
  * output. Do not edit the templates distributed with the plug-in - your changes will get overwritten if you upgrade.
  * Always make a copy of one which looks closest to your objectives and give it a distinctive name. The list of
  * available templates, including your own, will appear on the Payment configuration page for this plug-in.
- * 
+ *
  * This template provides a 3 column layout with, optionally, your logo across the top.
  * Your logo must be specified in the payment method configuration form. Either an absolute or
  * relative (to your site) path may be entered - NOTE the logo must be accessible using HTTPS!
- * 
+ *
  * Passed arguments from onAfterOrderConfirm()
  *  $params
  *  $order

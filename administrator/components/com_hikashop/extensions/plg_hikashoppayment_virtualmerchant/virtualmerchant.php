@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -45,6 +45,7 @@ class plgHikashoppaymentVirtualmerchant extends hikashopPaymentPlugin
 		if( $method->payment_params->ask_ccv ) {
 			$method->ask_ccv = true;
 		}
+		return true;
 	}
 
 	function onBeforeOrderCreate(&$order, &$do) {
@@ -61,7 +62,7 @@ class plgHikashoppaymentVirtualmerchant extends hikashopPaymentPlugin
 		$amount = number_format($order->cart->full_total->prices[0]->price_value_with_tax,2,'.','');
 
 		$vars = '<txn>'.
-			'<ssl_merchant_ID>'.$this->payment_params->merchant_id.'</ssl_merchant_ID>'.
+			'<ssl_merchant_id>'.$this->payment_params->merchant_id.'</ssl_merchant_id>'.
 			'<ssl_user_id>'.$this->payment_params->user_id.'</ssl_user_id>'.
 			'<ssl_pin>'.$this->payment_params->pin.'</ssl_pin>'.
 			'<ssl_test_mode>'.((@$this->payment_params->test_mode)?'True':'False').'</ssl_test_mode>'.
@@ -77,7 +78,7 @@ class plgHikashoppaymentVirtualmerchant extends hikashopPaymentPlugin
 			'<ssl_first_name>'.str_replace(array('<','>'),array('&lt;','&gt;'),$order->cart->billing_address->address_firstname).'</ssl_first_name>'.
 			'<ssl_last_name>'.str_replace(array('<','>'),array('&lt;','&gt;'),$order->cart->billing_address->address_lastname).'</ssl_last_name>';
 
-		if(@$this->payment_params->multi_currency)
+		if(!empty($this->payment_params->multi_currency))
 			$vars .= '<ssl_transaction_currency>'.$this->currency->currency_code.'</ssl_transaction_currency>';
 
 		if($this->payment_params->use_avs) {
@@ -184,10 +185,10 @@ class plgHikashoppaymentVirtualmerchant extends hikashopPaymentPlugin
 					$email->body = str_replace('<br/>',"\r\n",JText::sprintf('PAYMENT_NOTIFICATION_STATUS','VirtualMerchant','Accepted')).' '.JText::sprintf('ORDER_STATUS_CHANGED',$order_status)."\r\n\r\n".$order_text;
 
 					$this->modifyOrder($order,$order_status,$history,$email);
-
-					$this->ccClear();
-
 				} else {
+					if(empty($ret['errorMessage'])){
+						$ret['errorMessage'] = 'An error occurred with the payment';
+					}
 					$this->app->enqueueMessage('Error Code #' . $ret['errorCode'] . ': ' . $ret['errorMessage']);
 					$do = false;
 				}
@@ -195,6 +196,7 @@ class plgHikashoppaymentVirtualmerchant extends hikashopPaymentPlugin
 				$this->app->enqueueMessage('An error occurred.');
 				$do = false;
 			}
+			$this->ccClear();
 		} else {
 			$this->app->enqueueMessage('An error occurred. '. $error);
 			$do = false;

@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -72,27 +72,27 @@ defined('_JEXEC') or die('Restricted access');
 <?php
 		}
 
-			$already=true;
-			if (count($this->steps) > $this->step+1) $link=true;
-			foreach($this->steps as $k => $step){
-				$step=explode('_',trim($step));
-				$step_name = reset($step);
-				if($this->display_checkout_bar==2 && $step_name=='end'){
-					continue;
-				}
-				$class = '';
-				$badgeClass = '';
-				if($k == $this->step){
-					$already = false;
-					$class .= ' hikashop_cart_step_current';
-					$badgeClass = 'info';
-				}
-				if($already){
-					$class .= ' hikashop_cart_step_finished';
-					$badgeClass = 'success';
-				}
+		$already=true;
+		if (count($this->steps) > $this->step+1) $link=true;
+		foreach($this->steps as $k => $step){
+			$step=explode('_',trim($step));
+			$step_name = reset($step);
+			if($this->display_checkout_bar==2 && $step_name=='end'){
+				continue;
+			}
+			$class = '';
+			$badgeClass = '';
+			if($k == $this->step){
+				$already = false;
+				$class .= ' hikashop_cart_step_current';
+				$badgeClass = 'info';
+			}
+			if($already){
+				$class .= ' hikashop_cart_step_finished';
+				$badgeClass = 'success';
+			}
 
-				if(HIKASHOP_RESPONSIVE) {
+			if(HIKASHOP_RESPONSIVE) {
 ?>
 				<li class="<?php echo trim($class); ?>">
 					<span class="badge badge-<?php echo $badgeClass; ?>"><?php echo ($k + 1); ?></span>
@@ -111,7 +111,7 @@ defined('_JEXEC') or die('Restricted access');
 				</li>
 
 <?php
-				} else {
+			} else {
 ?>
 				<div class="hikashop_cart_step<?php echo $class;?>">
 					<span><?php
@@ -124,9 +124,15 @@ defined('_JEXEC') or die('Restricted access');
 					<?php }
 					?></span>
 				</div><?php
-				}
 			}
-			?>
+		}
+
+		if(HIKASHOP_RESPONSIVE) {
+?>
+				</ul>
+<?php
+		}
+?>
 			</div>
 <?php
 	}

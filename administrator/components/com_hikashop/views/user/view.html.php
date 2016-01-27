@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -112,6 +112,7 @@ class UserViewUser extends hikashopView {
 		$fields = $fieldsClass->getData('backend_listing', 'user', false);
 		$this->assignRef('fields',$fields);
 		foreach($fields as $field) {
+			if($field->field_type == "customtext") continue;
 			$searchMap[] = 'huser.'.$field->field_namekey;
 		}
 

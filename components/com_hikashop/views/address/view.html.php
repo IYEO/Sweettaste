@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -126,8 +126,18 @@ class addressViewAddress extends HikaShopView {
 
 		static $jsInit = array();
 		if(empty($jsInit[$type])) {
+			$jsInit[$type] = array();
 			$null = array();
 			$fieldsClass->addJS($null,$null,$null);
+
+			foreach($extraFields['address'] as &$p) {
+				$p->field_table = $type.'_address';
+			}
+			unset($p);
+			$fieldsClass->jsToggle($extraFields['address'], $address, 0);
+		}
+
+		if(empty($jsInit[$type][$edit])) {
 			if($edit) {
 				$parents = $fieldsClass->getParents($extraFields['address']);
 				if(!empty($parents)) {
@@ -140,19 +150,14 @@ class addressViewAddress extends HikaShopView {
 				}
 				$init_js = $fieldsClass->initJSToggle($parents, $address, 0);
 			} else {
-				foreach($extraFields['address'] as &$p) {
-					$p->field_table = $type.'_address';
-				}
-				unset($p);
-				$fieldsClass->jsToggle($extraFields['address'],$address,0);
 				$requiredFields = array();
 				$validMessages = array();
-				$values = array('address'=>$address);
-				$fieldsClass->checkFieldsForJS($extraFields,$requiredFields,$validMessages,$values);
-				$fieldsClass->addJS($requiredFields,$validMessages,array('address'));
+				$values = array('address' => $address);
+				$fieldsClass->checkFieldsForJS($extraFields, $requiredFields, $validMessages, $values);
+				$fieldsClass->addJS($requiredFields, $validMessages, array('address'));
 			}
 		}
-		$jsInit[$type] = true;
+		$jsInit[$type][$edit] = true;
 	}
 
 	function form(){

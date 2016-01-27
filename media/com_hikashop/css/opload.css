@@ -1,8 +1,8 @@
 /**
  * @package    HikaShop for Joomla!
- * @version    2.6.0
+ * @version    2.6.1
  * @author     hikashop.com
- * @copyright  (C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright  (C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license    GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 .oploadQueueItem {
@@ -142,12 +142,12 @@
 	background-image: linear-gradient(-45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
 	-webkit-background-size: 40px 40px;
 	   -moz-background-size: 40px 40px;
-	     -o-background-size: 40px 40px;
+		 -o-background-size: 40px 40px;
 			background-size: 40px 40px;
 	-webkit-animation: oploadbar-stripes 1s linear infinite;
 	   -moz-animation: oploadbar-stripes 1s linear infinite;
-	    -ms-animation: oploadbar-stripes 1s linear infinite;
-	     -o-animation: oploadbar-stripes 1s linear infinite;
+		-ms-animation: oploadbar-stripes 1s linear infinite;
+		 -o-animation: oploadbar-stripes 1s linear infinite;
 			animation: oploadbar-stripes 1s linear infinite;
 }
 

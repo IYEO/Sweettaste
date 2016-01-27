@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -333,14 +333,16 @@ if(!HIKASHOP_BACK_RESPONSIVE) { ?>
 							<td class="key" valign="top">
 								<?php echo JText::_('ADD_TO_WISHLIST_BUTTON');?>
 							</td>
-							<td>
-								<?php if(hikashop_level(1)){
-								if(!isset($this->element->hikashop_params['add_to_wishlist'])) $this->element->hikashop_params['add_to_wishlist'] = '-1';
+							<td><?php
+								if(hikashop_level(1)){
+									if(!isset($this->element->hikashop_params['add_to_wishlist']))
+										$this->element->hikashop_params['add_to_wishlist'] = '-1';
 									echo JHTML::_('hikaselect.radiolist', $arr, $this->control.'[add_to_wishlist]' , '', 'value', 'text', @$this->element->hikashop_params['add_to_wishlist']);
 								}else{
 									$this->element->hikashop_params['add_to_wishlist'] = 0;
 									echo hikashop_getUpgradeLink('essential');
-								} ?>							</td>
+								}
+							?></td>
 						</tr>
 						<tr>
 							<td class="key" valign="top">

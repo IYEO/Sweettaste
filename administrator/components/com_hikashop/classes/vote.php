@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -15,401 +15,315 @@ class hikashopVoteClass extends hikashopClass {
 	var $votePublished = array('vote_published'=>'vote_id');
 	var $paginationStart = 0;
 	var $paginationLimit = 50;
+	var $error = array('code' => '', 'message' => '');
+	var $values = array('average' => '', 'total' => '');
 
-	function save(&$element, $forceBackend = false) {
-		$app = Jfactory::getApplication();
-		if($app->isAdmin() || $forceBackend) {
-			return $this->saveBackend($element);
-		}
-		return $this->saveFrontend($element);
-	}
-
-	function saveBackend(&$element) {
-		$app = JFactory::getApplication();
-		$db	= JFactory::getDBO();
-		JPluginHelper::importPlugin('hikashop');
-		$dispatcher = JDispatcher::getInstance();
-		$currentElement = new stdClass();
-
-		if(!empty($element->vote_id) && empty($element->vote_type)) {
-			$db->setQuery('SELECT vote_type, vote_ref_id FROM '.hikashop_table('vote').' WHERE vote_id = '.$element->vote_id);
-			$db_vote = $db->loadObject();
-			$element->vote_type = $db_vote->vote_type;
-			if(empty($element->vote_ref_id))
-				$element->vote_ref_id = $db_vote->vote_ref_id;
-
-			$vote_type = $db_vote->vote_type;
-		} else {
-			$vote_type = @$element->vote_type;
-		}
-
-		if($element->vote_id == 0) {
-			if(empty($element->vote_ref_id)) {
-				$app = JFactory::getApplication();
-				$app->enqueueMessage(JText::_('VOTE_ENTER_ITEM_ID'), 'message');
-				return false;
-			}
-
-			if($element->vote_type == 'product') {
-				$db->setQuery('SELECT product_id FROM '.hikashop_table(''.$element->vote_type.'').' WHERE product_id = '.$element->vote_ref_id.' AND product_parent_id = 0');
-				$currentElement = $db->loadResult();
-			} else {
-				$do = true;
-				$dispatcher->trigger('onBeforeVoteCreate', array( &$element, &$do, &$currentElement ) );
-				if(!$do){
-					return false;
-				}
-			}
-			if(!$currentElement) {
-				$app = JFactory::getApplication();
-				$app->enqueueMessage(JText::_('WRONG_ITEM_ID'), 'message');
-				return false;
-			}
-		} else {
-			$do = true;
-			$dispatcher->trigger('onBeforeVoteUpdate', array( &$element, &$do, &$currentElement ) );
-			if(!$do){
-				return false;
-			}
-		}
-
-		$vote_id = $element->vote_id;
-		$new_published = $element->vote_published;
-		$new_rating = isset($element->vote_rating)?$element->vote_rating:'0';
-		if($vote_id == 0) {
-			$vote_ref_id = $element->vote_ref_id;
-		} else {
-			$results = $this->get($vote_id);
-			$old_rating = $results->vote_rating;
-			$vote_ref_id = $results->vote_ref_id;
-			$old_published = $results->vote_published;
-		}
-
-		$status = parent::save($element);
-		if($status && ($element->vote_id != 0 || ($element->vote_id == 0 && (int)$new_rating != 0))){
-			if($vote_type == 'product') {
-				$typeClass = hikashop_get('class.product');
-				$results = $typeClass->get($vote_ref_id);
-				$average_score = $results->product_average_score;
-				$total_vote = $results->product_total_vote;
-			} else {
-				if(!isset($currentElement->average_score) || !isset($currentElement->total_vote)) {
-					return false;
-				}
-				$average_score = $currentElement->average_score;
-				$total_vote = $currentElement->total_vote;
-			}
-
-			if($vote_id == '0'){ //new vote (only backend vote)
-				if($new_published == 1){
-					$average_score = (($average_score * $total_vote)+$new_rating)/($total_vote + 1);
-					$total_vote = ($total_vote + 1);
-				}
-			}else if($old_published == '0'){ //Published - Unpublished
-				if($new_published == 1 && $old_rating != 0){ //on publie
-					if($new_rating == 0){$new_rating = $old_rating;}
-					$average_score = (($average_score * $total_vote)+$new_rating)/($total_vote + 1);
-					$total_vote = ($total_vote + 1);
-				}
-			}else{ // Save
-				if($new_rating != '0' || $new_rating != ''){
-					if($old_published == 1){
-						if($new_published == 0){
-							if($old_rating != 0){ //update average & total - 1
-								if($total_vote - 1 == 0){
-									$average_score = 0; $total_vote = 0;
-								}else{
-									$average_score = (($average_score * $total_vote)-$old_rating)/($total_vote - 1);
-									$total_vote = ($total_vote - 1);
-								}
-							}
-						}else{
-							if($old_rating != 0 && $new_rating == 0){ //update average & total - 1
-								if($total_vote - 1 == 0){
-									$average_score = 0; $total_vote = 0;
-								}else{
-									$average_score = (($average_score * $total_vote)-$old_rating)/($total_vote - 1);
-									$total_vote = ($total_vote - 1);
-								}
-							}else if($old_rating != 0 && $new_rating != 0){ //update average
-								$average_score = (($average_score * $total_vote)-$old_rating)/($total_vote - 1);
-								$average_score = (($average_score * ($total_vote - 1))+$new_rating)/$total_vote;
-							}else if($old_rating == 0 && $new_rating != 0){ //update average & total + 1
-								$average_score = (($average_score * $total_vote)+$new_rating)/($total_vote + 1);
-								$total_vote = ($total_vote + 1);
-							}
-						}
-					}else{
-						if($new_published == 1 && $new_rating != 0){ //update average & total +1
-							$average_score = (($average_score * $total_vote)+$new_rating)/($total_vote + 1);
-							$total_vote = ($total_vote + 1);
-						}
-					}
-				}
-			}
-
-			$element->average_score = $average_score;
-			$element->total_vote = $total_vote;
-
-			$type = new stdClass();
-			if($vote_type == 'product'){
-				$type->product_id = (int)$vote_ref_id;
-				$type->product_average_score = strip_tags($average_score);
-				$type->product_total_vote = strip_tags($total_vote);
-				$typeClass->save($type,true);
-			}
-
-			$dispatcher->trigger('onAfterVoteUpdate', array( &$element ) );
-		}
-		return $status;
-	}
-
-	function saveFrontend(&$element) {
-		$db = JFactory::getDBO();
+	function saveUseful(&$element){
 		$config = hikashop_config();
-		$user_ip = hikashop_getIP();
-		$date = time();
-
-		if(empty($element->user_id) || (int)$element->user_id == 0)
-			$element->user_id = $user_ip;
-
-		if(empty($element->vote_type))
-			$element->vote_type = 'product';
-
-		JPluginHelper::importPlugin( 'hikashop' );
-		$dispatcher = JDispatcher::getInstance();
-		$do = true;
-		$currentElement = new stdClass();
-		$dispatcher->trigger('onBeforeVoteCreate', array( &$element, &$do, &$currentElement ) );
-		if(!$do){
+		if($config->get('useful_rating',0) == 0){
+			$this->error = array('code' => '505020', 'message' => JText::_('HIKA_VOTE_USEFUL_RATING_DISABLED'));
 			return false;
 		}
 
-		$vElement = new stdClass();
-		$vElement->vote_ref_id = (int)$element->vote_ref_id;
-		$vElement->vote_type = strip_tags($element->vote_type);
-		$vElement->vote_user_id = strip_tags($element->user_id);
-		$vElement->vote_pseudo = strip_tags(@$element->pseudo_comment);
-		$vElement->vote_ip = strip_tags($user_ip);
-		$vElement->vote_email = strip_tags(@$element->email_comment);
-		$vElement->vote_date = $date;
-
-		$comment_by_person_by_product = $config->get('comment_by_person_by_product');
-		$send_email = $config->get('email_each_comment');
-		$vote_if_bought = ($config->get('access_vote', 0) == 'buyed');
-
-
-		if($vote_if_bought == 1 && $vElement->vote_type == 'product') {
-			$purchased = $this->hasBought($vElement->vote_ref_id,$element->user_id);
+		$user_id = hikashop_loadUser();
+		if($config->get('register_note_comment',1) == 1 && is_null($user_id)){
+			$this->error = array('code' => '505021', 'message' => JText::_('HIKA_VOTE_MUST_BE_REGISTERED_FOR_USEFUL_RATING'));
+			return false;
 		}
 
-		if($element->hikashop_vote_type == 'useful') {
-			$useful = JRequest::getVar('value', 0, 'default', 'int');
-			$vote_id = JRequest::getVar('hikashop_vote_id', 0, 'default', 'int');
-			$element->user_id = JRequest::getVar('hikashop_vote_user_id', 0, 'default', 'int');
-			if(empty($element->user_id))
-				$element->user_id = $user_ip;
-
-			$already_vote = 0;
-			$useful_old	= 0;
-
-			$query = 'SELECT vote_user_useful FROM '.hikashop_table('vote_user').' WHERE vote_user_id = '.(int)$vote_id.' AND vote_user_user_id = '.$db->quote($element->user_id).'';
-			$db->setQuery($query);
-			$already_vote = $db->loadResult();
-
-			if($already_vote > 0) {
-				echo '2';
-				exit;
-			}
-
-			$voteClass = hikashop_get('class.vote');
-			$results = $voteClass->get((int)$vote_id);
-			$useful_old = $results->vote_useful;
-
-			if($useful == 1) {
-				 $useful_new = ($useful_old + 1);
-			} else {
-				$useful_new = ($useful_old - 1);
-			}
-			$vElement->vote_id = (int)$vote_id;
-			$vElement->vote_useful = strip_tags($useful_new);
-
-			$useful = new stdClass();
-			$useful->vote_id = (int)$vote_id;
-			$useful->vote_useful = (int)$useful_new;
-			$updated = parent::save($useful);
-
-			if($updated) {
-				$dispatcher->trigger('onAfterVoteUpdate', array( &$element, $useful ) );
-
-				$query = 'INSERT INTO '.hikashop_table('vote_user').' (vote_user_id,vote_user_user_id,vote_user_useful) VALUES ('.(int)$vote_id.','.$db->quote($element->user_id).',1)';
-				$db->setQuery($query);
-				$db->query();
-				if( $db->getAffectedRows() > 0 ) {
-					echo '1';
-				}
-			}
-			exit;
+		$voteClass = hikashop_get('class.vote');
+		$vote = $voteClass->get($element->vote_id);
+		if($element->value == '1')
+			$vote->vote_useful++;
+		else
+			$vote->vote_useful--;
+		$success = parent::save($vote);
+		if(!$success){
+			$this->error = array('code' => '505016', 'message' => JText::_('HIKA_VOTE_ERROR_SAVING_DATA'));
+			return false;
 		}
 
-		if($vote_if_bought && !$purchased) {
-			echo '3';
-			exit;
-		}
-
-		if($vElement->vote_type == 'product'){
-			$typeClass = hikashop_get('class.product');
-			$results = $typeClass->get($vElement->vote_ref_id);
-			$hikashop_vote_average_score = $results->product_average_score;
-			$hikashop_vote_total_score = $results->product_total_vote;
-		} else {
-			if(!isset($currentElement->average_score) || !isset($currentElement->total_vote)) {
-				echo '4';
-				exit;
-			}
-			$hikashop_vote_average_score = $currentElement->average_score;
-			$hikashop_vote_total_score = $currentElement->total_vote;
-		}
-
-		$hikashop_vote_total_score_new	= ($hikashop_vote_total_score + 1);
-		$hikashop_vote_average_score_new = ((($hikashop_vote_average_score * $hikashop_vote_total_score)+$element->vote)/($hikashop_vote_total_score_new));
-
-		$vote_id = '';
-		$vote_old =  '';
-
-		$filters = array('vote_type = '.$db->quote($vElement->vote_type),'vote_ref_id = '.(int)$vElement->vote_ref_id,'vote_rating != 0');
-
-		if(empty($element->user_id) || $element->user_id == $user_ip){
-			$filters[] = 'vote_ip = '.$db->quote($user_ip);
-			$filters[] = 'vote_user_id = \'\'';
+		if(is_null($user_id))
+			$user_id = hikashop_getIP();
+		$db = JFactory::getDBO();
+		$db->setQuery('INSERT INTO '.hikashop_table('vote_user').' VALUES ('.(int)$element->vote_id.','.$db->quote($user_id).',1) ');
+		$success = $db->query();
+		if(!$success){
+			$this->error = array('code' => '505016', 'message' => JText::_('HIKA_VOTE_ERROR_SAVING_DATA'));
+			return false;
 		}else{
-			$filters[] = 'vote_user_id = '.$db->quote($element->user_id);
+			$this->error = array('code' => '200', 'message' => JText::_('THANK_FOR_VOTE'));
+			return false;
 		}
+	}
 
-		$query = 'SELECT * FROM '.hikashop_table('vote').' WHERE '.implode(' AND ',$filters);
-		$db->setQuery($query);
-		$result = $db->loadObject();
-		if(!empty($result)){
-			$vote_id = $result->vote_id;
-			$vote_old = $result->vote_rating;
-			$published = $result->vote_published;
-		}
-
-		$nb_comment = $this->commentPassed($vElement->vote_type,$vElement->vote_ref_id,$element->user_id);
-
-		$vote_mode = $config->get('enable_status_vote', 0);
-
-		if($element->hikashop_vote_type == 'vote') {
-			$vElement->vote_rating = strip_tags($element->vote);
-			$vElement->vote_comment = '';
-
-			if(!empty($vote_id)){
-				$vElement->vote_id = $vote_id;
-				if(!empty($hikashop_vote_total_score))
-					$hikashop_vote_average_score_new = (((($hikashop_vote_average_score * $hikashop_vote_total_score) - $vote_old) + $element->vote) / $hikashop_vote_total_score);
-
-				$updated = parent::save($vElement);
-				if($updated && $published == 1) {
-					if($vElement->vote_type == 'product') {
-						$type = new stdClass();
-						$type->product_id = (int)$vElement->vote_ref_id;
-						$type->product_average_score = $hikashop_vote_average_score_new;
-						$type->product_total_vote = (int)$hikashop_vote_total_score;
-
-						$typeClass->save($type, true);
-					}
-
-					$element->average_score = $hikashop_vote_average_score_new;
-					$element->total_vote = (int)$hikashop_vote_total_score;
-
-					$dispatcher->trigger('onAfterVoteUpdate', array( &$element ) );
-				}
-				echo '1';
-			} else {
-				$inserted = parent::save($vElement);
-				if($inserted){
-					if($vElement->vote_type == 'product') {
-						$type = new stdClass();
-						$type->product_id = (int)$vElement->vote_ref_id;
-						$type->product_average_score = $hikashop_vote_average_score_new;
-						$type->product_total_vote = (int)$hikashop_vote_total_score_new;
-
-						$typeClass->save($type, true);
-					}
-
-					$element->average_score = $hikashop_vote_average_score_new;
-					$element->total_vote = (int)$hikashop_vote_total_score_new;
-
-					$dispatcher->trigger('onAfterVoteUpdate', array( &$element ) );
-				}
-				echo '2';
-			}
-			exit;
-		}
-
-		jimport('joomla.filter.filterinput');
+	function checkVote(&$element){
 		$safeHtmlFilter = JFilterInput::getInstance(null, null, 1, 1);
-		$config = hikashop_config();
-		$vElement->vote_published = $config->get('published_comment', 0);
 
-		if($element->hikashop_vote_type == 'both') {
-			$vElement->vote_rating = strip_tags($element->vote);
-			$vElement->vote_comment = $safeHtmlFilter->clean($element->comment, 'string');
-			if($nb_comment < $comment_by_person_by_product) {
-				$inserted = parent::save($vElement);
-				if($inserted) {
-					if($vElement->vote_type == 'product' && $vElement->vote_published) {
-						$type = new stdClass();
-						$type->product_id = (int)$vElement->vote_ref_id;
-						$type->product_average_score = $hikashop_vote_average_score_new;
-						$type->product_total_vote = (int)$hikashop_vote_total_score_new;
-
-						$typeClass->save($type,true);
-					}
-
-					$element->average_score = $hikashop_vote_average_score_new;
-					$element->total_vote = (int)$hikashop_vote_total_score;
-
-					$dispatcher->trigger('onAfterVoteUpdate', array( &$element ) );
-
-					if(!empty($send_email)) {
-						$vote_id = $db->insertid();
-						$this->sendNotifComment($vote_id, strip_tags($element->comment),(int)$vElement->vote_ref_id,(int)$element->user_id, strip_tags($element->pseudo_comment), strip_tags($element->email_comment), $vElement->vote_type);
-					}
-					echo '1';
-				} else {
-					echo '0';
-				}
-			} else {
-				echo '2';
-			}
-			exit;
+		if(empty($element->vote_ref_id) || (int)$element->vote_ref_id == 0){
+			$this->error = array('code' => '505001', 'message' => JText::_('HIKA_VOTE_ITEM_ID_MISSING'));
+			return false;
 		}
 
-		if($element->hikashop_vote_type == 'comment') {
+		if((!isset($element->vote_type) || empty($element->vote_type)) && (!$this->app->isAdmin() || $this->app->isAdmin() && $element->vote_id == 0)){
+			$this->error = array('code' => '505015', 'message' => JText::_('HIKA_VOTE_TYPE_MISSING'));
+			return false;
+		}
 
+		$allowedVoteType = $this->config->get('enable_status_vote','nothing');
+		$element->vote_rating = (isset($element->vote_rating))?$element->vote_rating:0;
+		$element->vote_comment = trim($safeHtmlFilter->clean(strip_tags((isset($element->vote_comment))?$element->vote_comment:''), 'string'));
+		$correctRating = 1;
+		if((int)$element->vote_rating == 0 || (int)$element->vote_rating > $this->config->get('vote_star_number',5))
+			$correctRating = 0;
 
-			$vElement->vote_rating = '0';
-			$vElement->vote_comment = $safeHtmlFilter->clean($element->comment, 'string');
-			if($nb_comment < $comment_by_person_by_product) {
-				$inserted = parent::save($vElement);
-				$vote_id = 0;
-				if($inserted) {
-					$dispatcher->trigger('onAfterVoteUpdate', array( &$element ) );
+		$user = hikashop_loadUser(true);
+		if($this->config->get('access_vote','public') == 'registered' && is_null($user)){
+			$this->error = array('code' => '505017', 'message' => JText::_('ONLY_REGISTERED_CAN_VOTE'));
+			return false;
+		}
 
-					if($send_email != '') {
-						$vote_id = $db->insertid();
-						$this->sendNotifComment($vote_id, strip_tags($element->comment),(int)$vElement->vote_ref_id,(int)$element->user_id, strip_tags($element->pseudo_comment), strip_tags($element->email_comment), $vElement->vote_type);
+		if($this->app->isAdmin()){
+			$element->vote_user_id = hikashop_getIP();
+		}else{
+			if(!is_null($user)){
+				$element->vote_user_id = (int)$user->user_id;
+				$element->vote_pseudo = $user->username;
+				$element->vote_email = $user->email;
+			}else{
+				$element->vote_user_id = hikashop_getIP();
+				$element->vote_pseudo = trim($safeHtmlFilter->clean(strip_tags((isset($element->vote_pseudo))?$element->vote_pseudo:''), 'string'));
+
+				if(!$correctRating && !empty($element->vote_comment)){
+					if(!$element->vote_pseudo){
+						$this->error = array('code' => '505011', 'message' => JText::_('HIKA_VOTE_PSEUDO_REQUIRED'));
+						return false;
 					}
-					echo '1';
-				} else {
-					echo '0';
+
+					if($this->config->get('email_comment','1')){
+						$element->vote_email = trim($safeHtmlFilter->clean(strip_tags((isset($element->vote_email))?$element->vote_email:''), 'string'));
+						if(!$element->vote_email || empty($element->vote_email)){
+							$this->error = array('code' => '505012', 'message' => JText::_('HIKA_VOTE_EMAIL_REQUIRED'));
+							return false;
+						}
+					}
 				}
-			} else {
-				echo '2';
+			}
+
+			if($this->config->get('access_vote','public') != 'public' && is_null($user)){
+				$this->error = array('code' => '505002', 'message' => JText::_('HIKA_VOTE_REGISTRATION_REQUIRED'));
+				return false;
+			}
+
+			if($element->vote_type == 'product' && $this->config->get('access_vote','public') == 'buyed'){
+				$hasBought = $this->hasBought($element->vote_ref_id, $user->user_id);
+				if(!$hasBought){
+					$this->error = array('code' => '505003', 'message' => JText::_('HIKA_VOTE_ITEM_BOUGHT_REQUIRED'));
+					return false;
+				}
 			}
 		}
-		exit;
+
+		if(in_array($allowedVoteType,array('vote','two')) && $element->vote_rating != 0)
+			$element->vote_comment = '';
+
+		if($allowedVoteType == 'nothing'){
+			$this->error = array('code' => '505005', 'message' => JText::_('HIKA_VOTE_NOT_ALLOWED'));
+			return false;
+		}
+
+		if($allowedVoteType == 'vote' && !$correctRating){
+			$this->error = array('code' => '505006', 'message' => JText::_('HIKA_VOTE_WRONG_RATING_VALUE'));
+			return false;
+		}
+
+		if($allowedVoteType == 'comment' && $element->vote_comment == ''){
+			$this->error = array('code' => '505007', 'message' => JText::_('HIKA_VOTE_EMPTY_COMMENT'));
+			return false;
+		}
+
+		if($allowedVoteType == 'two' && $element->vote_comment == '' && !$correctRating){
+			$this->error = array('code' => '505008', 'message' => JText::_('HIKA_VOTE_WRONG_VOTE_COMMENT_VALUE'));
+			return false;
+		}
+
+		if($allowedVoteType == 'both' && ($element->vote_comment == '' || !$correctRating)){
+			$this->error = array('code' => '505009', 'message' => JText::_('HIKA_VOTE_MISSING_VOTE_COMMENT_VALUE'));
+			return false;
+		}
+
+		if(!empty($element->vote_comment) && (!isset($element->vote_id) || $element->vote_id == 0)){
+			$nbComment = $this->commentPassed($element->vote_type, $element->vote_ref_id, $element->vote_user_id);
+			if(in_array($allowedVoteType,array('comment','two','both')) && !empty($element->vote_comment) && $nbComment >= $this->config->get('comment_by_person_by_product','30')){
+				$this->error = array('code' => '505010', 'message' => JText::_('HIKA_VOTE_LIMIT_REACHED'));
+				return false;
+			}
+		}
+		return true;
+	}
+
+	function save(&$element){
+		$this->app = Jfactory::getApplication();
+		$this->config = hikashop_config();
+		$dispatcher = JDispatcher::getInstance();
+		$db = JFactory::getDBO();
+
+		if(isset($element->vote_ref_id) || !$this->app->isAdmin())
+			$this->checkVote($element);
+
+		if(!empty($this->error['code']))
+			return false;
+
+		$element->vote_date = time();
+		if(!$this->app->isAdmin()){
+			$element->vote_ip = hikashop_getIP();
+			if(!empty($element->vote_comment) && !$this->config->get('published_comment','1'))
+				$element->vote_published = 0;
+			else
+				$element->vote_published = 1;
+		}
+
+		$oldElement = new stdClass();
+		if($this->app->isAdmin()){
+			if($element->vote_id != '0'){
+				$query = 'SELECT * FROM '.hikashop_table('vote').' WHERE vote_id = '.(int)$element->vote_id;
+				$db->setQuery($query);
+				$result = $db->loadObject();
+				if(!empty($result)){
+					$oldElement = $result;
+					if(!isset($element->vote_ref_id)){
+						$published = $element->vote_published;
+						$element = clone($result);
+						$element->vote_published = $published;
+					}
+					$element->vote_type = $result->vote_type;
+				}else{
+					$this->error = array('code' => '505018', 'message' => JText::_('HIKA_VOTE_MISSING_ENTRY'));
+					return false;
+				}
+			}
+		}elseif($element->vote_rating != 0 && !in_array($this->config->get('enable_status_vote','nothing'), array('nothing','comment','both'))){ //If it is only a rating
+			$result = $this->getUserRating($element->vote_type,$element->vote_ref_id,$element->vote_user_id);
+			if(!empty($result)){
+				$element->vote_id = $result->vote_id;
+				$element->vote_published = $result->vote_published;
+				$oldElement = $result;
+			}else{
+				$element->vote_id = 0;
+			}
+		}else{
+			$element->vote_id = 0;
+		}
+
+		$new = false;
+		if($element->vote_id == 0)
+			$new = true;
+
+		if($new)
+			$dispatcher->trigger('onBeforeVoteCreate', array( &$oldElement, &$do, &$element ) );
+		else
+			$dispatcher->trigger('onBeforeVoteUpdate', array( &$oldElement, &$do, &$element ) );
+
+		$success = parent::save($element);
+		if(!$success){
+			$this->error = array('code' => '505016', 'message' => JText::_('HIKA_VOTE_ERROR_SAVING_DATA'));
+			return false;
+		}
+
+		$return_data = array('average' => 0, 'total' => 0);
+		if($element->vote_type != 'product') {
+			$db = JFactory::getDBO();
+			$query = 'SELECT AVG(v.vote_rating) AS average, COUNT(v.vote_id) AS total FROM '.hikashop_table('vote').' AS v '.
+				' WHERE vote_ref_id = ' . (int)$element->vote_ref_id .' AND vote_type = ' . $db->Quote($element->vote_type).' AND v.vote_rating != 0';
+			$db->setQuery($query);
+			$data = $db->loadObject();
+			if($data->total == 0){
+				$return_data['average'] = $element->vote_rating;
+				$return_data['total'] = 1;
+			}else{
+				if(!$new){
+					$return_data['average'] = (($data->total * $data->average) - $oldElement->vote_rating + $element->vote_rating) / $data->total;
+					$return_data['total'] = $data->total;
+
+				}else{
+					$return_data['average'] = (($data->total * $data->average) + $element->vote_rating) / ($data->total + 1);
+					$return_data['total'] = $data->total++;
+				}
+			}
+		}
+
+		if(!$new){
+			$dispatcher->trigger('onAfterVoteCreate', array( &$element, &$return_data ) );
+			$this->error = array('code' => '1', 'message' => JText::_('VOTE_UPDATED'));
+		}else{
+			$dispatcher->trigger('onAfterVoteUpdate', array( &$element, &$return_data ) );
+			$this->error = array('code' => '2', 'message' => JText::_('THANK_FOR_VOTE'));
+		}
+
+		$itemClass = hikashop_get('class.'.$element->vote_type);
+		if($itemClass === null)
+			return true;
+
+		if(is_object($itemClass) && !empty($itemClass)){
+			$data = $itemClass->get($element->vote_ref_id);
+			if(isset($data->alias))
+				unset($data->alias);
+		}else{
+			$data = new stdClass();
+		}
+
+		if($element->vote_rating == 0)
+			return false;
+
+		if($element->vote_type == 'product') {
+			$newValues = $this->updateAverage($element, $oldElement, $data);
+			$return_data = array('average' => $newValues->product_average_score, 'total' => $newValues->product_total_vote);
+		}
+
+		$this->values = $return_data;
+
+		$success = $itemClass->save($data);
+
+		if(!$success){
+			$this->error = array('code' => '505013', 'message' => JText::_('HIKA_VOTE_ERROR_SAVING_ITEM_DATA'));
+			return false;
+		}
+		return true;
+	}
+
+	function updateAverage(&$element, $oldElement, &$data){
+		$addVote = false;
+		if(isset($oldElement->vote_published) && $oldElement->vote_published == '0' && $element->vote_published == '1'){
+			if($element->vote_rating == 0)
+				$element->vote_rating = $oldElement->vote_rating;
+			if($element->vote_rating == 0)
+				return $data;
+			$addVote = true;
+		}
+		if($element->vote_id == '0' || $addVote){
+			$data->product_average_score = (($data->product_total_vote * $data->product_average_score) + $element->vote_rating) / ($data->product_total_vote + 1);
+			$data->product_total_vote = $data->product_total_vote + 1;
+			return $data;
+		}
+		if(isset($oldElement->vote_published) && $oldElement->vote_published == '1' && $element->vote_published == '0'){
+			if($oldElement->vote_rating == 0)
+				return $data;
+			if($data->product_total_vote - 1 == 0){
+				$data->product_average_score = $data->product_total_vote = 0;
+				return $data;
+			}
+			$data->product_average_score = (($data->product_total_vote * $data->product_average_score) - $oldElement->vote_rating) / ($data->product_total_vote - 1);
+			$data->product_total_vote = $data->product_total_vote - 1;
+			return $data;
+		}
+		if($element->vote_published == '1'){
+			if($data->product_total_vote == 0){
+				$data->product_average_score = $data->product_total_vote = 0;
+				return $data;
+			}
+			$data->product_average_score = (($data->product_total_vote * $data->product_average_score) - $oldElement->vote_rating + $element->vote_rating) / $data->product_total_vote;
+			return $data;
+		}
 	}
 
 	function delete(&$elements){
@@ -427,60 +341,28 @@ class hikashopVoteClass extends hikashopClass {
 		$results = $db->loadObjectList();
 
 		foreach($results as $result) {
-			$vote_rating = $result->vote_rating;
-			$vote_ref_id = $result->vote_ref_id;
-			$vote_published = $result->vote_published;
-
 			if($result->vote_type == 'product'){
-				$productClass = hikashop_get('class.'.$result->vote_type);
-				$resultVote = $productClass->get($vote_ref_id);
-				$average_score = @$resultVote->product_average_score;
-				$total_vote = @$resultVote->product_total_vote;
-			} else if(isset($currentElements[(int)$result->vote_id])) {
-				$element = $currentElements[(int)$result->vote_id];
-				if(!isset($element->average_score) || !isset($element->total_vote)) {
-					return false;
-				}
-				$average_score = $element->average_score;
-				$total_vote = $element->total_vote;
-			} else {
-				$average_score = 0;
-				$total_vote = 0;
-				$element = null;
+				$dataClass = hikashop_get('class.'.$result->vote_type);
+				$data = $dataClass->get($result->vote_ref_id);
 			}
 
 			$status = parent::delete($result->vote_id);
-			if($status && isset($element) && $element !== null) {
+			if($status && isset($data) && $data !== null) {
 				$query = 'DELETE FROM '.hikashop_table('vote_user').' WHERE vote_user_id = '.(int)$result->vote_id.' ';
 				$db->setQuery($query);
 				$db->query();
-				if($vote_published == 1 && $vote_rating != 0) {
-					if($total_vote - 1 == 0) {
-						$average_score = 0;
-						$total_vote = 0;
-					}else{
-						$average_score = ((($average_score * $total_vote)-$vote_rating)/($total_vote - 1));
-						$total_vote	= ($total_vote - 1);
-					}
 
-					$element->vote_id = (int)$result->vote_id;
-					$element->vote_ref_id = (int)$result->vote_ref_id;
-					$element->average_score = $average_score;
-					$element->total_vote = $total_vote;
-
-					if($result->vote_type == 'product'){
-						$product = new stdClass();
-						$product->product_id = (int)$vote_ref_id;
-						$product->product_average_score = $average_score;
-						$product->product_total_vote = (int)$total_vote;
-
-						$productClass->save($product,true);
-					}
+				if($result->vote_type == 'product'){
+					$oldResult = clone($result);
+					$result->vote_published = 0;
+					if($result->vote_rating != '0')
+						$this->updateAverage($result, $oldResult, $data);
+					unset($data->alias);
+					$dataClass->save($data,true);
 				}
-
-				$dispatcher->trigger('onAfterVoteDelete', array(&$element) );
 			}
 		}
+		$dispatcher->trigger('onAfterVoteDelete', array(&$elements) );
 		return true;
 	}
 
@@ -507,228 +389,29 @@ class hikashopVoteClass extends hikashopClass {
 			return true;
 		$done = true;
 
-		$current_url = hikashop_currentURL();
-
-		$baseUrl = hikashop_completelink('vote&task=save&'.hikashop_getFormToken().'=1');
-		$ajaxUrl = hikashop_completelink('vote&task=save',true,true);
-		if(strpos($baseUrl, '?') !== false)
-			$baseUrl .= '&';
-		else
-			$baseUrl .= '?';
+		hikashop_loadJsLib('tooltip');
 
 		$config = hikashop_config();
-		$email_comment = $config->get('email_comment', 0);
-
-		if($config->get('enable_status_vote', 0) == 'both')
-			$vote_comment = 1;
-		else
-			$vote_comment = 0;
-
-		$note_comment = $config->get('register_note_comment', 0);
-		if($config->get('access_vote', 0) == 'buyed' || $config->get('access_vote', 0) == 'registered')
-			$hikashop_vote_con_req = 1;
-		else
-			$hikashop_vote_con_req = 0;
+		$voteType = 0;
+		if($config->get('enable_status_vote','0') == 'both')
+			$voteType = 1;
 
 		$js = '
-function trim(myString){
-	myString = myString.replace(/(^\s|&)+/g,\'\').replace(/\s+$/g,\'\').replace(/\\n/g,\'<br \/>\');
-	return myString;
-}
+hikaVote.setOptions({
+	itemId : "'.hikashop_getCID().'",
+	urls : {
+		save : "'.hikashop_completelink('vote&task=save',true,true).'",
+		show : "'.hikashop_completelink('vote&task=show',true,true).'"
+	},ctrl : "'.JRequest::getVar('ctrl','product').'",
+	both : "'.$voteType.'"
+});
 
-function hikashop_vote_useful(hikashop_vote_id,val){
-	var hikashop_vote_user_id = "";
-	if(document.getElementById("hikashop_vote_user_id")) hikashop_vote_user_id = document.getElementById("hikashop_vote_user_id").value;
-	var hikashop_vote_note_comment 	= ' . $note_comment . ';
-	if((hikashop_vote_note_comment == 1 && hikashop_vote_user_id != "") || hikashop_vote_note_comment == 0){
-		data = "hikashop_vote_type=useful";
-		data += "&value=" + encodeURIComponent(val);
-		data += "&hikashop_vote_id=" + encodeURIComponent(hikashop_vote_id);
-		data += "&hikashop_vote_user_id=" + encodeURIComponent(hikashop_vote_user_id);
-		window.Oby.xRequest("'.$ajaxUrl.'", {mode: "POST", data: data}, function(xhr) {
-			var el = document.getElementById(hikashop_vote_id);
-			if(xhr.responseText == "1"){el.innerHTML = " ' . JText::_('THANK_FOR_VOTE', true) . '";}
-			else if(xhr.responseText == "3"){el.innerHTML = " ' . JText::_('ALREADY_VOTE_USEFUL', true) . '";}
-			else{el.innerHTML = " ' . JText::_('VOTE_ERROR', true) . '";}
-		});
-		setTimeout("document.location=\''.$current_url.'\'",2250);
-	}
-	else{
-		document.getElementById(hikashop_vote_id).innerHTML = " ' . JText::_('ONLY_REGISTERED_CAN_VOTE', true) . '";
-		setTimeout("document.getElementById(\'hikashop_vote_id\').innerHTML = \'\'",2250);
-	}
-}
-
-function hikashop_send_vote(hikashop_vote, from){
-	var re = new RegExp(\'id_(.*?)_hikashop\');
-	var m = re.exec(from);
-	if(m != null){
-		var hikashop_vote_ref_id = "";
-		for (i = 1; i < m.length; i++) {
-			hikashop_vote_ref_id = hikashop_vote_ref_id + m[i] + "\n";
-		}
-	}else{
-		var hikashop_vote_ref_id = document.getElementById("hikashop_vote_ref_id").value;
-	}
-	document.getElementById("hikashop_vote_ok_"+parseInt(hikashop_vote_ref_id)).value = "1";
-	var hikashop_vote_vote_comment 	= ' . $vote_comment . ';
-	var hikashop_vote_con_req		= ' . $hikashop_vote_con_req . ';
-	var hikashop_vote_user_id 		= document.getElementById("hikashop_vote_user_id_"+parseInt(hikashop_vote_ref_id)).value;
-	var vote_type					= document.getElementById("vote_type_"+parseInt(hikashop_vote_ref_id)).value;
-	var div_vote_status				= "hikashop_vote_status_"+parseInt(hikashop_vote_ref_id);
-	if((hikashop_vote_con_req == 1 && hikashop_vote_user_id != "") || hikashop_vote_con_req == 0){
-		if(hikashop_vote_vote_comment == 1){//User must enter a comment to note a product
-			if(from =="hikashop_vote_rating_id"){
-				document.getElementById("hikashop_vote_status_form").innerHTML = " ' . JText::_('LET_COMMENT_TO_VALID_VOTE', true) . '";
-				setTimeout("document.getElementById(\'hikashop_vote_status_form\').innerHTML = \'\'",2250);
-			}else{
-				var el = document.getElementById(div_vote_status);
-				el.innerHTML = " ' . JText::_('LET_COMMENT_TO_VALID_VOTE', true) . '";
-				setTimeout(function(){el.innerHTML = "";},2250);
-			}
-		}
-		else{// Only vote - sending request to saveFrontend() function, and analysing the result, status(thanks, bought, error)
-			if(from =="hikashop_vote_rating_id"){
-				var el = document.getElementById("hikashop_vote_status_form");
-			}else{
-				var el = document.getElementById(div_vote_status);
-			}
-			data = "vote_type=" + encodeURIComponent(vote_type);
-			data += "&hikashop_vote_type=vote";
-			data += "&hikashop_vote=" + encodeURIComponent(hikashop_vote);
-			data += "&hikashop_vote_user_id=" + encodeURIComponent(hikashop_vote_user_id);
-			data += "&hikashop_vote_ref_id=" + encodeURIComponent(hikashop_vote_ref_id);
-			window.Oby.xRequest("'.$ajaxUrl.'", {mode: "POST", data: data}, function(xhr) {
-				if(xhr.responseText == "1"){
-					el.innerHTML = " ' . JText::_('VOTE_UPDATED', true) . '";
-
-					setTimeout(function(){el.innerHTML = "";},2250);
-					resetVotes();
-
-				}
-				else if(xhr.responseText == "2"){el.innerHTML = " ' . JText::_('THANK_FOR_VOTE', true) . '"; }
-				else if(xhr.responseText == "3"){el.innerHTML = " ' . JText::_('MUST_HAVE_BUY_TO_VOTE', true) . '";}
-				else{el.innerHTML = " ' . JText::_('VOTE_ERROR', true) . '";}
-			});
-		}
-	}
-	else{ //The user must be registered to vote
-		if(from =="hikashop_vote_rating_id"){
-			document.getElementById("hikashop_vote_status_form").innerHTML = " ' . JText::_('ONLY_REGISTERED_CAN_VOTE', true) . '";
-			setTimeout("document.getElementById(\'hikashop_vote_status_form\').innerHTML = \'\'",2250);
-		}else{
-			var el = document.getElementById(div_vote_status);
-			el.innerHTML = " ' . JText::_('ONLY_REGISTERED_CAN_VOTE', true) . '";
-			setTimeout(function(){el.innerHTML = "";},2250);
-		}
-	}
-}
-
-function hikashop_send_comment(){ //Action on submit comment
-	var hikashop_vote_ref_id 		= document.getElementById("hikashop_vote_ref_id").value;
-	var hikashop_vote_comment 		= encodeURIComponent(trim(document.getElementById("hikashop_vote_comment").value));
-	var vote_type					= document.getElementById("vote_type_"+parseInt(hikashop_vote_ref_id)).value;
-	var hikashop_vote_ok 			= document.getElementById("hikashop_vote_ok_"+parseInt(hikashop_vote_ref_id)).value;
-	var hikashop_vote_vote_comment 	= ' . $vote_comment . ';
-	var hikashop_vote_con_req		= ' . $hikashop_vote_con_req . ';
-	var email_comment_bool 			= ' . $email_comment . ';
-	var hikashop_vote_user_id 		= document.getElementById("hikashop_vote_user_id_"+parseInt(hikashop_vote_ref_id)).value;
-	var pseudo_comment 				= document.getElementById("pseudo_comment").value;
-	var email_comment				= document.getElementById("email_comment").value;
-	var reg = new RegExp(\'^[a-z0-9]+([_|\.|-]{1}[a-z0-9]+)*@[a-z0-9]+([_|\.|-]{1}[a-z0-9]+)*[\.]{1}[a-z]{2,6}$\', \'i\'); // TEST EMAIL ADDRESS
-	var verif_mail = reg.test(email_comment);
-
-	if (hikashop_vote_user_id != ""){verif_mail = true;}
-	if((hikashop_vote_con_req == 1 && hikashop_vote_user_id != "") || hikashop_vote_con_req == 0){ //if connection not required
-		if(pseudo_comment == "" || (email_comment_bool == 1 && verif_mail == false)){ //if not connected
-			if(pseudo_comment == ""){
-				document.getElementById("hikashop_vote_status_form").innerHTML = "' . JText::_('PSEUDO_REQUIRED', true) . '";
-				setTimeout("document.getElementById(\'hikashop_vote_status_form\').innerHTML = \'\'",2250);
-			}else{
-				document.getElementById("hikashop_vote_status_form").innerHTML = "' . JText::_('EMAIL_INVALID', true) . '";
-				setTimeout("document.getElementById(\'hikashop_vote_status_form\').innerHTML = \'\'",2250);
-			}
-		}else{
-			if(hikashop_vote_vote_comment == 1){ // Save comment & vote.
-				var hikashop_vote = document.getElementById("hikashop_vote_rating_id").value;
-				if(hikashop_vote_comment == "" || hikashop_vote_ok == 0){ // Just show a message
-					document.getElementById("hikashop_vote_status_form").innerHTML = "' . JText::_('VOTE_AND_COMMENT_PLEASE', true) . '";
-					setTimeout("document.getElementById(\'hikashop_vote_status_form\').innerHTML = \'\'",2250);
-				}else{
-					var data = window.Oby.getFormData("hikashop_comment_form");
-					var regEx = /ctrl=(.*?)&/;
-					data = data.replace(regEx,"");
-					var regEx = /task=(.*?)&/;
-					data = data.replace(regEx,"");
-					var regEx = /limitstart=(.*?)&/;
-					data = data.replace(regEx,"");
-					data += "&hikashop_vote_type=both";
-					regEx = /hikashop_vote_ref_id/;
-					if(!regEx.test(data)){
-						data += "&vote_type=" + encodeURIComponent(vote_type);
-						data += "&email_comment=" + encodeURIComponent(email_comment);
-						data += "&pseudo_comment=" + encodeURIComponent(pseudo_comment);
-						data += "&hikashop_vote_user_id=" + encodeURIComponent(hikashop_vote_user_id);
-						data += "&hikashop_vote_ref_id=" + encodeURIComponent(hikashop_vote_ref_id);
-						data += "&hikashop_vote_comment=" + encodeURIComponent(hikashop_vote_comment);
-					}
-					data += "&hikashop_vote=" + encodeURIComponent(hikashop_vote);
-					window.Oby.xRequest("'.$ajaxUrl.'", {mode: "POST", data: data}, function(xhr) {
-						var el = document.getElementById("hikashop_vote_status_form");
-						if(xhr.responseText == "1"){el.innerHTML = " ' . JText::_('THANKS_FOR_PARTICIPATION', true) . '";document.getElementById("hikashop_vote_comment").value="";}
-						else if(xhr.responseText == "3"){el.innerHTML = " ' . JText::_('MUST_HAVE_BUY_TO_VOTE', true) . '";}
-						else if(xhr.responseText == "2"){el.innerHTML = " ' . JText::_('REACH_LIMIT_OF_COMMENT', true) . '";}
-						else{el.innerHTML = " ' . JText::_('VOTE_ERROR', true) . '";}
-					});
-					setTimeout("document.location=\''.$current_url.'\'",2250);
-				}
-			}else if(hikashop_vote_comment != ""){
-				var data = window.Oby.getFormData("hikashop_comment_form");
-				var regEx = /ctrl=(.*?)&/;
-				data = data.replace(regEx,"");
-				var regEx = /task=(.*?)&/;
-				data = data.replace(regEx,"");
-				var regEx = /limitstart=(.*?)&/;
-				data = data.replace(regEx,"");
-				data += "&hikashop_vote_type=comment";
-				regEx = /hikashop_vote_ref_id/;
-				if(!regEx.test(data)){
-					data += "&vote_type=" + encodeURIComponent(vote_type);
-					data += "&email_comment=" + encodeURIComponent(email_comment);
-					data += "&pseudo_comment=" + encodeURIComponent(pseudo_comment);
-					data += "&hikashop_vote_user_id=" + encodeURIComponent(hikashop_vote_user_id);
-					data += "&hikashop_vote_ref_id=" + encodeURIComponent(hikashop_vote_ref_id);
-					data += "&hikashop_vote_comment=" + encodeURIComponent(hikashop_vote_comment);
-				}
-				window.Oby.xRequest("'.$ajaxUrl.'", {mode: "POST", data: data}, function(xhr) {
-					var el = document.getElementById("hikashop_vote_status_form");
-					if(xhr.responseText == "1"){el.innerHTML = " ' . JText::_('THANKS_FOR_COMMENT', true) . '";document.getElementById("hikashop_vote_comment").value="";}
-					else if(xhr.responseText == "3"){el.innerHTML = " ' . JText::_('MUST_HAVE_BUY_TO_VOTE', true) . '";}
-					else if(xhr.responseText == "2"){el.innerHTML = " ' . JText::_('REACH_LIMIT_OF_COMMENT', true) . '";}
-					else{el.innerHTML = " ' . JText::_('VOTE_ERROR', true) . '";}
-				});
-				setTimeout("document.location=\''.$current_url.'\'",2250);
-			}else{
-				document.getElementById("hikashop_vote_status_form").innerHTML = " ' . JText::_('PLEASE_COMMENT', true) . '";
-				setTimeout("document.getElementById(\'hikashop_vote_status_form\').innerHTML = \'\'",2250);
-			}
-		}
-	}else{
-		document.getElementById("hikashop_vote_status_form").innerHTML = " ' . JText::_('ONLY_REGISTERED_CAN_COMMENT', true) . '";
-		setTimeout("document.getElementById(\'hikashop_vote_status_form\').innerHTML = \'\'",2250);
-	}
-}
-';
-		if(!HIKASHOP_PHP5) {
-			$doc =& JFactory::getDocument();
-		} else {
-			$doc = JFactory::getDocument();
-		}
+function hikashop_vote_useful(hikashop_vote_id, val) { return hikaVote.useful(hikashop_vote_id, val); }
+function hikashop_send_comment(){ return hikaVote.vote(0,"hikashop_vote_rating_id"); }
+function hikashop_send_vote(rating, from){ return hikaVote.vote(rating, from); }
+		';
+		$doc = JFactory::getDocument();
 		$doc->addScriptDeclaration("\n<!--\n" . $js . "\n//-->\n");
-		if(!HIKASHOP_J30)
-			JHTML::_('behavior.mootools');
-		else
-			JHTML::_('behavior.framework');
 	}
 
 	function sendNotifComment($vote_id, $comment, $vote_ref_id, $user_id, $pseudo, $email, $vote_type){
@@ -928,6 +611,26 @@ function hikashop_send_comment(){ //Action on submit comment
 		foreach($results as $result) {
 			$nb_comment++;
 		}
+		return $nb_comment;
 	}
 
+	function getUserRating($type, $ref_id, $user_id = ''){
+		if(empty($user_id)){
+			$user_id = hikashop_loadUser();
+			if($user_id == null)
+				$user_id = '';
+		}
+		$db = JFactory::getDBO();
+		$filters = array('vote_type = '.$db->quote($type),'vote_ref_id = '.(int)$ref_id,'vote_rating != 0');
+		if(empty($user_id) || $user_id == hikashop_getIp()){
+			$filters[] = 'vote_ip = '.$db->quote(hikashop_getIp());
+			$filters[] = 'vote_user_id = \'\'';
+		}else{
+			$filters[] = 'vote_user_id = '.$db->quote($user_id);
+		}
+		$query = 'SELECT * FROM '.hikashop_table('vote').' WHERE '.implode(' AND ',$filters);
+		$db->setQuery($query);
+		$result = $db->loadObject();
+		return $result;
+	}
 }

@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -52,6 +52,11 @@ if($this->widget->widget_params->date_group == '%H %j %Y') {
 }
 
 $name=$this->widget->widget_params->content;
+if(JText::_($name) != $name) {
+	$name = JText::_($name);
+}elseif(JText::_('HIKA_'.$name) != $name) {
+	$name = JText::_('HIKA_'.$name);
+}
 
 ?>
 <script language="JavaScript" type="text/javascript">
@@ -85,7 +90,7 @@ function drawChart() {
 	var vis = new google.visualization.<?php echo $chartType; ?>(document.getElementById('<?php echo 'chart_'.$id; ?>'));
 	var options = {
 		legend:'right',
-		title: '<?php echo JText::_('ORDERS'); ?>',
+		title: '<?php echo $name; ?>',
 		legendTextStyle: {color:'#333333'},
 		<?php echo $opt; ?>
 	};

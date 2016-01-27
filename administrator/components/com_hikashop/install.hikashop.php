@@ -16,7 +16,7 @@ function com_install(){
 }
 class hikashopInstall{
 	var $level = 'Starter';
-	var $version = '2.6.0';
+	var $version = '2.6.1';
 	var $freshinstall = true;
 	var $update = false;
 	var $fromLevel = '';
@@ -613,35 +613,16 @@ CREATE TABLE IF NOT EXISTS `#__hikashop_plugin` (
 		}
 
 		if(version_compare($this->fromVersion, '2.6.0', '<')) {
-			$this->db->setQuery("
-CREATE TABLE IF NOT EXISTS `#__hikashop_email_log` (
-	`email_log_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-	`email_log_sender_email` varchar(255) NOT NULL DEFAULT '',
-	`email_log_sender_name` varchar(255) NOT NULL DEFAULT '',
-	`email_log_recipient_email` varchar(255) NOT NULL DEFAULT '',
-	`email_log_recipient_name` varchar(255) NOT NULL DEFAULT '',
-	`email_log_reply_email` varchar(255) NOT NULL DEFAULT '',
-	`email_log_reply_name` varchar(255) NOT NULL DEFAULT '',
-	`email_log_cc_email` varchar(255) NOT NULL DEFAULT '',
-	`email_log_bcc_email` varchar(255) NOT NULL DEFAULT '',
-	`email_log_subject` text NOT NULL,
-	`email_log_altbody` text NOT NULL,
-	`email_log_body` text NOT NULL,
-	`email_log_name` varchar(255) NOT NULL DEFAULT '',
-	`email_log_ref_id` varchar(255) NOT NULL DEFAULT '',
-	`email_log_params` text NOT NULL,
-	`email_log_date` int(10) NOT NULL ,
-	`email_log_published` tinyint(3) unsigned NOT NULL DEFAULT '1',
-	PRIMARY KEY (`email_log_id`)
-) ENGINE=MyISAM");
-			try{$this->db->query();}catch(Exception $e){}
-
 			$this->db->setQuery("ALTER TABLE `#__hikashop_filter` CHANGE `filter_category_id` `filter_category_id` VARCHAR(255) NOT NULL DEFAULT '';");
 			try{$this->db->query();}catch(Exception $e){}
 
 			$this->databaseHelper->addColumns("discount","`discount_site_id` VARCHAR(255) NULL DEFAULT '';");
 
 			$this->databaseHelper->addColumns("order",array("`order_payment_tax` decimal(12,5) NOT NULL DEFAULT '0.00000'"));
+		}
+
+		if(version_compare($this->fromVersion, '2.6.1', '<')) {
+			$this->databaseHelper->addColumns("badge","`badge_access` varchar(255) NOT NULL DEFAULT 'all';");
 		}
 
 	}
@@ -771,6 +752,7 @@ CREATE TABLE IF NOT EXISTS `#__hikashop_email_log` (
 		$allPref['cart_retaining_period_checked'] = '1278664651';
 		$allPref['auto_submit_methods'] = '1';
 		$allPref['clean_cart_when_order_created'] = 'order_confirmed';
+		$allPref['display_add_to_cart_for_free_products'] = '1';
 
 		$border_visible = 1;
 		if(version_compare(JVERSION,'3.0','>=')) {

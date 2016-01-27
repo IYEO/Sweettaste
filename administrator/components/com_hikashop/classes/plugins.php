@@ -1,35 +1,34 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
 ?><?php
-class hikashopPluginsClass extends hikashopClass{
+class hikashopPluginsClass extends hikashopClass {
 
-	function  __construct( $config = array() ){
-		if(version_compare(JVERSION,'1.6','<')){
+	function  __construct( $config = array() ) {
+		if(!HIKASHOP_J16) {
 			$this->toggle = array('published'=>'id');
 			$this->pkeys = array('id');
-		}else{
+		} else {
 			$this->toggle = array('enabled'=>'extension_id');
 			$this->pkeys = array('extension_id');
 		}
 		return parent::__construct($config);
 	}
 
-	function getTable(){
-		if(version_compare(JVERSION,'1.6','<')){
+	function getTable() {
+		if(!HIKASHOP_J16) {
 			return hikashop_table('plugins',false);
-		}else{
-			return hikashop_table('extensions',false);
 		}
+		return hikashop_table('extensions',false);
 	}
 
-	function getMethods($type='shipping',$name='',$shipping='',$currency=''){
+	function getMethods($type = 'shipping', $name = '',$shipping = '', $currency = '') {
 		$where = array();
 		$lf='';
 		$select='*';
@@ -76,7 +75,7 @@ class hikashopPluginsClass extends hikashopClass{
 			}
 			$types = implode(',',$types);
 			if(!HIKASHOP_J16) {
-				$query = 'SELECT *,published as enabled FROM '.hikashop_table('plugins',false).' WHERE element IN ('.$types.') AND folder=\'hikashoppayment\' ORDER BY ordering ASC';
+				$query = 'SELECT *, published as enabled FROM '.hikashop_table('plugins',false).' WHERE element IN ('.$types.') AND folder=\'hikashoppayment\' ORDER BY ordering ASC';
 			} else {
 				$query = 'SELECT * FROM '.hikashop_table('extensions',false).' WHERE element IN ('.$types.') AND folder=\'hikashoppayment\' AND type=\'plugin\' ORDER BY ordering ASC';
 			}
@@ -126,26 +125,26 @@ class hikashopPluginsClass extends hikashopClass{
 	}
 
 	function loadParams(&$result){
-		if(!empty($result->params)){
-			if(version_compare(JVERSION,'1.6','<')){
-				$lines = explode("\n",$result->params);
-				$result->params = array();
-				foreach($lines as $line){
-					$param = explode('=',$line,2);
-					if(count($param)==2){
-						$result->params[$param[0]]=$param[1];
-					}
-				}
-			}else{
-				$registry = new JRegistry;
-				if(version_compare(JVERSION,'3.0','<')) {
-					$registry->loadJSON($result->params);
-				} else {
-					$registry->loadString($result->params, 'JSON');
-				}
-				$result->params = $registry->toArray();
-			}
+		if(empty($result->params))
+			return;
 
+		if(!HIKASHOP_J16) {
+			$lines = explode("\n", $result->params);
+			$result->params = array();
+			foreach($lines as $line){
+				$param = explode('=',$line,2);
+				if(count($param)==2){
+					$result->params[$param[0]]=$param[1];
+				}
+			}
+		} else {
+			$registry = new JRegistry;
+			if(!HIKASHOP_J30) {
+				$registry->loadJSON($result->params);
+			} else {
+				$registry->loadString($result->params, 'JSON');
+			}
+			$result->params = $registry->toArray();
 		}
 	}
 
@@ -166,14 +165,14 @@ class hikashopPluginsClass extends hikashopClass{
 			$element->plugin_params = serialize($element->plugin_params);
 		}
 
-		if(!empty($element->params)){
-			if(version_compare(JVERSION,'1.6','<')){
+		if(!empty($element->params)) {
+			if(!HIKASHOP_J16) {
 				$params = '';
 				foreach($element->params as $key => $val){
-					$params.=$key.'='.$val."\n";
+					$params .= $key . '=' . $val . "\n";
 				}
 				$element->params = rtrim($params);
-			}else{
+			} else {
 				$handler = JRegistryFormat::getInstance('JSON');
 				$element->params = $handler->objectToString($element->params);
 			}
@@ -181,21 +180,20 @@ class hikashopPluginsClass extends hikashopClass{
 		return parent::save($element);
 	}
 
-	function cleanPluginCache(){
+	function cleanPluginCache() {
 		if(!HIKASHOP_J16 || !class_exists('JCache')) return;
 
-		$conf = JFactory::getConfig();
+		$jconf = JFactory::getConfig();
 		$dispatcher = JDispatcher::getInstance();
 
 		$options = array(
 			'defaultgroup' => 'com_plugins',
-			'cachebase' => $conf->get('cache_path', JPATH_SITE . '/cache'));
+			'cachebase' => $jconf->get('cache_path', JPATH_SITE . '/cache')
+		);
 
 		$cache = JCache::getInstance('callback', $options);
 		$cache->clean();
 
 		$dispatcher->trigger('onContentCleanCache', $options);
-
 	}
-
 }

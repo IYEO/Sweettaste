@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -15,6 +15,14 @@ $html = $this->params->get('html');
 
 $qLayout = JRequest::getVar('quantitylayout','show_default');
 switch($qLayout){
+	case 'show_none':
+?>
+		<div class="hikashop_product_quantity_div hikashop_product_quantity_add_to_cart_div hikashop_product_quantity_add_to_cart_div_regrouped">
+			<?php echo $html; ?>
+		</div>
+<?php
+		break;
+
 	case 'show_regrouped':
 ?>
 		<div class="input-append hikashop_product_quantity_div hikashop_product_quantity_input_div_regrouped">

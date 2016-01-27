@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -100,7 +100,6 @@ defined('_JEXEC') or die('Restricted access');
 					$orderUrl = str_replace('http://','https://',HIKASHOP_LIVE) . 'index.php?option=com_hikashop&ctrl=order';
 				}
 
-
 				$k = 0;
 				for($i = 0,$a = count($this->rows);$i<$a;$i++){
 					$row =& $this->rows[$i];
@@ -130,18 +129,31 @@ defined('_JEXEC') or die('Restricted access');
 								<?php
 								if($this->payment_change){
 									$text = JText::_('PAY_NOW');
-									$this->payment->order = $row;
-									$this->payment->preload(false);
-									echo $this->payment->display('new_payment_method',$row->order_payment_method,$row->order_payment_id,false);
+
+									$row->total = new stdClass();
+									$row->total->prices[0] = new stdClass();
+									$row->total->prices[0]->price_currency_id = $row->order_currency_id;
+									$row->total->prices[0]->price_value_with_tax = $row->order_full_price;
+									$row->total->prices[0]->price_value = $row->order_full_price;
+
+									$rowPayments = $this->paymentClass->getPayments($row);
+
+									if(is_array($rowPayments) && !empty($rowPayments)){
+										$paymentvalues = array();
+										foreach($rowPayments as $paymentId => $paymentMethod){
+											$paymentvalues[] = JHTML::_('select.option', $paymentMethod->payment_type.'_'.$paymentMethod->payment_id , $paymentMethod->payment_name);
+										}
+										echo JHTML::_('select.genericlist', $paymentvalues, 'new_payment_method', ' class="inputbox" size="1"', 'value', 'text', '', 'new_payment_method'.$row->order_id);
+									}
 								}else{
 									$text = JText::sprintf('PAY_WITH_X',$this->payment->getName($row->order_payment_method,$row->order_payment_id));
 								}
+
 								$url = hikashop_completeLink('order&task=pay&order_id='.$row->order_id.$url_itemid);
 								if($config->get('force_ssl',0) && strpos('https://',$url) === false) {
 									$url = str_replace('http://','https://',HIKASHOP_LIVE) . 'index.php?option=com_hikashop&ctrl=order&task=pay&order_id='.$row->order_id;
 								}
 								echo $this->cart->displayButton($text,'pay',$this->params,$url,'document.adminForm_'.$row->order_id.'_pay.submit();return false;','class="hikashop_order_pay_button"');
-
 								?>
 								<input type="hidden" name="Itemid" value="<?php echo $Itemid; ?>"/>
 								<input type="hidden" name="option" value="<?php echo HIKASHOP_COMPONENT; ?>" />

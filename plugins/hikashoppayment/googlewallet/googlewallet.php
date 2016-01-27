@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -35,11 +35,11 @@ class plgHikashoppaymentgooglewallet extends hikashopPaymentPlugin
 	{
 		parent::onAfterOrderConfirm($order,$methods,$method_id);
 
-		if ($this->payment_params->testingMode == true) 
+		if ($this->payment_params->testingMode == true)
 		{
 			$this->payment_params->url = "https://sandbox.google.com/checkout/inapp/lib/buy.js";
 		}
-		else 
+		else
 		{
 			$this->payment_params->url = "https://wallet.google.com/inapp/lib/buy.js";
 		}
@@ -81,7 +81,7 @@ class plgHikashoppaymentgooglewallet extends hikashopPaymentPlugin
 				'currencyCode' => $this->currency->currency_code,
 				'sellerData' => $order->order_id, //Order_id for Hikashop
 			)
-		); 
+		);
 
 		$sellerSecret = $this->payment_params->sellerSecret;
 
@@ -126,8 +126,8 @@ class plgHikashoppaymentgooglewallet extends hikashopPaymentPlugin
 		$orderId = $gwdata->response->orderId;
 
 		if ($orderId)//success
-		{   
-			echo $orderId; 
+		{
+			echo $orderId;
 			ob_start();
 
 			$order_status = $this->payment_params->verified_status;
@@ -145,35 +145,35 @@ class plgHikashoppaymentgooglewallet extends hikashopPaymentPlugin
 }
 
 class JWT
-{   
+{
 	public static function decode($jwt, $key = null, $verify = true)
 	{
 		$tks = explode('.', $jwt);
-		if (count($tks) != 3) 
+		if (count($tks) != 3)
 		{
 
 			throw new UnexpectedValueException('Wrong number of segments');
 		}
 		list($headb64, $payloadb64, $cryptob64) = $tks;
-		if (null === ($header = JWT::jsonDecode(JWT::urlsafeB64Decode($headb64)))) 
+		if (null === ($header = JWT::jsonDecode(JWT::urlsafeB64Decode($headb64))))
 		{
 
 			throw new UnexpectedValueException('Invalid segment encoding');
 		}
-		if (null === $payload = JWT::jsonDecode(JWT::urlsafeB64Decode($payloadb64))) 
+		if (null === $payload = JWT::jsonDecode(JWT::urlsafeB64Decode($payloadb64)))
 		{
 
 			throw new UnexpectedValueException('Invalid segment encoding');
 		}
 		$sig = JWT::urlsafeB64Decode($cryptob64);
-		if ($verify) 
+		if ($verify)
 		{
-			if (empty($header->alg)) 
+			if (empty($header->alg))
 			{
 
 				throw new DomainException('Empty algorithm');
 			}
-			if ($sig != JWT::sign("$headb64.$payloadb64", $key, $header->alg)) 
+			if ($sig != JWT::sign("$headb64.$payloadb64", $key, $header->alg))
 			{
 
 				throw new UnexpectedValueException('Signature verification failed');
@@ -204,7 +204,7 @@ class JWT
 			'HS384' => 'sha384',
 			'HS512' => 'sha512',
 		);
-		if (empty($methods[$method])) 
+		if (empty($methods[$method]))
 		{
 
 			throw new DomainException('Algorithm not supported');
@@ -215,11 +215,11 @@ class JWT
 	public static function jsonDecode($input)
 	{
 		$obj = json_decode($input);
-		if (function_exists('json_last_error') && $errno = json_last_error()) 
+		if (function_exists('json_last_error') && $errno = json_last_error())
 		{
 			JWT::handleJsonError($errno);
 		}
-		else if ($obj === null && $input !== 'null') 
+		else if ($obj === null && $input !== 'null')
 		{
 			throw new DomainException('Null result with non-null input');
 		}
@@ -229,11 +229,11 @@ class JWT
 	public static function jsonEncode($input)
 	{
 		$json = json_encode($input);
-		if (function_exists('json_last_error') && $errno = json_last_error()) 
+		if (function_exists('json_last_error') && $errno = json_last_error())
 		{
 			JWT::handleJsonError($errno);
 		}
-		else if ($json === 'null' && $input !== null) 
+		else if ($json === 'null' && $input !== null)
 		{
 			throw new DomainException('Null result with non-null input');
 		}
@@ -243,7 +243,7 @@ class JWT
 	public static function urlsafeB64Decode($input)
 	{
 		$remainder = strlen($input) % 4;
-		if ($remainder) 
+		if ($remainder)
 		{
 			$padlen = 4 - $remainder;
 			$input .= str_repeat('=', $padlen);

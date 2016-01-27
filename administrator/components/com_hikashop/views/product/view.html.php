@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -131,6 +131,7 @@ class ProductViewProduct extends hikashopView
 
 		if(!empty($fields)){
 			foreach($fields as $field){
+				if($field->field_type == "customtext") continue;
 				$searchMap[]='b.'.$field->field_namekey;
 			}
 		}
@@ -1530,9 +1531,30 @@ class ProductViewProduct extends hikashopView
 			$query = 'SELECT variant.*, characteristic.* FROM '.hikashop_table('variant').' as variant LEFT JOIN '.hikashop_table('characteristic').' as characteristic ON variant.variant_characteristic_id = characteristic.characteristic_id WHERE variant.variant_product_id = '.(int)$product_id . ' ORDER BY variant.ordering ASC, characteristic.characteristic_ordering ASC, ordering ASC';
 			$db->setQuery($query);
 			$product->characteristics = $db->loadObjectList('characteristic_id');
+
 			$query = 'SELECT p.* FROM '.hikashop_table('product').' as p WHERE p.product_type = '.$db->Quote('variant').' AND p.product_parent_id = '.(int)$product_id;
 			$db->setQuery($query);
 			$product->variants = $db->loadObjectList('product_id');
+
+			if(!empty($product->characteristics)) {
+				$repair = array();
+				foreach($product->characteristics as $c) {
+					if(is_null($c->characteristic_id))
+						$repair[] = (int)$c->variant_characteristic_id;
+				}
+				if(!empty($repair)) {
+					$repair_ids = array((int)$product->product_id);
+					if(!empty($product->variants))
+						$repair_ids = array_merge($repair_ids, array_keys($product->variants));
+
+					$query = 'DELETE variant FROM '.hikashop_table('variant').' AS variant LEFT JOIN '.hikashop_table('characteristic').' as characteristic ON variant.variant_characteristic_id = characteristic.characteristic_id '.
+						' WHERE variant.variant_product_id IN ('.implode(',', $repair_ids).') AND characteristic.characteristic_id IS NULL';
+					$db->setQuery($query);
+					$db->query();
+
+					$app->enqueueMessage('Your product used a characteristic which has been deleted. The product has been repair but it is possible that you have some duplicate variants.', 'error');
+				}
+			}
 
 			if(!empty($product->variants)) {
 				$variant_ids = array_keys($product->variants);

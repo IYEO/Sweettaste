@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -92,6 +92,14 @@ defined('_JEXEC') or die('Restricted access');
 			</td>
 			<td>
 				<input type="text" id="regex" size="80" name="field_options[regex]" value="<?php echo $this->escape(@$this->field->field_options['regex']); ?>"/>
+			</td>
+		</tr>
+		<tr id="fieldopt_attribute">
+			<td class="key">
+				<?php echo JText::_( 'FIELD_ATTRIBUTE' ); ?>
+			</td>
+			<td>
+				<input type="text" id="attribute" size="80" name="field_options[attribute]" value="<?php echo $this->escape(@$this->field->field_options['attribute']); ?>"/>
 			</td>
 		</tr>
 		<tr id="fieldopt_placeholder">

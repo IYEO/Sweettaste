@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -95,12 +95,11 @@ class hikashopWarehouseClass extends hikashopClass {
 						$ret[1][(int)$v] = $ret[0][(int)$v];
 				}
 			} else {
-				$values = array_merge($values);
-				JArrayHelper::toInteger($values);
+				JArrayHelper::toInteger($value);
 
 				$query = 'SELECT warehouse_id, warehouse_name '.
 					' FROM ' . hikashop_table('warehouse') .
-					' WHERE warehouse_id IN ('.implode(',', $values).') '.
+					' WHERE warehouse_id IN ('.implode(',', $value).') '.
 					' ORDER BY warehouse_name';
 				$db->setQuery($query);
 				$ret[1] = $db->loadObjectList('warehouse_id');

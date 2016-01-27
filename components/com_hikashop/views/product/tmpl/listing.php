@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -118,29 +118,30 @@ if($this->params->get($title) && JRequest::getVar('hikashop_front_end_main',0) &
 }
 
 	if(($this->params->get('show_image') && !empty($this->element->file_path))|| ($this->params->get('show_description',!$this->module)&&!empty($this->element->category_description))){
-		?>
+?>
 		<div class="hikashop_category_description">
-		<?php
+<?php
 		if($this->params->get('show_image') && !empty($this->element->file_path)){
 			jimport('joomla.filesystem.file');
 			if(JFile::exists($this->image->getPath($this->element->file_path,false))){
-			?>
-			<img src="<?php echo $this->image->getPath($this->element->file_path); ?>" class="hikashop_category_image"/>
-			<?php
+?>
+			<img src="<?php echo $this->image->getPath($this->element->file_path); ?>" class="hikashop_category_image" title="<?php echo $this->escape(@$this->element->file_description); ?>" alt="<?php echo $this->escape(@$this->element->file_name); ?>"/>
+<?php
 			}
 		}
 		if($this->params->get('show_description',!$this->module)&&!empty($this->element->category_description)){
-			?>
-			<div class="hikashop_category_description_content">
-			<?php echo JHTML::_('content.prepare',$this->element->category_description); ?>
-			</div>
-			<?php
+?>
+			<div class="hikashop_category_description_content"><?php
+				echo JHTML::_('content.prepare',$this->element->category_description);
+			?></div>
+<?php
 		}
-	?></div><?php
+?>
+		</div>
+<?php
 	}
-	if(!empty($this->fields)){ ?>
 
-		<?php
+	if(!empty($this->fields)){
 		ob_start();
 		$this->fieldsClass->prefix = '';
 		foreach($this->fields as $fieldName => $oneExtraField) {
@@ -157,17 +158,20 @@ if($this->params->get($title) && JRequest::getVar('hikashop_front_end_main',0) &
 					</span>
 				</td>
 			</tr>
-		<?php }
+<?php
+			}
 		}
 		$custom_fields_html = ob_get_clean();
-		if(!empty($custom_fields_html)){ ?>
+		if(!empty($custom_fields_html)){
+?>
 		<div id="hikashop_category_custom_info_main" class="hikashop_category_custom_info_main">
 			<h4><?php echo JText::_('CATEGORY_ADDITIONAL_INFORMATION');?></h4>
 			<table width="100%">
 				<?php echo $custom_fields_html; ?>
 			</table>
 		</div>
-		<?php }
+<?php
+		}
 	}
 $mainInfo = ob_get_clean();
 ob_start();

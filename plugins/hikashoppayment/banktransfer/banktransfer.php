@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -21,7 +21,7 @@ class plgHikashoppaymentBanktransfer extends hikashopPaymentPlugin {
 	function onAfterOrderConfirm(&$order,&$methods,$method_id) {
 		parent::onAfterOrderConfirm($order,$methods,$method_id);
 		if($order->order_status != $this->payment_params->order_status)
-			$this->modifyOrder($order->order_id, $this->payment_params->order_status, @$this->payment_params->status_notif_email, false);
+			$this->modifyOrder($order->order_id, $this->payment_params->order_status, (bool)@$this->payment_params->status_notif_email, false);
 
 		$this->removeCart = true;
 

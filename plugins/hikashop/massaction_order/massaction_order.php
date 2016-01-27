@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -279,7 +279,6 @@ class plgHikashopMassaction_order extends JPlugin
 		$params = $this->massaction->_displayResults('order',$elements,$action,$k);
 		$params->action_id = $k;
 		$js = '';
-
 		$app = JFactory::getApplication();
 		if($app->isAdmin() && JRequest::getVar('ctrl','massaction') == 'massaction'){
 			echo hikashop_getLayout('massaction','results',$params,$js);
@@ -316,7 +315,7 @@ class plgHikashopMassaction_order extends JPlugin
 			$mail->html = '1';
 			$csv = new stdClass();
 			$csv->name = basename($path);
-			$csv->filename = basename($path);
+			$csv->filename = $url['server'];
 			$csv->url = $url['web'];
 			$mail->attachments = array($csv);
 			$mail->dst_name = '';
@@ -526,17 +525,42 @@ class plgHikashopMassaction_order extends JPlugin
 			foreach($user_ids as $user_id){
 				$values[$user_id] = '('.$user_id.','.$action['value'].')';
 			}
-			if($action['type'] == 'replace'){
-				$db->setQuery('DELETE FROM '.hikashop_table('user_usergroup_map',false).' WHERE user_id IN ('.implode(',',$user_ids).')');
+
+			if($action['type'] != 'add'){
+				$filters = '';
+				if($action['type'] == 'remove')
+					$filters = ' AND group_id = '.(int)$action['value'];
+
+				$db->setQuery('DELETE FROM '.hikashop_table('user_usergroup_map',false).' WHERE user_id IN ('.implode(',',$user_ids).')'.$filters);
 				$db->query();
 			}
 
-			$db->setQuery('REPLACE INTO '.hikashop_table('user_usergroup_map',false).' VALUES '.implode(',',$values));
+			if($action['type'] != 'remove'){
+				$db->setQuery('REPLACE INTO '.hikashop_table('user_usergroup_map',false).' VALUES '.implode(',',$values));
+				$db->query();
+			}
+		}
+
+		$app = JFactory::getApplication();
+		$config = JFactory::getConfig();
+		$handler = $config->get('session_handler', 'none');
+		if($handler=='database'){
+			$db->setQuery('DELETE FROM '.hikashop_table('session',false).' WHERE client_id=0 AND userid IN ('.implode(',',$user_ids).')');
 			$db->query();
 		}
+		$currentUser = hikashop_loadUser(true);
+		if(!$app->isAdmin() && in_array($currentUser->user_cms_id,$user_ids))
+			$app->logout( $currentUser->user_cms_id );
 	}
 	function onProcessOrderMassActionsendEmail(&$elements,&$action,$k){
 		if(!empty($action['emailAddress'])){
+
+			if($action['emailAddress'] == 'user.user_email' && count($elements) == '1'){
+				$userClass = hikashop_get('class.user');
+				$user = $userClass->get($elements[0]->order_user_id);
+				$action['emailAddress'] = 	$user->user_email;
+			}
+
 			$config = hikashop_config();
 			$mailClass = hikashop_get('class.mail');
 			$content = array('elements' => $elements, 'action' => $action, 'type' => 'order_notification');

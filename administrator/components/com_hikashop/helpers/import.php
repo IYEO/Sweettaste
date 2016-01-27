@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -31,7 +31,7 @@ class hikashopImportHelper
 	var $createCategories = false;
 	var $header_errors = true;
 	var $force_published = true;
-	var $tax_category=0;
+	var $tax_category = 0;
 	var $default_file = '';
 
 	var $importName;
@@ -109,20 +109,19 @@ class hikashopImportHelper
 		jimport('joomla.filesystem.file');
 	}
 
-	function addTemplate($template_product_id){
-		if($template_product_id){
-			$productClass = hikashop_get('class.product');
-			if($productClass->getProducts($template_product_id,'import') && !empty($productClass->products)){
-				$key = key($productClass->products);
-				$this->template = $productClass->products[$key];
-
-			}
+	function addTemplate($template_product_id) {
+		if(empty($template_product_id))
+			return;
+		$productClass = hikashop_get('class.product');
+		if($productClass->getProducts($template_product_id,'import') && !empty($productClass->products)) {
+			$key = key($productClass->products);
+			$this->template = $productClass->products[$key];
 		}
 	}
 
-	function importFromFolder($type,$delete,$uploadFolder){
+	function importFromFolder($type, $delete, $uploadFolder) {
 		$config =& hikashop_config();
-		if($type=='both'){
+		if($type == 'both'){
 			$allowed = explode(',',strtolower($config->get('allowedimages')));
 		}else{
 			$allowed = explode(',',strtolower($config->get('allowed'.$type)));
@@ -247,7 +246,7 @@ class hikashopImportHelper
 		$this->charsetConvert = JRequest::getString('charsetconvert','');
 		jimport('joomla.filesystem.file');
 		$config =& hikashop_config();
-		$allowedFiles = explode(',',strtolower($config->get('allowedfiles')));
+		$allowedFiles = 'csv'; // strtolower($config->get('allowedfiles'));
 		$uploadFolder = JPath::clean(html_entity_decode($config->get('uploadfolder')));
 		$uploadFolder = trim($uploadFolder,DS.' ').DS;
 		$uploadPath = JPath::clean(HIKASHOP_ROOT.$uploadFolder);
@@ -265,10 +264,12 @@ class hikashopImportHelper
 		$attachment = new stdClass();
 		$attachment->filename = strtolower(JFile::makeSafe($importFile['name']));
 		$attachment->size = $importFile['size'];
-		if(!preg_match('#\.('.str_replace(array(',','.'),array('|','\.'),$config->get('allowedfiles')).')$#Ui',$attachment->filename,$extension) || preg_match('#\.(php.?|.?htm.?|pl|py|jsp|asp|sh|cgi)$#Ui',$attachment->filename)){
+
+		if(!preg_match('#\.('.str_replace(array(',', '.'), array('|', '\.'), $allowedFiles).')$#Ui', $attachment->filename, $extension) || preg_match('#\.(php.?|.?htm.?|pl|py|jsp|asp|sh|cgi)$#Ui', $attachment->filename)) {
 			$app->enqueueMessage(JText::sprintf( 'ACCEPTED_TYPE',substr($attachment->filename,strrpos($attachment->filename,'.')+1),$config->get('allowedfiles')), 'notice');
 			return false;
 		}
+
 		$attachment->filename = str_replace(array('.',' '),'_',substr($attachment->filename,0,strpos($attachment->filename,$extension[0]))).$extension[0];
 		if ( !move_uploaded_file($importFile['tmp_name'], $uploadPath . $attachment->filename)) {
 			if(!JFile::upload($importFile['tmp_name'], $uploadPath . $attachment->filename)){

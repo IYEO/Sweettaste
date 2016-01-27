@@ -1,20 +1,20 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
 ?><?php
-class hikashopShippingClass extends hikashopClass{
+class hikashopShippingClass extends hikashopClass {
 	var $tables = array('shipping');
 	var $pkeys = array('shipping_id');
 	var $deleteToggle = array('shipping'=>array('shipping_type','shipping_id'));
 	var $toggle = array('shipping_published'=>'shipping_id');
 
-	function save(&$element,$reorder=true){
+	function save(&$element, $reorder = true) {
 		JPluginHelper::importPlugin('hikashop');
 		$dispatcher = JDispatcher::getInstance();
 		$do = true;
@@ -43,13 +43,13 @@ class hikashopShippingClass extends hikashopClass{
 		if($status && empty($element->shipping_id)){
 			$element->shipping_id = $status;
 			if($reorder){
-				$orderClass = hikashop_get('helper.order');
-				$orderClass->pkey = 'shipping_id';
-				$orderClass->table = 'shipping';
-				$orderClass->groupMap = 'shipping_type';
-				$orderClass->groupVal = $element->shipping_type;
-				$orderClass->orderingMap = 'shipping_ordering';
-				$orderClass->reOrder();
+				$orderHelper = hikashop_get('helper.order');
+				$orderHelper->pkey = 'shipping_id';
+				$orderHelper->table = 'shipping';
+				$orderHelper->groupMap = 'shipping_type';
+				$orderHelper->groupVal = $element->shipping_type;
+				$orderHelper->orderingMap = 'shipping_ordering';
+				$orderHelper->reOrder();
 			}
 		}
 
@@ -69,18 +69,19 @@ class hikashopShippingClass extends hikashopClass{
 		return $status;
 	}
 
-	function delete(&$elements){
+	function delete(&$elements) {
 		$status = parent::delete($elements);
-		if($status){
-			$orderClass = hikashop_get('helper.order');
-			$orderClass->pkey = 'shipping_id';
-			$orderClass->table = 'shipping';
-			$orderClass->groupMap = 'shipping_type';
-			$orderClass->orderingMap = 'shipping_ordering';
-			$app =& JFactory::getApplication();
-			$orderClass->groupVal = $app->getUserStateFromRequest( HIKASHOP_COMPONENT.'.shipping_plugin_type','shipping_plugin_type','manual');
-			$orderClass->reOrder();
-		}
+		if(!$status)
+			return $status;
+
+		$orderHelper = hikashop_get('helper.order');
+		$orderHelper->pkey = 'shipping_id';
+		$orderHelper->table = 'shipping';
+		$orderHelper->groupMap = 'shipping_type';
+		$orderHelper->orderingMap = 'shipping_ordering';
+		$app =& JFactory::getApplication();
+		$orderHelper->groupVal = $app->getUserStateFromRequest( HIKASHOP_COMPONENT.'.shipping_plugin_type','shipping_plugin_type','manual');
+		$orderHelper->reOrder();
 		return $status;
 	}
 
@@ -656,32 +657,34 @@ class hikashopShippingClass extends hikashopClass{
 		return $shipping_name;
 	}
 
-	function displayErrors(){
-		if(!empty($this->errors)) {
+	function displayErrors() {
+		if(empty($this->errors))
+			return false;
 
-			foreach($this->errors as $k => $errors) {
-				if(is_array($errors)){
-					foreach($errors as $key => $value){
-						$this->_displayErrors($key,$value);
-						return true;
-					}
-				}else{
-					$this->_displayErrors($k,$errors);
+		foreach($this->errors as $k => $errors) {
+			if(is_array($errors)) {
+				foreach($errors as $key => $value) {
+					$this->_displayErrors($key,$value);
 					return true;
 				}
+			} else {
+				$this->_displayErrors($k,$errors);
+				return true;
 			}
-			return true;
 		}
-		return false;
+		return true;
 	}
-	function _displayErrors($key,$value){
+
+	function _displayErrors($key, $value) {
 		static $displayed = array();
-		if(isset($displayed[$key.$value])) return;
+		if(isset($displayed[$key.$value]))
+			return;
 		$displayed[$key.$value] = true;
+
 		$number = 0;
-		if(is_numeric($value)){
+		if(is_numeric($value)) {
 			$number = $value;
-			switch($key){
+			switch($key) {
 				case 'min_price':
 					$value = 'ORDER_TOTAL_TOO_LOW_FOR_SHIPPING_METHODS';
 					break;
@@ -714,17 +717,19 @@ class hikashopShippingClass extends hikashopClass{
 					break;
 			}
 		}
+
 		$transKey = strtoupper(str_replace(' ','_',$value));
 		$trans = JText::_($transKey);
-		if(strpos($trans,'%s')!==false){
-			$trans = JText::sprintf($transKey,$number);
+		if(strpos($trans, '%s') !== false) {
+			$trans = JText::sprintf($transKey, $number);
 		}
-		if($trans != $transKey){
+		if($trans != $transKey) {
 			$value = $trans;
 		}
 
 		static $translatedDisplayed = array();
-		if(isset($translatedDisplayed[$value])) return;
+		if(isset($translatedDisplayed[$value]))
+			return;
 		$translatedDisplayed[$value] = true;
 
 		$app = JFactory::getApplication();

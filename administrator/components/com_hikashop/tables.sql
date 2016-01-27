@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS `#__hikashop_badge` (
 	`badge_keep_size` tinyint(4) NOT NULL DEFAULT '0',
 	`badge_quantity` varchar(255) NOT NULL DEFAULT '',
 	`badge_url` varchar(255) NOT NULL DEFAULT '',
+	`badge_access` varchar(255) NOT NULL DEFAULT 'all',
 	PRIMARY KEY (`badge_id`)
 ) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
 
@@ -197,27 +198,6 @@ CREATE TABLE IF NOT EXISTS `#__hikashop_download` (
 	`file_pos` int(10) NOT NULL DEFAULT '1',
 	`download_number` int(11) NOT NULL DEFAULT '1',
 	PRIMARY KEY (`file_id`,`order_id`,`file_pos`)
-) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
-
-CREATE TABLE IF NOT EXISTS `#__hikashop_email_log` (
-	`email_log_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-	`email_log_sender_email` varchar(255) NOT NULL DEFAULT '',
-	`email_log_sender_name` varchar(255) NOT NULL DEFAULT '',
-	`email_log_recipient_email` varchar(255) NOT NULL DEFAULT '',
-	`email_log_recipient_name` varchar(255) NOT NULL DEFAULT '',
-	`email_log_reply_email` varchar(255) NOT NULL DEFAULT '',
-	`email_log_reply_name` varchar(255) NOT NULL DEFAULT '',
-	`email_log_cc_email` varchar(255) NOT NULL DEFAULT '',
-	`email_log_bcc_email` varchar(255) NOT NULL DEFAULT '',
-	`email_log_subject` text NOT NULL,
-	`email_log_altbody` text NOT NULL,
-	`email_log_body` text NOT NULL,
-	`email_log_name` varchar(255) NOT NULL DEFAULT '',
-	`email_log_ref_id` varchar(255) NOT NULL DEFAULT '',
-	`email_log_params` text NOT NULL,
-	`email_log_date` int(10) NOT NULL ,
-	`email_log_published` tinyint(3) unsigned NOT NULL DEFAULT '1',
-	PRIMARY KEY (`email_log_id`)
 ) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/;
 
 CREATE TABLE IF NOT EXISTS `#__hikashop_entry` (

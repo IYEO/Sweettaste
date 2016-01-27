@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -25,7 +25,6 @@ class MenuViewMenu extends hikashopView{
 		if(method_exists($this,$function)) $this->$function();
 
 		$plugin = JPluginHelper::getPlugin('system', 'hikashopaffiliate');
-		$emailPlugin = JPluginHelper::getPlugin('hikashop', 'email_history');
 
 		$menus = array(
 			'system' => array(
@@ -231,15 +230,6 @@ class MenuViewMenu extends hikashopView{
 						'url' => hikashop_completeLink('waitlist'),
 						'display' => hikashop_level(1) && $config->get('product_waitlist', 1)
 					),
-					array(
-						'name' => JText::_('EMAIL_HISTORY'),
-						'check' => array('ctrl'=>'email_log'),
-						'acl' => 'email_log',
-						'icon' => 'icon-16-email',
-						'url' => hikashop_completeLink('email_log'),
-						'display' => (!empty($emailPlugin) && hikashop_level(2)),
-						),
-
 				)
 			),
 			'orders' => array(

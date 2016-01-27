@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -25,6 +25,7 @@ class plgHikashoppaymentPaypalExpress extends hikashopPaymentPlugin
 		'cartdetail' => array('SEND_CART_DETAIL', 'boolean','0'),
 		'displaycheckout' => array('DISPLAY_BUTTON_CHECKOUT', 'boolean','0'),
 		'displaycart' => array('DISPLAY_BUTTON_CART', 'boolean','0'),
+		'address_override' => array('ADDRESS_OVERRIDE', 'boolean','0'),
 		'debug' => array('DEBUG', 'boolean','0'),
 		'sandbox' => array('SANDBOX', 'boolean','0'),
 		'return_url' => array('RETURN_URL', 'input'),
@@ -70,7 +71,6 @@ class plgHikashoppaymentPaypalExpress extends hikashopPaymentPlugin
 		$element->payment_params->invalid_status='cancelled';
 		$element->payment_params->verified_status='confirmed';
 	}
-
 
 	function onPaymentNotification(&$statuses)
 	{
@@ -199,6 +199,15 @@ class plgHikashoppaymentPaypalExpress extends hikashopPaymentPlugin
 				$varform = array_merge($items,$endItem);
 			}
 
+			if($amountTheorical<=0){
+				$order = $this->createOrder($cart);
+				$orderClass = hikashop_get('class.order');
+				$order->order_payment_id = $this->plugin_data->payment_id;
+				$order->order_payment_method = $this->name;
+				$order->order_id = $orderClass->save($order);
+				$app->redirect($return_url);
+			}
+
 			if(empty($this->plugin_params->landingpage)) $this->plugin_params->landingpage = 'Login';
 			else $this->plugin_params->landingpage ='Billing';
 
@@ -221,7 +230,6 @@ class plgHikashoppaymentPaypalExpress extends hikashopPaymentPlugin
 				$varform = array_merge($arrayparams, $varform);
 			else
 				$varform = $arrayparams;
-
 
 			$request = $this->initCurlToPaypal($varform,$this->plugin_params->sandbox);
 			$post_response = curl_exec($request);
@@ -310,7 +318,7 @@ class plgHikashoppaymentPaypalExpress extends hikashopPaymentPlugin
 			{
 				curl_close ($request);
 				$vars = $this->getPostDatas($post_response);
-				if ($vars['ACK']!='Success')
+				if ($vars['ACK'] != 'Success' && $vars['ACK'] != 'SuccessWithWarning')
 				{
 					if($this->plugin_params->debug)
 						$this->writeToLog('Fail at step 2 :'.curl_error($request));
@@ -336,7 +344,7 @@ class plgHikashoppaymentPaypalExpress extends hikashopPaymentPlugin
 					else
 						$userid = $dbOrder->order_user_id;
 
-					if (!isset($dbOrder->order_shipping_address_id) || $dbOrder->order_shipping_address_id==0)
+					if ( @$this->plugin_params->address_override || !isset($dbOrder->order_shipping_address_id) || $dbOrder->order_shipping_address_id==0)
 					{
 						$address = $this->createAddress($vars,$userid);
 						$addressClass = hikashop_get('class.address');
@@ -378,7 +386,7 @@ class plgHikashoppaymentPaypalExpress extends hikashopPaymentPlugin
 					{
 						curl_close ($request);
 						$vars = $this->getPostDatas($post_response);
-						if ($vars['ACK']!='Success')
+						if ($vars['ACK'] != 'Success' && $vars['ACK'] != 'SuccessWithWarning')
 						{
 							if($this->plugin_params->debug)
 								$this->writeToLog('Fail at step 4 :'.curl_error($request));
@@ -729,9 +737,7 @@ class plgHikashoppaymentPaypalExpress extends hikashopPaymentPlugin
 	function loadOrderId($token)
 	{
 		$db = JFactory::getDBO();
-		$sql = 'SELECT history_order_id FROM `#__hikashop_history` hh INNER JOIN `#__hikashop_order` ho ON hh.history_order_id = ho.order_id WHERE history_data = '.$db->Quote(htmlspecialchars($token)).';';
-		$db->setQuery($sql);
-		$db->query();
+		$db->setQuery('SELECT history_order_id FROM `#__hikashop_history` hh INNER JOIN `#__hikashop_order` ho ON hh.history_order_id = ho.order_id WHERE history_data = '.$db->Quote(htmlspecialchars($token)).';');
 		$datas = $db->loadObjectList();
 		return $datas;
 	}
@@ -769,9 +775,7 @@ class plgHikashoppaymentPaypalExpress extends hikashopPaymentPlugin
 				$where = '';
 			}
 
-			$sql = 'SELECT * FROM `#__hikashop_payment`'.$where.' ORDER BY payment_ordering';
-			$db->setQuery($sql);
-			$db->query();
+			$db->setQuery('SELECT * FROM `#__hikashop_payment`'.$where.' ORDER BY payment_ordering');
 			$datas[$name] = $db->loadObjectList();
 		}
 
@@ -806,29 +810,24 @@ class plgHikashoppaymentPaypalExpress extends hikashopPaymentPlugin
 		{
 			$db = JFactory::getDBO();
 
-			$sql = 'SELECT zone_namekey FROM `#__hikashop_zone` hz WHERE zone_name_english = '.$db->Quote($vars['PAYMENTREQUEST_0_SHIPTOCOUNTRYNAME']).' AND zone_type = \'country\';';
-			$db->setQuery($sql);
-			$db->query();
-			$datas = $db->loadObjectList();
-			if (!empty($datas) && count($datas)==1)
-				$country = $datas[0];
-			else
-				$country = $vars['PAYMENTREQUEST_0_SHIPTOCOUNTRYNAME'];
-
-			if (isset($vars['PAYMENTREQUEST_0_SHIPTOSTATE']))
-			{
-				$sql ='SELECT zone_namekey FROM `#__hikashop_zone` hz WHERE zone_code_2 = '.$db->Quote($vars['PAYMENTREQUEST_0_SHIPTOSTATE']).' AND zone_type = \'state\';';
-				$db->setQuery($sql);
-				$db->query();
-				$datas = $db->loadObjectList();
-				if (!empty($datas) && count($datas)==1)
-					$state = $datas[0];
-				else
-					$state = $vars['PAYMENTREQUEST_0_SHIPTOSTATE'];
+			if(!empty($vars['PAYMENTREQUEST_0_SHIPTOCOUNTRYCODE'])){
+				$db->setQuery('SELECT zone_namekey FROM `#__hikashop_zone` WHERE zone_code_2 = '.$db->Quote($vars['PAYMENTREQUEST_0_SHIPTOCOUNTRYCODE']).' AND zone_type = \'country\';');
+				$country = $db->loadResult();
 			}
-			else
-			{
+			if (empty($country)){
+				$db->setQuery('SELECT zone_namekey FROM `#__hikashop_zone` WHERE zone_name_english = '.$db->Quote($vars['PAYMENTREQUEST_0_SHIPTOCOUNTRYNAME']).' AND zone_type = \'country\';');
+				$country = $db->loadResult();
+				if (empty($country))
+					$country = $vars['PAYMENTREQUEST_0_SHIPTOCOUNTRYNAME'];
+			}
+
+			if (empty($vars['PAYMENTREQUEST_0_SHIPTOSTATE'])){
 				$state = "NULL";
+			}else{
+				$db->setQuery('SELECT zone_namekey FROM `#__hikashop_zone` WHERE zone_code_2 = '.$db->Quote($vars['PAYMENTREQUEST_0_SHIPTOSTATE']).' AND zone_type = \'state\';');
+				$state = $db->loadResult();
+				if (empty($state))
+					$state = $vars['PAYMENTREQUEST_0_SHIPTOSTATE'];
 			}
 
 			$address = new stdClass();

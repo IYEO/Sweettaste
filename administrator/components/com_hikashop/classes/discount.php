@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -43,6 +43,12 @@ class hikashopDiscountClass extends hikashopClass{
 				$discount->$namebox = '';
 			}
 		}
+
+		if(!empty($discount->discount_category_id) && !empty($discount->discount_product_id)){
+			$app = JFactory::getApplication();
+				$app->enqueueMessage('If you set both categories and products in a discount/coupon, only the products will be taken into account.', 'error');
+		}
+
 		if(!empty($discount->discount_start)){
 			$discount->discount_start=hikashop_getTime($discount->discount_start);
 		}
@@ -211,6 +217,9 @@ class hikashopDiscountClass extends hikashopClass{
 						$ids[$prod->product_id] = (int)$prod->product_id;
 				}
 
+				if(empty($ids))
+					$error_message = JText::_('COUPON_NOT_FOR_EMPTY_CART');
+
 				if(!empty($coupon->discount_product_id) && is_string($coupon->discount_product_id))
 					$coupon->discount_product_id = explode(',',$coupon->discount_product_id);
 
@@ -259,7 +268,7 @@ class hikashopDiscountClass extends hikashopClass{
 				$coupon->products = array();
 				if(!empty($coupon->discount_product_id)) {
 					foreach ($products as $product) {
-						if(!in_array($product->product_id,$coupon->discount_product_id)) {
+						if(!in_array($product->product_id, $coupon->discount_product_id)) {
 							foreach ($products as $product2) {
 								if($product2->cart_product_id == $product->cart_product_parent_id && in_array($product2->product_id, $coupon->discount_product_id)){
 									$coupon->products[] = $product;
@@ -292,7 +301,7 @@ class hikashopDiscountClass extends hikashopClass{
 
 				if(empty($error_message) && bccomp($coupon->discount_minimum_order, 0, 5)) {
 
-					$currency->convertCoupon($coupon,$total->prices[0]->price_currency_id);
+					$currency->convertCoupon($coupon, $total->prices[0]->price_currency_id);
 					$config =& hikashop_config();
 					$discount_before_tax = $config->get('discount_before_tax');
 					$var = 'price_value_with_tax';
@@ -342,7 +351,7 @@ class hikashopDiscountClass extends hikashopClass{
 		JRequest::setVar('coupon_error_message','');
 
 		if($do) {
-			$currency->convertCoupon($coupon,$total->prices[0]->price_currency_id);
+			$currency->convertCoupon($coupon, $total->prices[0]->price_currency_id);
 
 			if(!HIKASHOP_PHP5){
 				$coupon->total = $total;
@@ -442,7 +451,9 @@ class hikashopDiscountClass extends hikashopClass{
 		}
 
 		if (bccomp($coupon->discount_flat_amount, 0, 5)) {
+			$coupon->discount_percent_amount_orig = $coupon->discount_percent_amount;
 			$coupon->discount_percent_amount = 0;
+			$coupon->discount_coupon_nodoubling_orig = $coupon->discount_coupon_nodoubling;
 			$coupon->discount_coupon_nodoubling = null;
 		}
 

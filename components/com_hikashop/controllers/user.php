@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -18,13 +18,16 @@ class userController extends hikashopController{
 		if(!$skip){
 			$this->registerDefaultTask('cpanel');
 		}
-		$this->display[]='cpanel';
-		$this->display[]='form';
-		$this->display[]='register';
-		$this->display[]='downloads';
+
+		$this->display = array_merge($this->display, array(
+			'cpanel',
+			'form',
+			'register',
+			'downloads'
+		));
 	}
 
-	function register(){
+	function register() {
 		if(empty($_REQUEST['data'])){
 			return $this->form();
 		}
@@ -39,13 +42,13 @@ class userController extends hikashopController{
 		$this->form();
 	}
 
-	function cpanel(){
+	function cpanel() {
 		if(!$this->_checkLogin()) return true;
 		JRequest::setVar( 'layout', 'cpanel'  );
 		return parent::display();
 	}
 
-	function form(){
+	function form() {
 		$user = JFactory::getUser();
 		if ($user->guest) {
 			JRequest::setVar( 'layout', 'form'  );
@@ -57,13 +60,13 @@ class userController extends hikashopController{
 		}
 	}
 
-	function downloads(){
+	function downloads() {
 		if(!$this->_checkLogin()) return true;
 		JRequest::setVar( 'layout', 'downloads'  );
 		return parent::display();
 	}
 
-	function _checkLogin(){
+	function _checkLogin() {
 		$user = JFactory::getUser();
 		if ($user->guest) {
 			$app=JFactory::getApplication();

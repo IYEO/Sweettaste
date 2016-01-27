@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -195,7 +195,7 @@ window.productMgr.updatePrice = function(id, taxed, key) {
 	else
 		tax_id = <?php echo $this->product->product_tax_id; ?>;
 <?php } ?>
-	var url = '<?php echo str_replace('\'', '\\\'', hikashop_completeLink('product&task=getprice&price={PRICE}&product_id='.$this->product->product_id.'&tax_id={TAXID}&conversion={CONVERSION}', true, false, true)); ?>';
+	var url = '<?php echo str_replace('\'', '\\\'', hikashop_completeLink('product&task=getprice&price={PRICE}&product_id='.(int)@$this->product->product_id.'&tax_id={TAXID}&conversion={CONVERSION}', true, false, true)); ?>';
 	url = url.replace('{PRICE}', price).replace('{TAXID}', tax_id).replace('{CONVERSION}', conversion);
 	o.xRequest(url, null, function(xhr, params) {
 		dest.value = xhr.responseText;

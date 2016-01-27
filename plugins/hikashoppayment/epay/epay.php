@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -133,9 +133,8 @@ class plgHikashoppaymentEpay extends hikashopPaymentPlugin
 				$history->data = "Payment by ePay - Invalid MD5 - ePay transaction ID: " . $_GET["tid"];
 				$email->subject = JText::sprintf('NOTIFICATION_REFUSED_FOR_THE_ORDER','ePay').'invalid response';
 				$email->body = JText::sprintf("Hello,\r\n An ePay notification was refused because the notification from the ePay server was invalid")."\r\n\r\n".$order_text;
-				$order_status = $this->payment_params->invalid_status;
 
-				$this->modifyOrder($order_id,$order_status,$history,$email);
+				$this->modifyOrder($order_id, $this->payment_params->invalid_status, $history, $email);
 
 				return false;
 			}
@@ -157,194 +156,41 @@ class plgHikashoppaymentEpay extends hikashopPaymentPlugin
 	}
 
 	function getPaymentDefaultValues(&$element) {
-		$element->payment_name='ePay';
-		$element->payment_description='You can pay by credit card or epay using this payment method';
-		$element->payment_images='MasterCard,VISA,Credit_card,American_Express';
-		$element->payment_params->notification=1;
-		$element->payment_params->windowstate=1;
-		$element->payment_params->windowid=1;
-		$element->payment_params->instantcapture=0;
-		$element->payment_params->ownreceipt=0;
-		$element->payment_params->invalid_status='cancelled';
-		$element->payment_params->pending_status='created';
-		$element->payment_params->verified_status='confirmed';
+		$element->payment_name = 'ePay';
+		$element->payment_description = 'You can pay by credit card or epay using this payment method';
+		$element->payment_images = 'MasterCard,VISA,Credit_card,American_Express';
+		$element->payment_params->notification = 1;
+		$element->payment_params->windowstate = 1;
+		$element->payment_params->windowid = 1;
+		$element->payment_params->instantcapture = 0;
+		$element->payment_params->ownreceipt = 0;
+		$element->payment_params->invalid_status = 'cancelled';
+		$element->payment_params->pending_status = 'created';
+		$element->payment_params->verified_status = 'confirmed';
 	}
 
 	function get_iso_code($code) {
-		switch (strtoupper($code)){
-			case 'ADP': return '020';
-			case 'AED': return '784';
-			case 'AFA': return '004';
-			case 'ALL': return '008';
-			case 'AMD': return '051';
-			case 'ANG': return '532';
-			case 'AOA': return '973';
-			case 'ARS': return '032';
-			case 'AUD': return '036';
-			case 'AWG': return '533';
-			case 'AZM': return '031';
-			case 'BAM': return '977';
-			case 'BBD': return '052';
-			case 'BDT': return '050';
-			case 'BGL': return '100';
-			case 'BGN': return '975';
-			case 'BHD': return '048';
-			case 'BIF': return '108';
-			case 'BMD': return '060';
-			case 'BND': return '096';
-			case 'BOB': return '068';
-			case 'BOV': return '984';
-			case 'BRL': return '986';
-			case 'BSD': return '044';
-			case 'BTN': return '064';
-			case 'BWP': return '072';
-			case 'BYR': return '974';
-			case 'BZD': return '084';
-			case 'CAD': return '124';
-			case 'CDF': return '976';
-			case 'CHF': return '756';
-			case 'CLF': return '990';
-			case 'CLP': return '152';
-			case 'CNY': return '156';
-			case 'COP': return '170';
-			case 'CRC': return '188';
-			case 'CUP': return '192';
-			case 'CVE': return '132';
-			case 'CYP': return '196';
-			case 'CZK': return '203';
-			case 'DJF': return '262';
-			case 'DKK': return '208';
-			case 'DOP': return '214';
-			case 'DZD': return '012';
-			case 'ECS': return '218';
-			case 'ECV': return '983';
-			case 'EEK': return '233';
-			case 'EGP': return '818';
-			case 'ERN': return '232';
-			case 'ETB': return '230';
-			case 'EUR': return '978';
-			case 'FJD': return '242';
-			case 'FKP': return '238';
-			case 'GBP': return '826';
-			case 'GEL': return '981';
-			case 'GHC': return '288';
-			case 'GIP': return '292';
-			case 'GMD': return '270';
-			case 'GNF': return '324';
-			case 'GTQ': return '320';
-			case 'GWP': return '624';
-			case 'GYD': return '328';
-			case 'HKD': return '344';
-			case 'HNL': return '340';
-			case 'HRK': return '191';
-			case 'HTG': return '332';
-			case 'HUF': return '348';
-			case 'IDR': return '360';
-			case 'ILS': return '376';
-			case 'INR': return '356';
-			case 'IQD': return '368';
-			case 'IRR': return '364';
-			case 'ISK': return '352';
-			case 'JMD': return '388';
-			case 'JOD': return '400';
-			case 'JPY': return '392';
-			case 'KES': return '404';
-			case 'KGS': return '417';
-			case 'KHR': return '116';
-			case 'KMF': return '174';
-			case 'KPW': return '408';
-			case 'KRW': return '410';
-			case 'KWD': return '414';
-			case 'KYD': return '136';
-			case 'KZT': return '398';
-			case 'LAK': return '418';
-			case 'LBP': return '422';
-			case 'LKR': return '144';
-			case 'LRD': return '430';
-			case 'LSL': return '426';
-			case 'LTL': return '440';
-			case 'LVL': return '428';
-			case 'LYD': return '434';
-			case 'MAD': return '504';
-			case 'MDL': return '498';
-			case 'MGF': return '450';
-			case 'MKD': return '807';
-			case 'MMK': return '104';
-			case 'MNT': return '496';
-			case 'MOP': return '446';
-			case 'MRO': return '478';
-			case 'MTL': return '470';
-			case 'MUR': return '480';
-			case 'MVR': return '462';
-			case 'MWK': return '454';
-			case 'MXN': return '484';
-			case 'MXV': return '979';
-			case 'MYR': return '458';
-			case 'MZM': return '508';
-			case 'NAD': return '516';
-			case 'NGN': return '566';
-			case 'NIO': return '558';
-			case 'NOK': return '578';
-			case 'NPR': return '524';
-			case 'NZD': return '554';
-			case 'OMR': return '512';
-			case 'PAB': return '590';
-			case 'PEN': return '604';
-			case 'PGK': return '598';
-			case 'PHP': return '608';
-			case 'PKR': return '586';
-			case 'PLN': return '985';
-			case 'PYG': return '600';
-			case 'QAR': return '634';
-			case 'ROL': return '642';
-			case 'RUB': return '643';
-			case 'RUR': return '810';
-			case 'RWF': return '646';
-			case 'SAR': return '682';
-			case 'SBD': return '090';
-			case 'SCR': return '690';
-			case 'SDD': return '736';
-			case 'SEK': return '752';
-			case 'SGD': return '702';
-			case 'SHP': return '654';
-			case 'SIT': return '705';
-			case 'SKK': return '703';
-			case 'SLL': return '694';
-			case 'SOS': return '706';
-			case 'SRG': return '740';
-			case 'STD': return '678';
-			case 'SVC': return '222';
-			case 'SYP': return '760';
-			case 'SZL': return '748';
-			case 'THB': return '764';
-			case 'TJS': return '972';
-			case 'TMM': return '795';
-			case 'TND': return '788';
-			case 'TOP': return '776';
-			case 'TPE': return '626';
-			case 'TRL': return '792';
-			case 'TRY': return '949';
-			case 'TTD': return '780';
-			case 'TWD': return '901';
-			case 'TZS': return '834';
-			case 'UAH': return '980';
-			case 'UGX': return '800';
-			case 'USD': return '840';
-			case 'UYU': return '858';
-			case 'UZS': return '860';
-			case 'VEB': return '862';
-			case 'VND': return '704';
-			case 'VUV': return '548';
-			case 'XAF': return '950';
-			case 'XCD': return '951';
-			case 'XOF': return '952';
-			case 'XPF': return '953';
-			case 'YER': return '886';
-			case 'YUM': return '891';
-			case 'ZAR': return '710';
-			case 'ZMK': return '894';
-			case 'ZWD': return '716';
-		}
+		$codes = array(
+			'ADP' => '020', 'AED' => '784', 'AFA' => '004', 'ALL' => '008', 'AMD' => '051', 'ANG' => '532', 'AOA' => '973', 'ARS' => '032', 'AUD' => '036', 'AWG' => '533', 'AZM' => '031',
+			'BAM' => '977', 'BBD' => '052', 'BDT' => '050', 'BGL' => '100', 'BGN' => '975', 'BHD' => '048', 'BIF' => '108', 'BMD' => '060', 'BND' => '096', 'BOB' => '068', 'BOV' => '984',
+			'BRL' => '986', 'BSD' => '044', 'BTN' => '064', 'BWP' => '072', 'BYR' => '974', 'BZD' => '084', 'CAD' => '124', 'CDF' => '976', 'CHF' => '756', 'CLF' => '990', 'CLP' => '152',
+			'CNY' => '156', 'COP' => '170', 'CRC' => '188', 'CUP' => '192', 'CVE' => '132', 'CYP' => '196', 'CZK' => '203', 'DJF' => '262', 'DKK' => '208', 'DOP' => '214', 'DZD' => '012',
+			'ECS' => '218', 'ECV' => '983', 'EEK' => '233', 'EGP' => '818', 'ERN' => '232', 'ETB' => '230', 'EUR' => '978', 'FJD' => '242', 'FKP' => '238', 'GBP' => '826', 'GEL' => '981',
+			'GHC' => '288', 'GIP' => '292', 'GMD' => '270', 'GNF' => '324', 'GTQ' => '320', 'GWP' => '624', 'GYD' => '328', 'HKD' => '344', 'HNL' => '340', 'HRK' => '191', 'HTG' => '332',
+			'HUF' => '348', 'IDR' => '360', 'ILS' => '376', 'INR' => '356', 'IQD' => '368', 'IRR' => '364', 'ISK' => '352', 'JMD' => '388', 'JOD' => '400', 'JPY' => '392', 'KES' => '404',
+			'KGS' => '417', 'KHR' => '116', 'KMF' => '174', 'KPW' => '408', 'KRW' => '410', 'KWD' => '414', 'KYD' => '136', 'KZT' => '398', 'LAK' => '418', 'LBP' => '422', 'LKR' => '144',
+			'LRD' => '430', 'LSL' => '426', 'LTL' => '440', 'LVL' => '428', 'LYD' => '434', 'MAD' => '504', 'MDL' => '498', 'MGF' => '450', 'MKD' => '807', 'MMK' => '104', 'MNT' => '496',
+			'MOP' => '446', 'MRO' => '478', 'MTL' => '470', 'MUR' => '480', 'MVR' => '462', 'MWK' => '454', 'MXN' => '484', 'MXV' => '979', 'MYR' => '458', 'MZM' => '508', 'NAD' => '516',
+			'NGN' => '566', 'NIO' => '558', 'NOK' => '578', 'NPR' => '524', 'NZD' => '554', 'OMR' => '512', 'PAB' => '590', 'PEN' => '604', 'PGK' => '598', 'PHP' => '608', 'PKR' => '586',
+			'PLN' => '985', 'PYG' => '600', 'QAR' => '634', 'ROL' => '642', 'RUB' => '643', 'RUR' => '810', 'RWF' => '646', 'SAR' => '682', 'SBD' => '090', 'SCR' => '690', 'SDD' => '736',
+			'SEK' => '752', 'SGD' => '702', 'SHP' => '654', 'SIT' => '705', 'SKK' => '703', 'SLL' => '694', 'SOS' => '706', 'SRG' => '740', 'STD' => '678', 'SVC' => '222', 'SYP' => '760',
+			'SZL' => '748', 'THB' => '764', 'TJS' => '972', 'TMM' => '795', 'TND' => '788', 'TOP' => '776', 'TPE' => '626', 'TRL' => '792', 'TRY' => '949', 'TTD' => '780', 'TWD' => '901',
+			'TZS' => '834', 'UAH' => '980', 'UGX' => '800', 'USD' => '840', 'UYU' => '858', 'UZS' => '860', 'VEB' => '862', 'VND' => '704', 'VUV' => '548', 'XAF' => '950', 'XCD' => '951',
+			'XOF' => '952', 'XPF' => '953', 'YER' => '886', 'YUM' => '891', 'ZAR' => '710', 'ZMK' => '894', 'ZWD' => '716'
+		);
+		$code = strtoupper(trim($code));
+		if(isset( $codes[$code] ))
+			return $codes[$code];
 		return '208';
 	}
 }

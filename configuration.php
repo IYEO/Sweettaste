@@ -54,8 +54,8 @@ class JConfig {
 	public $sef_suffix = '0';
 	public $unicodeslugs = '0';
 	public $feed_limit = '10';
-	public $log_path = 'd:\\Work\\WWW\\XAMPP\\htdocs\\sweettaste/logs';
-	public $tmp_path = 'd:\\Work\\WWW\\XAMPP\\htdocs\\sweettaste/tmp';
+	public $log_path = '/mnt/D/Work/Web/xampp/htdocs/sweettaste/logs';
+	public $tmp_path = '/mnt/D/Work/Web/xampp/htdocs/sweettaste/tmp';
 	public $lifetime = '15';
 	public $session_handler = 'database';
 	public $memcache_persist = '1';

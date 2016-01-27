@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -27,7 +27,7 @@ if(hikashop_level(2)){
 }
 ?>
 <div class="hkc-xl-12 hikashop_module_edit_display_settings_div" data-type="product_layout" data-layout="product_div">
-	<div class="hkc-xl-4 hikashop_module_subblock hikashop_module_edit_display_settings_subdiv">
+	<div class="hkc-xl-4 hkc-md-6 hikashop_module_subblock hikashop_module_edit_display_settings_subdiv">
 		<div class="hikashop_module_subblock_content">
 			<div class="hikashop_module_subblock_title hikashop_module_edit_display_settings_div_title"><?php echo JText::_('HIKA_ITEMS'); ?></div>
 			<dl class="hika_options">
@@ -80,7 +80,7 @@ if(hikashop_level(2)){
 			</dl>
 		</div>
 	</div>
-	<div class="hkc-xl-4 hikashop_module_subblock hikashop_module_edit_display_settings_subdiv">
+	<div class="hkc-xl-4 hkc-md-6 hikashop_module_subblock hikashop_module_edit_display_settings_subdiv">
 		<div class="hikashop_module_subblock_content">
 			<div class="hikashop_module_subblock_title hikashop_module_edit_display_settings_div_title"><?php echo JText::_('HIKA_ITEM_LAYOUT'); ?></div>
 			<dl class="hika_options">
@@ -148,7 +148,7 @@ if(hikashop_level(2)){
 			</dl>
 		</div>
 	</div>
-	<div class="hkc-xl-4 hikashop_module_subblock hikashop_module_edit_display_settings_subdiv">
+	<div class="hkc-xl-4 hkc-md-6 hikashop_module_subblock hikashop_module_edit_display_settings_subdiv">
 		<div class="hikashop_module_subblock_content">
 			<div class="hikashop_module_subblock_title hikashop_module_edit_display_settings_div_title"><?php echo JText::_('HIKA_ITEM_BOX_SETTINGS'); ?></div>
 			<dl class="hika_options">

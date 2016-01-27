@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -30,6 +30,10 @@ class plgHikashoppaymentAuthorize extends hikashopPaymentPlugin
 		'debug' => array('DEBUG', 'boolean','0'),
 		'return_url' => array('RETURN_URL', 'input'),
 		'x_logo_url' => array('LOGO', 'input'),
+		'negative_coupon' => array('Negative coupon value', 'list',array(
+			'0' => 'No (for most payment gateways)',
+			'1' => 'Yes (for Payeezy)')
+		),
 		'invalid_status' => array('INVALID_STATUS', 'orderstatus'),
 		'pending_status' => array('PENDING_STATUS', 'orderstatus'),
 		'verified_status' => array('VERIFIED_STATUS', 'orderstatus')
@@ -251,7 +255,10 @@ class plgHikashoppaymentAuthorize extends hikashopPaymentPlugin
 		}
 
 		if(!empty($order->cart->coupon) && @$order->cart->coupon->discount_value>0){
-			$vars["x_line_item"][]='coupon<|>'.JText::_('HIKASHOP_COUPON').'<|>'.JText::_('HIKASHOP_COUPON').'<|>1<|>-'.round($order->cart->coupon->discount_value,(int)$this->currency->currency_locale['int_frac_digits']).'<|>N';
+			$negative = '';
+			if((int)@$this->payment_params->negative_coupon)
+				$negative = '-';
+			$vars["x_line_item"][]='coupon<|>'.JText::_('HIKASHOP_COUPON').'<|>'.JText::_('HIKASHOP_COUPON').'<|>1<|>'.$negative.round($order->cart->coupon->discount_value,(int)$this->currency->currency_locale['int_frac_digits']).'<|>N';
 		}
 		if(!empty($order->order_payment_price)){
 			$vars["x_line_item"][]='payment<|>'.JText::_('HIKASHOP_PAYMENT').'<|>'.JText::_('HIKASHOP_PAYMENT').'<|>1<|>'.round($order->order_payment_price,(int)$this->currency->currency_locale['int_frac_digits']).'<|>N';

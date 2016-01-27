@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -24,7 +24,7 @@ defined('_JEXEC') or die('Restricted access');
 			$image_url = $image->path;
 		unset($image);
 ?>
-		<h3><img src="<?php echo $image_url; ?>" alt="" style="vertical-align:middle;margin-right:5px;"/><?php echo $this->product->product_name; ?></h3>
+		<h3><img src="<?php echo $image_url; ?>" alt="" style="vertical-align:middle;margin-right:5px;"/><?php echo @$this->product->product_name; ?></h3>
 		<ul class="hika_tabs" rel="tabs:hikashop_product_edition_tab_">
 			<li class="active"><a href="#product" rel="tab:1" onclick="return window.hikashop.switchTab(this);"><?php echo JText::_('PRODUCT'); ?></a></li>
 			<li><a href="#variants" rel="tab:2" onclick="return window.hikashop.switchTab(this);"><?php echo JText::_('VARIANTS'); ?><span id="hikashop_product_variant_label"></span></a></li>
@@ -176,19 +176,14 @@ defined('_JEXEC') or die('Restricted access');
 <?php
 		}
 
-		if(@$this->product->product_type != 'variant') {
-			$curr = '';
-			$mainCurr = $this->currencyClass->getCurrencies($this->main_currency_id, $curr);
+		$curr = '';
+		$mainCurr = $this->currencyClass->getCurrencies($this->main_currency_id, $curr);
 ?>
 			<dt class="hikashop_product_msrp"><label for="data_product__product_msrp"><?php echo JText::_('PRODUCT_MSRP'); ?></label></dt>
 			<dd class="hikashop_product_msrp">
 				<input type="text" id="data_product__product_msrp" name="data[product][product_msrp]" value="<?php echo $this->escape(@$this->product->product_msrp); ?>"/> <?php echo $mainCurr[$this->main_currency_id]->currency_symbol.' '.$mainCurr[$this->main_currency_id]->currency_code;?>
 			</dd>
-<?php
-		}
-?>
 		</dl>
-
 <?php
 	if(hikashop_acl('product/edit/price')) {
 ?>

@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -210,7 +210,7 @@ class plgSystemHikashopsocial extends JPlugin {
 		else
 			$url = hikashop_currentURL('',false);
 
-		return '<span class="hikashop_social_pinterest'.$c.'"><a href="//pinterest.com/pin/create/button/?url='.urlencode($url).'&media='.urlencode($imageUrl).'&description='.htmlspecialchars(strip_tags($element->description), ENT_COMPAT,'UTF-8').'" class="pin-it-button" count-layout="'.$count.'"><img border="0" src="//assets.pinterest.com/images/PinExt.png" title="Pin It" /></a></span>';
+		return '<span class="hikashop_social_pinterest'.$c.'"><a href="//pinterest.com/pin/create/button/?url='.urlencode($url).'&media='.urlencode($imageUrl).'&description='.htmlspecialchars(strip_tags(preg_replace('#\{(load)?(module|position) +[a-b_0-9]+\}#i','',$element->description)), ENT_COMPAT,'UTF-8').'" class="pin-it-button" count-layout="'.$count.'"><img border="0" src="//assets.pinterest.com/images/PinExt.png" title="Pin It" /></a></span>';
 	}
 
 	function _addTwitterButton(&$plugin) {
@@ -401,7 +401,7 @@ function twitterPop(str) {
 			$this->meta['property="og:image"']='<meta property="og:image" content="'.$imageUrl.'" /> ';
 
 		$this->meta['property="og:url"']='<meta property="og:url" content="'.$url.'" />';
-		$this->meta['property="og:description"'] = '<meta property="og:description" content="'.htmlspecialchars(strip_tags($element->description), ENT_COMPAT,'UTF-8').'"/> ';
+		$this->meta['property="og:description"'] = '<meta property="og:description" content="'.htmlspecialchars(strip_tags(preg_replace('#\{(load)?(module|position) +[a-b_0-9]+\}#i','',$element->description)), ENT_COMPAT,'UTF-8').'"/> ';
 
 		$jconf = JFactory::getConfig();
 		if(HIKASHOP_J30)

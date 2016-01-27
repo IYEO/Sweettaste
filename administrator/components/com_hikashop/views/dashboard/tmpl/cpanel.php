@@ -1,20 +1,14 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
-?><?php if(false) { ?>
-<div class="well">
-<ul class="nav nav-pills nav-stacked nav-list">
-	<li class="nav-header">List header</li>
-<?php } else { ?>
-<div id="cpanel">
-<?php }
-
+?><div id="cpanel">
+<?php
 	$tooltip_class = HIKASHOP_J30 ? 'hasTooltip' : 'hasTip';
 	if(HIKASHOP_J30)
 		JHtml::_('bootstrap.tooltip');
@@ -47,11 +41,6 @@ defined('_JEXEC') or die('Restricted access');
 <?php
 		}
 	}
-
-if(false) { ?>
-</ul>
-</div>
-<?php } else { ?>
+?>
 	<div style="clear:both"></div>
 </div>
-<?php }

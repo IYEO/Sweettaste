@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -144,13 +144,12 @@ class hikashopZoneClass extends hikashopClass{
 		return (int)$zone->zone_currency_id;
 	}
 
-
 	function getOrderZones(&$order) {
 		$field = 'address_country';
 		$fieldClass = hikashop_get('class.field');
-		$fields = $fieldClass->getData('frontcomp','address');
-		if(isset($fields['address_state']) && $fields['address_state']->field_type=='zone' && !empty($order->shipping_address) && !empty($order->shipping_address->address_state) && (!is_array($order->shipping_address->address_state) || count($order->shipping_address->address_state)>1 || !empty($order->shipping_address->address_state[0]))) {
-			$field='address_state';
+		$fields = $fieldClass->getData('frontcomp', 'address');
+		if(isset($fields['address_state']) && $fields['address_state']->field_type == 'zone' && !empty($order->shipping_address) && !empty($order->shipping_address->address_state) && (!is_array($order->shipping_address->address_state) || count($order->shipping_address->address_state)>1 || !empty($order->shipping_address->address_state[0]))) {
+			$field = 'address_state';
 		}
 		$type = 'shipping_address';
 		if(empty($order->shipping_address) && !empty($order->billing_address)) {

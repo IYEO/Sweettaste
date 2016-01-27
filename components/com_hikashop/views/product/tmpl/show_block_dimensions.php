@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -53,14 +53,15 @@ if ($this->config->get('dimensions_display', 0) && bccomp($this->element->produc
 <?php
 }
 if($this->config->get('manufacturer_display', 0) && !empty($this->element->product_manufacturer_id)){
-	$class = hikashop_get('class.category');
-	$manufacturer = $class->get($this->element->product_manufacturer_id);
-	$menuClass = hikashop_get('class.menus');
-	$Itemid = $menuClass->loadAMenuItemId('manufacturer','listing');
-	if(empty($Itemid)){
-		$Itemid = $menuClass->loadAMenuItemId('','');
-	}
 	$categoryClass = hikashop_get('class.category');
-	$categoryClass->addAlias($manufacturer);
-	echo JText::_('MANUFACTURER').': '.'<a href="'.hikashop_contentLink('category&task=listing&cid='.$manufacturer->category_id.'&name='.$manufacturer->alias.'&Itemid='.$Itemid,$manufacturer).'">'.$manufacturer->category_name.'</a>';
+	$manufacturer = $categoryClass->get($this->element->product_manufacturer_id);
+	if($manufacturer->category_published){
+		$menuClass = hikashop_get('class.menus');
+		$Itemid = $menuClass->loadAMenuItemId('manufacturer','listing');
+		if(empty($Itemid)){
+			$Itemid = $menuClass->loadAMenuItemId('','');
+		}
+		$categoryClass->addAlias($manufacturer);
+		echo JText::_('MANUFACTURER').': '.'<a href="'.hikashop_contentLink('category&task=listing&cid='.$manufacturer->category_id.'&name='.$manufacturer->alias.'&Itemid='.$Itemid,$manufacturer).'">'.$manufacturer->category_name.'</a>';
+	}
 }

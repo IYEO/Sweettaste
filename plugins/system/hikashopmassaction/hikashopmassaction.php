@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -256,7 +256,7 @@ class plgSystemHikashopmassaction extends JPlugin {
 				$tables = array('user','address');
 
 
-				$filters['haveDontHave']=JText::_('HAVE_DONT_HAVE');
+				$filters['haveDontHave']=JText::_('HIKA_HAVE_DONT_HAVE');
 				$loadedData->massaction_filters['__num__'] = new stdClass();
 				$loadedData->massaction_filters['__num__']->type = 'user';
 				$loadedData->massaction_filters['__num__']->data = array('have'=>'have','type'=>'','order_status'=>'created');
@@ -276,7 +276,7 @@ class plgSystemHikashopmassaction extends JPlugin {
 					$value->type = 'user';
 
 					$output= '<select class="chzn-done not-processed" name="filter['.$table->table.']['.$key.'][haveDontHave][have]" id="userfilter'.$key.'haveDontHavetype" onchange="countresults(\''.$table->table.'\','.$key.')">';
-					$datas = array('have'=>'HIKA_HAVE','donthave'=>'DONT_HAVE');
+					$datas = array('have'=>'HIKA_HAVE','donthave'=>'HIKA_DONT_HAVE');
 					$display = 'style="display: none;"';
 					foreach($datas as $k => $data){
 						$selected = '';
@@ -479,7 +479,8 @@ class plgSystemHikashopmassaction extends JPlugin {
 					if(!in_array($relatedTable, array('characteristic','product_related','user'))){
 						$output .= JHTML::_('select.genericlist', $typeField, "filter[".$table->table."][".$key."][".$column."][type]", 'class="inputbox chzn-done not-processed" onchange="countresults(\''.$table->table.'\',\''.$key.'\')" size="1"', 'value', 'text', $value->data['type']);
 					}
-					$output .= $operators->display('filter['.$table->table.']['.$key.']['.$column.'][operator]" onchange="countresults(\''.$table->table.'\',\''.$key.'\')"',$value->data['operator'], "chzn-done not-processed");
+					$operators->extra = 'onchange="countresults(\''.$table->table.'\',\''.$key.'\')"';
+					$output .= $operators->display('filter['.$table->table.']['.$key.']['.$column.'][operator]',$value->data['operator'], "chzn-done not-processed");
 					$output .= ' <input class="inputbox" type="text" name="filter['.$table->table.']['.$key.']['.$column.'][value]" size="50" value="'.$value->data['value'].'" onchange="countresults(\''.$table->table.'\',\''.$key.'\')" />';
 
 					$filters_html[$value->name] = $massactionClass->initDefaultDiv($value, $key, $type, $table->table, $loadedData, $output);
@@ -666,6 +667,7 @@ class plgSystemHikashopmassaction extends JPlugin {
 				$actions['updateRelateds']=JText::_('UPDATE_RELATEDS');
 				$actions['updateOptions']=JText::_('UPDATE_OPTIONS');
 				$actions['updateCharacteristics']=JText::_('UPDATE_CHARACTERISTICS');
+				$actions['setCanonical']=JText::_('HK_SET_CANONICAL');
 
 				break;
 			case 'category':
@@ -722,9 +724,23 @@ class plgSystemHikashopmassaction extends JPlugin {
 						if(preg_match('/joomla_/',$relatedTable)) $fields = $db->getTableColumns('#__'.str_replace('joomla_','',$relatedTable));
 						else $fields = $db->getTableColumns('#__hikashop_'.$relatedTable);
 					}
-					ksort($fields);
 					if(!empty($fields)) {
 						$output .= '<div id="action_'.$table->table.'_'.$key.'_displayResults_'.$relatedTable.'Column_div" class="hika_massaction_checkbox"> <a style="cursor: pointer;" onclick="checkAll(\'action_'.$table->table.'_'.$key.'_displayResults_'.$relatedTable.'Column_div\',\'check\');">'.JText::_('SELECT_ALL').'</a> / <a style="cursor: pointer;" onclick="checkAll(\'action_'.$table->table.'_'.$key.'_displayResults_'.$relatedTable.'Column_div\',\'uncheck\');">'.JText::_('UNSELECT_ALL').'</a> <br/>';
+
+						foreach($fields as $key2 => $field){
+							if($key2 == 'address_state'){
+								$fields['zone_state_name'] = $field;
+								$fields['zone_state_name_english'] = $field;
+								$fields['zone_state_code_2'] = $field;
+								$fields['zone_state_code_3'] = $field;
+							}elseif($key2 == 'address_country'){
+								$fields['zone_country_name'] = $field;
+								$fields['zone_country_name_english'] = $field;
+								$fields['zone_country_code_2'] = $field;
+								$fields['zone_country_code_3'] = $field;
+							}
+						}
+						ksort($fields);
 						foreach($fields as $key2 => $field){
 							$checked='';
 							if(isset($value->data[$relatedTable]) && isset($value->data[$relatedTable][$key2])){
@@ -825,9 +841,23 @@ class plgSystemHikashopmassaction extends JPlugin {
 						if(preg_match('/joomla_/',$relatedTable)) $fields = $db->getTableColumns('#__'.str_replace('joomla_','',$relatedTable));
 						else $fields = $db->getTableColumns('#__hikashop_'.$relatedTable);
 					}
-					ksort($fields);
 					if(!empty($fields)) {
 						$output .= '<div id="action_'.$table->table.'_'.$key.'_exportCsv_'.$relatedTable.'Column_div" class="hika_massaction_checkbox"> <a style="cursor: pointer;" onclick="checkAll(\'action_'.$table->table.'_'.$key.'_exportCsv_'.$relatedTable.'Column_div\',\'check\');">'.JText::_('SELECT_ALL').'</a> / <a style="cursor: pointer;" onclick="checkAll(\'action_'.$table->table.'_'.$key.'_exportCsv_'.$relatedTable.'Column_div\',\'uncheck\');">'.JText::_('UNSELECT_ALL').'</a> <br/>';
+
+						foreach($fields as $key2 => $field){
+							if($key2 == 'address_state'){
+								$fields['zone_state_name'] = $field;
+								$fields['zone_state_name_english'] = $field;
+								$fields['zone_state_code_2'] = $field;
+								$fields['zone_state_code_3'] = $field;
+							}elseif($key2 == 'address_country'){
+								$fields['zone_country_name'] = $field;
+								$fields['zone_country_name_english'] = $field;
+								$fields['zone_country_code_2'] = $field;
+								$fields['zone_country_code_3'] = $field;
+							}
+						}
+						ksort($fields);
 						foreach($fields as $key2 => $field){
 							$checked='';
 							if(isset($value->data[$relatedTable]) && isset($value->data[$relatedTable][$key2])){
@@ -1306,6 +1336,22 @@ class plgSystemHikashopmassaction extends JPlugin {
 
 					$actions_html[$value->name] = $massactionClass->initDefaultDiv($value, $key, $type, $table->table, $loadedData, $output);
 				}
+
+
+				$loadedData->massaction_actions['__num__'] = new stdClass();
+				$loadedData->massaction_actions['__num__']->type = $table->table;
+				$loadedData->massaction_actions['__num__']->name = 'setCanonical';
+				$loadedData->massaction_actions['__num__']->html = '';
+				$loadedData->massaction_actions['__num__']->data = array('value' => '', 'type' => '');
+
+				foreach($loadedData->massaction_actions as $key => &$value) {
+					if($value->name != 'setCanonical' || ($table->table != $loadedData->massaction_table && is_int($key)))
+						continue;
+					if(!isset($value->data['value'])) $value->data['value'] = '';
+					$output = '<input type="text" id="action_'.$table->table.'_'.$key.'_setCanonical_value" name="action['.$table->table.']['.$key.'][setCanonical][value]" value="'.$value->data['value'].'">';
+					$actions_html[$value->name] = $massactionClass->initDefaultDiv($value, $key, $type, $table->table, $loadedData, $output);
+				}
+
 			}
 
 			if($loadedData->massaction_table == 'order' || $loadedData->massaction_table == 'user'){
@@ -1331,6 +1377,8 @@ class plgSystemHikashopmassaction extends JPlugin {
 					if(HIKASHOP_J25){
 						$output ='<select class="chzn-done not-processed" id="action_'.$table->table.'_'.$key.'_changeGroup_type" name="action['.$table->table.']['.$key.'][changeGroup][type]">';
 						$datas = array('add'=>'ADD', 'replace'=>'REPLACE');
+						if(HIKASHOP_J25)
+							$datas['remove'] = 'REMOVE';
 						foreach($datas as $k => $data){
 							$selected = '';
 							if($k == $value->data['type']) $selected = 'selected="selected"';

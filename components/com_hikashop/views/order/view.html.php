@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -97,9 +97,13 @@ class OrderViewOrder extends hikashopView{
 			}
 			$payment_change = $config->get('allow_payment_change',1);
 			$this->assignRef('payment_change',$payment_change);
+
 			$pluginsPayment = hikashop_get('type.plugins');
 			$pluginsPayment->type='payment';
-			$this->assignRef('payment',$pluginsPayment);
+			$this->assignRef('payment', $pluginsPayment);
+
+			$paymentClass = hikashop_get('class.payment');
+			$this->assignRef('paymentClass', $paymentClass);
 		}
 		if( $config->get('cancellable_order_status','') != '' ) {
 			$cancellable_order_status = explode(',',$config->get('cancellable_order_status',''));

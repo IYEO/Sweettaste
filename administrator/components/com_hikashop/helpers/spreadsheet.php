@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -94,6 +94,16 @@ class hikashopSpreadsheetHelper {
 		}
 	}
 
+	function get() {
+		if( $this->format == 1 )
+			$this->buffer .= pack('vv',0x000A,0x0000);
+
+		$ret = $this->buffer;
+		$this->buffer = '';
+
+		return $ret;
+	}
+
 	function writeNumber($row, $col, $value, $lastOne) {
 		if( $this->format == 1 ) {
 			$this->currLine = $row;
@@ -158,7 +168,8 @@ class hikashopSpreadsheetHelper {
 				$lastOne = true;
 			if(is_array($value))
 				continue;
-			if( is_numeric($value) ) {
+
+			if( is_numeric($value) && (preg_match('[^0-9]',$value) || ltrim($value,'0')===(string)$value)) {
 				$this->writeNumber($this->currLine, $i++, $value, $lastOne);
 			} else {
 				$this->writeText($this->currLine, $i++, $value, $lastOne);

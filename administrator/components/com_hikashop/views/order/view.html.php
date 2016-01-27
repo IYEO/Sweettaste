@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -118,15 +118,20 @@ class OrderViewOrder extends hikashopView{
 				}
 				break;
 		}
-		switch($pageInfo->filter->filter_payment){
-			case '':
-				break;
-			default:
-				$filters[]='b.order_payment_method = '.$database->Quote($pageInfo->filter->filter_payment);
-				break;
+		if(!empty($pageInfo->filter->filter_payment) && is_numeric($pageInfo->filter->filter_payment)){
+			$filters[]='b.order_payment_id = '.(int)$pageInfo->filter->filter_payment;
+		}else{
+			switch($pageInfo->filter->filter_payment){
+				case '':
+					break;
+				default:
+					$filters[]='b.order_payment_method = '.$database->Quote($pageInfo->filter->filter_payment);
+					break;
+			}
 		}
 		$searchMap = array('c.id','c.username','c.name','a.user_email','b.order_user_id','b.order_number','b.order_id','b.order_invoice_number','b.order_invoice_id','b.order_full_price','d.address_firstname','d.address_lastname');
 		foreach($fields as $field){
+			if($field->field_type == "customtext") continue;
 			$searchMap[]='b.'.$field->field_namekey;
 		}
 

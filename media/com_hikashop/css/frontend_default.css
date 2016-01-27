@@ -1,8 +1,8 @@
 /**
  * @package    HikaShop for Joomla!
- * @version    2.6.0
+ * @version    2.6.1
  * @author     hikashop.com
- * @copyright  (C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright  (C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license    GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 div.hikashop_footer{
@@ -1213,6 +1213,26 @@ a.hikashop_filter_list_selected:hover { color:black; font-weight:bold; text-deco
 .ui-rating-empty {background-position:left -32px;}
 .ui-rating-hover {background-position:left -48px !important;}
 
+.hk-rating {
+	margin:auto;
+	display:inline;
+}
+.hk-rating a { cursor: pointer; background-color: transparent !important; }
+.hk-rate-star {
+	width:16px;
+	height:16px;
+	font-size:2px;
+	display:inline-block;
+	text-decoration:none;
+	vertical-align:bottom;
+	background-image:url('../images/star.gif') !important;
+	background-repeat:no-repeat;
+}
+.hk-rate-star.state-full { background-position:left top; }
+.hk-rate-star.state-mid { background-position:left -16px; }
+.hk-rate-star.state-empty { background-position:left -32px; }
+.hk-rate-star.state-hover { background-position:left -48px !important; }
+
 
 .hikashop_vote_notification{
 	display:inline;
@@ -1262,7 +1282,7 @@ a.hikashop_filter_list_selected:hover { color:black; font-weight:bold; text-deco
 	margin-top:30px;
 }
 
-#hikashop_product_vote_form table{
+#hikashop_product_vote_form table, .hikashop_product_vote_form table{
 	margin:auto;
 	color:#666;}
 

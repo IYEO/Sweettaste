@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -201,12 +201,12 @@ class plgHikashopshippingUPS extends hikashopShippingPlugin
 					$new_usable_rates[$i]->shipping_id .= '-' . $selected_method;
 
 				if(isset($rate->shipping_params->show_eta) && $rate->shipping_params->show_eta){
-					if($method['delivery_day'] != -1)
+					if(!empty($method['delivery_day']) && $method['delivery_day'] != -1)
 						$new_usable_rates[$i]->shipping_description .= ' '.JText::sprintf('ESTIMATED_TIME_AFTER_SEND', $method['delivery_day']);
 					else
 						$new_usable_rates[$i]->shipping_description .= ' '.JText::_('NO_ESTIMATED_TIME_AFTER_SEND');
 
-					if($method['delivery_time'] != -1)
+					if(!empty($method['delivery_time']) && $method['delivery_time'] != -1)
 						$new_usable_rates[$i]->shipping_description .= '<br/>'.JText::sprintf('DELIVERY_HOUR', $method['delivery_time']);
 					else
 						$new_usable_rates[$i]->shipping_description .= '<br/>'.JText::_('NO_DELIVERY_HOUR');
@@ -217,15 +217,15 @@ class plgHikashopshippingUPS extends hikashopShippingPlugin
 				$i++;
 			}
 
-			foreach($new_usable_rates as $i => $rate) {
-				if(isset($rate->shipping_price_orig) || isset($rate->shipping_currency_id_orig)){
-					if($rate->shipping_currency_id_orig == $rate->shipping_currency_id)
-						$rate->shipping_price_orig = $rate->shipping_price;
+			foreach($new_usable_rates as $i => $usable_rate) {
+				if(isset($usable_rate->shipping_price_orig) || isset($usable_rate->shipping_currency_id_orig)){
+					if($usable_rate->shipping_currency_id_orig == $usable_rate->shipping_currency_id)
+						$usable_rate->shipping_price_orig = $usable_rate->shipping_price;
 					else
-						$rate->shipping_price_orig = $currencyClass->convertUniquePrice($rate->shipping_price, $rate->shipping_currency_id, $rate->shipping_currency_id_orig);
+						$usable_rate->shipping_price_orig = $currencyClass->convertUniquePrice($usable_rate->shipping_price, $usable_rate->shipping_currency_id, $usable_rate->shipping_currency_id_orig);
 				}
-				$usable_rates[$rate->shipping_id] = $rate;
-				$cache_usable_rates[$rate->shipping_id] = $rate;
+				$usable_rates[$usable_rate->shipping_id] = $usable_rate;
+				$cache_usable_rates[$usable_rate->shipping_id] = $usable_rate;
 			}
 		}
 

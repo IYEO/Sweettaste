@@ -1,16 +1,16 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
 ?>
 <?php echo JText::sprintf('NEW_COMMENT_NOTIFICATION_SUBJECT',HIKASHOP_LIVE);?><br/>
 
-<?php 
+<?php
 if(isset($data->result->vote_type) && $data->result->vote_type == 'vendor'){
 	echo JText::sprintf('COMMENT_ITEM_NAME').": ".$data->type->vendor_name;
 }else{

@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -49,7 +49,7 @@ if(!isset($this->element['layout_type']))
 		</div>
 
 		<!-- Middle part (Display options) -->
-		<div class="hkc-xl-12 hikashop_menu_block hikashop_module_edit_display">
+		<div class="hkc-xl-12 hk-container hikashop_menu_block hikashop_module_edit_display">
 <!--			<div class="hkc-xl-4 hikashop_module_block hikashop_module_edit_display_preview">
 			<?php
 				$this->setLayout('options_display_preview');
@@ -69,7 +69,7 @@ if(!isset($this->element['layout_type']))
 		</div>
 
 		<!-- Bottom part (Generic options) -->
-		<div class="hkc-xl-12 hikashop_module_block hikashop_module_edit_general">
+		<div class="hkc-xl-12 hk-container hikashop_module_block hikashop_module_edit_general">
 		<?php
 		$this->setLayout('options_main');
 		echo $this->loadTemplate();
@@ -84,12 +84,53 @@ if(!isset($this->element['layout_type']))
 		</div>
 
 		<!-- Extra part (Carousel options & ...) -->
-		<div class="hkc-xl-12 hikashop_module_block hikashop_module_edit_extra" data-display-tab="div">
+		<div class="hkc-xl-12 hk-container hikashop_module_block hikashop_module_edit_extra" data-display-tab="div">
 		<?php
 			$this->setLayout('options_product_extra');
 			echo $this->loadTemplate();
 		?>
 		</div>
+<?php
+if(!empty($this->extra_blocks['layouts'])) {
+	foreach($this->extra_blocks['layouts'] as $key => $r) {
+		if(is_string($r))
+			echo $r;
+		if(is_array($r)) {
+			if(!isset($r['name']) && isset($r[0]))
+				$r['name'] = $r[0];
+			if(!isset($r['value']) && isset($r[1]))
+				$r['value'] = $r[1];
+?>
+		<div class="hkc-xl-12 hikashop_module_block hikashop_module_edit_<?php echo $key; ?>">
+<div class="hkc-xl-4 hikashop_module_subblock hikashop_module_edit_product">
+	<div class="hikashop_module_subblock_content">
+		<div class="hikashop_module_subblock_title hikashop_module_edit_<?php echo $key; ?>_title"><?php echo JText::_(@$r['name']); ?></div>
+<?php
+			if(is_array($r['value'])) {
+?>
+		<dl class="hika_options">
+<?php
+				foreach($r['value'] as $k => $v) {
+?>
+			<dt class="hikashop_option_name"><?php echo JText::_($k); ?></dt>
+			<dd class="hikashop_option_value"><?php echo $v; ?></dd>
+<?php
+				}
+?>
+		</dl>
+<?php
+			} else {
+				echo $r['value'];
+			}
+?>
+	</div>
+</div>
+		</div>
+<?php
+		}
+	}
+}
+?>
 	</div>
 </div>
 <?php

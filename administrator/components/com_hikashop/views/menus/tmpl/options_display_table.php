@@ -1,14 +1,14 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
 ?><div class="hkc-xl-12 hikashop_menu_edit_display_settings_table" data-type="<?php echo $this->type; ?>_layout" data-layout="<?php echo $this->type; ?>_table">
-	<div class="hkc-xl-4 hikashop_menu_subblock hikashop_menu_edit_display_settings_subdiv">
+	<div class="hkc-xl-4 hkc-md-6 hikashop_menu_subblock hikashop_menu_edit_display_settings_subdiv">
 		<div class="hikashop_menu_subblock_content">
 			<div class="hikashop_menu_subblock_title hikashop_menu_edit_display_settings_div_title"><?php echo JText::_('HIKA_ITEMS'); ?></div>
 			<dl class="hika_options">

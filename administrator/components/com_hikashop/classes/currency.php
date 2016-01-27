@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -1538,42 +1538,43 @@ class hikashopCurrencyClass extends hikashopClass{
 		return true;
 	}
 
-	function getCurrencies($ids,&$currencies){
-		static $cachedCurrencies=array();
-		if(!empty($currencies)){
-			foreach($currencies as $currency){
+	function getCurrencies($ids, &$currencies) {
+		static $cachedCurrencies = array();
+		if(!empty($currencies)) {
+			foreach($currencies as $currency) {
 				$this->checkLocale($currency);
-				$cachedCurrencies[(int)$currency->currency_id]=$currency;
+				$cachedCurrencies[(int)$currency->currency_id] = $currency;
 			}
 		}
-		if(!is_null($ids)){
-			if(!is_array($ids)){
-				$ids = array($ids);
-			}
-			$need = array();
-			foreach($ids as $id){
-				if(!isset($cachedCurrencies[(int)$id])){
-					$need[]=(int)$id;
-				}
-			}
 
-			if(!empty($need)){
-				$query = 'SELECT * FROM '.hikashop_table('currency').' WHERE currency_id IN ('.implode(',',$need).')';
-				$this->database->setQuery($query);
+		if(is_null($ids))
+			return true;
 
-				$results = $this->database->loadObjectList();
-				foreach($results as $k => $v){
-					$this->checkLocale($results[$k]);
-				}
-				$this->getCurrencies(null,$results);
+		if(!is_array($ids))
+			$ids = array($ids);
+
+		$need = array();
+		foreach($ids as $id) {
+			if(!isset($cachedCurrencies[(int)$id])) {
+				$need[] = (int)$id;
 			}
-			$found = array();
-			foreach($ids as $id){
-				if(isset($cachedCurrencies[(int)$id])) $found[(int)$id]=$cachedCurrencies[(int)$id];
-			}
-			return $found;
 		}
-		return true;
+
+		if(!empty($need)) {
+			$query = 'SELECT * FROM '.hikashop_table('currency').' WHERE currency_id IN ('.implode(',',$need).')';
+			$this->database->setQuery($query);
+			$results = $this->database->loadObjectList();
+			foreach($results as $k => $v) {
+				$this->checkLocale($results[$k]);
+			}
+			$this->getCurrencies(null, $results);
+		}
+		$found = array();
+		foreach($ids as $id) {
+			if(isset($cachedCurrencies[(int)$id]))
+				$found[(int)$id]=$cachedCurrencies[(int)$id];
+		}
+		return $found;
 	}
 
 	function calculateTotal(&$rows, &$order, $currency_id) {
@@ -2101,74 +2102,83 @@ class hikashopCurrencyClass extends hikashopClass{
 		}
 	}
 
-	function processShippings(&$usable_rates, &$cart) {
+	function processShippings(&$usable_rates, &$cart, $zone_id = null) {
 		if(empty($usable_rates))
 			return;
 
 		$this->convertShippings($usable_rates);
-		$zone_id = hikashop_getZone();
-		foreach($usable_rates as $k => $rate) {
+		if($zone_id === null)
+			$zone_id = hikashop_getZone();
+		foreach($usable_rates as &$rate) {
 			if(!empty($rate->shipping_tax_id) && bccomp($rate->shipping_price, 0, 5)) {
-				if(!empty($usable_rates[$k]->taxes_added))
+				if(!empty($rate->taxes_added))
 					continue;
 
-				$usable_rates[$k]->taxes_added = true;
+				$rate->taxes_added = true;
 
 				$round = $this->getRounding(@$rate->shipping_currency_id, true);
-				$usable_rates[$k]->shipping_price_with_tax = $this->getTaxedPrice($rate->shipping_price, $zone_id, $rate->shipping_tax_id, $round);
-				$usable_rates[$k]->taxes = $this->taxRates;
+				$rate->shipping_price_with_tax = $this->getTaxedPrice($rate->shipping_price, $zone_id, $rate->shipping_tax_id, $round);
+				$rate->taxes = $this->taxRates;
 
 				if(isset($rate->shipping_price_orig) && bccomp($rate->shipping_price_orig, 0, 5)) {
-					$usable_rates[$k]->shipping_price_orig_with_tax = $this->getTaxedPrice($rate->shipping_price_orig, $zone_id, $rate->shipping_tax_id, $round);
-					$usable_rates[$k]->taxes_orig = $this->taxRates;
+					$rate->shipping_price_orig_with_tax = $this->getTaxedPrice($rate->shipping_price_orig, $zone_id, $rate->shipping_tax_id, $round);
+					$rate->taxes_orig = $this->taxRates;
 				} else {
-					$usable_rates[$k]->shipping_price_orig = 0.0;
-					$usable_rates[$k]->shipping_price_orig_with_tax = 0.0;
+					$rate->shipping_price_orig = 0.0;
+					$rate->shipping_price_orig_with_tax = 0.0;
 				}
 			} else {
-				if(!is_object($usable_rates[$k]))
-					$usable_rates[$k] = new stdClass();
-				$usable_rates[$k]->shipping_price_with_tax = @$rate->shipping_price;
-				$usable_rates[$k]->shipping_price_orig_with_tax = @$usable_rates[$k]->shipping_price_orig;
+				if(!is_object($rate))
+					$rate = new stdClass();
+				$rate->shipping_price_with_tax = @$rate->shipping_price;
+				$rate->shipping_price_orig_with_tax = @$rate->shipping_price_orig;
 			}
 		}
+		unset($rate);
 
 		JPluginHelper::importPlugin('hikashop');
 		$dispatcher = JDispatcher::getInstance();
 		$dispatcher->trigger('onAfterProcessShippings', array(&$usable_rates, &$cart));
 	}
 
-	function processPayments(&$usable_rates) {
-		if(!empty($usable_rates)) {
-			$this->convertPayments($usable_rates);
-			$zone_id = hikashop_getZone();
-			foreach($usable_rates as $k => $rate) {
-				$round = $this->getRounding(@$rate->payment_currency_id, true);
-				if(!empty($rate->payment_params->payment_tax_id) && bccomp($rate->payment_price,0,5)) {
-					if(!empty($usable_rates[$k]->taxes_added))
-						continue;
+	function processPayments(&$usable_rates, &$cart, $zone_id = null) {
+		if(empty($usable_rates))
+			return;
 
-					$usable_rates[$k]->taxes_added = true;
-					$usable_rates[$k]->payment_price_with_tax = $this->getTaxedPrice($rate->payment_price,$zone_id,$rate->payment_params->payment_tax_id,$round);
-					$usable_rates[$k]->taxes = $this->taxRates;
-					if(isset($rate->payment_price_orig) && bccomp($rate->payment_price_orig,0,5)) {
-						$usable_rates[$k]->payment_price_orig_with_tax = $this->getTaxedPrice($rate->payment_price_orig,$zone_id,$rate->payment_params->payment_tax_id,$round);
-						$usable_rates[$k]->taxes_orig = $this->taxRates;
-					} else {
-						$usable_rates[$k]->payment_price_orig = 0.0;
-						$usable_rates[$k]->payment_price_orig_with_tax = 0.0;
-					}
+		$this->convertPayments($usable_rates);
+		if($zone_id === null)
+			$zone_id = hikashop_getZone();
+
+		foreach($usable_rates as &$rate) {
+			if(!empty($rate->payment_params->payment_tax_id) && bccomp($rate->payment_price, 0, 5)) {
+				if(!empty($rate->taxes_added))
+					continue;
+
+				$rate->taxes_added = true;
+
+				$round = $this->getRounding(@$rate->payment_currency_id, true);
+				$rate->payment_price_with_tax = $this->getTaxedPrice($rate->payment_price, $zone_id, $rate->payment_params->payment_tax_id, $round);
+				$rate->taxes = $this->taxRates;
+
+				if(isset($rate->payment_price_orig) && bccomp($rate->payment_price_orig, 0, 5)) {
+					$rate->payment_price_orig_with_tax = $this->getTaxedPrice($rate->payment_price_orig,$zone_id, $rate->payment_params->payment_tax_id, $round);
+					$rate->taxes_orig = $this->taxRates;
 				} else {
-					if(!is_object($usable_rates[$k])) $usable_rates[$k] = new stdClass();
-					$usable_rates[$k]->payment_price_with_tax = (@$rate->payment_price);
-					$usable_rates[$k]->payment_price_orig_with_tax = (@$usable_rates[$k]->payment_price_orig);
+					$rate->payment_price_orig = 0.0;
+					$rate->payment_price_orig_with_tax = 0.0;
 				}
+			} else {
+				if(!is_object($rate))
+					$rate = new stdClass();
+				$rate->payment_price_with_tax = @$rate->payment_price;
+				$rate->payment_price_orig_with_tax = @$rate->payment_price_orig;
 			}
 		}
+		unset($rate);
 
 		JPluginHelper::importPlugin('hikashop');
 		$dispatcher = JDispatcher::getInstance();
-		$dispatcher->trigger('onAfterProcessPayments', array(&$usable_rates));
+		$dispatcher->trigger('onAfterProcessPayments', array(&$usable_rates, &$cart));
 	}
 
 	function addTax(&$prices, &$element, &$currency_ids, $zone_id, $product_tax_id) {
@@ -2243,6 +2253,11 @@ class hikashopCurrencyClass extends hikashopClass{
 			$format = $format_override;
 		}
 		$locale = $data->currency_locale;
+
+		$config = hikashop_config();
+		if(!$config->get('round_calculations', 0) && !empty($locale['rounding_increment']) && $locale['rounding_increment'] > 0.00001){
+			$number = $this->roundByIncrement($number, (float)$locale['rounding_increment']);
+		}
 
 		preg_match_all('/%((?:[\^!\-]|\+|\(|\=.)*)([0-9]+)?(?:#([0-9]+))?(?:\.([0-9]+))?([in%][in]?)/', $format, $matches, PREG_SET_ORDER);
 		foreach ($matches as $fmatch) {

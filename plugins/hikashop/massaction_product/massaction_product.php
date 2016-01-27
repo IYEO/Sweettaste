@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -123,12 +123,39 @@ class plgHikashopMassaction_product extends JPlugin
 		if(empty($filter['type']) || $filter['type']=='all') return;
 		if(!isset($this->massaction))$this->massaction = hikashop_get('class.massaction');
 		$db = JFactory::getDBO();
+
 		if(count($elements)){
+			$pIds = array();
 			foreach($elements as $k => $element){
+				if($element->product_type == 'main')
+					$pIds[$element->product_id] = $element->product_id;
+				else
+					$pIds[$element->product_parent_id] = $element->product_parent_id;
+			}
+			$productClass = hikashop_get('class.product');
+			if(!empty($pIds))
+				$productClass->getProducts($pIds);
+			else
+				$productClass->products = array();
+
+			foreach($elements as $k => $element){
+
+				if(empty($element->categories)){
+					if($element->product_type == 'main' && isset($productClass->products[$element->product_id]))
+						$element->categories = $productClass->products[$element->product_id]->categories;
+					if($element->product_type == 'variant' && isset($productClass->products[$element->product_parent_id]))
+						$element->categories = $productClass->products[$element->product_parent_id]->categories;
+				}
+
 				if(!empty($element->categories)){
 					if(!is_array($element->categories)) $element->categories = array($element->categories);
 					JArrayHelper::toInteger($element->categories);
-					$db->setQuery('SELECT * FROM '.hikashop_table('category').' WHERE category_id IN('.implode(',',$element->categories).')');
+
+					if($filter['type'] == 'category_parent_id')
+						$db->setQuery('SELECT * FROM '.hikashop_table('category').' WHERE category_parent_id IN('.implode(',',$element->categories).')');
+					else
+						$db->setQuery('SELECT * FROM '.hikashop_table('category').' WHERE category_id IN('.implode(',',$element->categories).')');
+
 					$categories = $db->loadObjectList();
 					$del = true;
 					foreach($categories as $category){
@@ -158,14 +185,17 @@ class plgHikashopMassaction_product extends JPlugin
 				$mainProducts = $db->loadObjectList();
 				$ids = array();
 				foreach($mainProducts as $mainProduct){
-					$ids[] = $mainProduct->product_id;
+					$ids[] = (int)$mainProduct->product_id;
 				}
 
 				$query->join = array();
 				$query->leftjoin = array();
-				$query->where = array('product_id IN ('.implode(',',$ids).') OR product_parent_id IN ('.implode(',',$ids).')');
+				if(count($ids))
+					$query->where = array('product_id IN ('.implode(',',$ids).') OR product_parent_id IN ('.implode(',',$ids).')');
+				else
+					$query->where = array('product_id=0');
 			}
-		 }
+		}
 	}
 	function onCountProductMassFiltercategoryColumn(&$query,$filter,$num){
 		$elements = array();
@@ -176,12 +206,20 @@ class plgHikashopMassaction_product extends JPlugin
 		if(empty($filter['type']) || $filter['type']=='all') return;
 		if(!isset($this->massaction))$this->massaction = hikashop_get('class.massaction');
 		if(count($elements)){
+			$db = JFactory::getDBO();
+			$db->setQuery('SELECT characteristic_id, characteristic_value FROM '.hikashop_table('characteristic'). ' ORDER BY characteristic_parent_id ASC, characteristic_ordering ASC');
+			$characteristics = $db->loadObjectList('characteristic_id');
+
 			foreach($elements as $k => $element){
-				$filter['type'] = strtolower($filter['type']);
-				if(!isset($element->$filter['type'])){
-					$in = false;
-				}else{
-					$in = $this->massaction->checkInElement($element, $filter);
+				$in = false;
+				if(!empty($element->characteristics)){
+					foreach($element->characteristics as $charId => $parentCharId){
+						if(!isset($characteristics[$parentCharId]) || !isset($characteristics[$charId]))
+							continue;
+
+						if($characteristics[$parentCharId]->characteristic_value == $filter['type'] && $characteristics[$charId]->characteristic_value == $filter['value'])
+							$in = true;
+					}
 				}
 				if(!$in) unset($elements[$k]);
 			}
@@ -371,6 +409,19 @@ class plgHikashopMassaction_product extends JPlugin
 					$data->elements[$id]->prices = array();
 					$price_values = explode('|',$data->elements[$id]->price_value);
 					$price_currencies = explode('|',$data->elements[$id]->price_currency_id);
+
+					$nbPrices = count($price_values) - 1;
+					if(!isset($data->elements[$id]->price_min_quantity)){
+						$data->elements[$id]->price_min_quantity = '1';
+						if($nbPrices)
+							$data->elements[$id]->price_min_quantity = $data->elements[$id]->price_min_quantity.str_repeat('|1',$nbPrices);
+					}
+					if(!isset($data->elements[$id]->price_access)){
+						$data->elements[$id]->price_access = 'all';
+						if($nbPrices)
+							$data->elements[$id]->price_access = $data->elements[$id]->price_access.str_repeat('|all',$nbPrices);
+					}
+
 					$price_min_quantities = explode('|',$data->elements[$id]->price_min_quantity);
 					$price_accesses = explode('|',$data->elements[$id]->price_access);
 					foreach($price_values as $k => $price_value){
@@ -609,7 +660,7 @@ class plgHikashopMassaction_product extends JPlugin
 			$mail->html = '1';
 			$csv = new stdClass();
 			$csv->name = basename($path);
-			$csv->filename = basename($path);
+			$csv->filename = $url['server'];
 			$csv->url = $url['web'];
 			$mail->attachments = array($csv);
 			$mail->dst_name = '';
@@ -1042,20 +1093,38 @@ class plgHikashopMassaction_product extends JPlugin
 	}
 
 	function onProcessProductMassActionsendEmail(&$elements,&$action,$k){
-		if(!empty($action['emailAddress'])){
-			$config = hikashop_config();
-			$mailClass = hikashop_get('class.mail');
-			$content = array('elements' => $elements, 'action' => $action, 'type' => 'product_notification');
-			$mail = $mailClass->get('massaction_notification',$content);
-			$mail->subject = !empty($action['emailSubject'])?JText::_($action['emailSubject']):JText::_('MASS_NOTIFICATION_EMAIL_SUBJECT');
-			$mail->body = $action['bodyData'];
-			$mail->html = '1';
-			$mail->dst_name = '';
-			if(!empty($action['emailAddress']))
-				$mail->dst_email = explode(',',$action['emailAddress']);
-			else
-				$mail->dst_email = $config->get('from_email');
-			$mailClass->sendMail($mail);
+		if(empty($action['emailAddress']))
+			return;
+		$config = hikashop_config();
+		$mailClass = hikashop_get('class.mail');
+		$content = array('elements' => $elements, 'action' => $action, 'type' => 'product_notification');
+		$mail = $mailClass->get('massaction_notification',$content);
+		$mail->subject = !empty($action['emailSubject'])?JText::_($action['emailSubject']):JText::_('MASS_NOTIFICATION_EMAIL_SUBJECT');
+		$mail->body = $action['bodyData'];
+		$mail->html = '1';
+		$mail->dst_name = '';
+		if(!empty($action['emailAddress']))
+			$mail->dst_email = explode(',',$action['emailAddress']);
+		else
+			$mail->dst_email = $config->get('from_email');
+		$mailClass->sendMail($mail);
+	}
+
+	function onProcessProductMassActionsetCanonical(&$elements,&$action,$k){
+		$db = JFactory::getDBO();
+		$columns = array_keys(get_object_vars($elements[0]));
+		preg_match_all('#{(.*)}#U',$action['value'],$matches);
+		foreach($elements as $element){
+			$element->product_canonical = $action['value'];
+			foreach($matches[1] as $k => $v){
+				if(!in_array($v, $columns))
+					continue;
+				$element->product_canonical = str_replace($matches[0][$k],$element->$v,$element->product_canonical);
+			}
+			if(!empty($element->product_canonical))
+				$element->product_canonical = str_replace('/administrator','',hikashop_cleanURL($element->product_canonical));
+			$db->setQuery('UPDATE '.hikashop_table('product').' SET `product_canonical` = '.$db->Quote($element->product_canonical).' WHERE product_id = '.(int)$element->product_id);
+			$db->query();
 		}
 	}
 

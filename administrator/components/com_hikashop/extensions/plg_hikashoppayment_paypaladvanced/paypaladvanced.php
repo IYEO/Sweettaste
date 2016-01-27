@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -78,6 +78,8 @@ class plgHikashoppaymentPaypalAdvanced extends hikashopPaymentPlugin {
 			$vars['HOST_ADDR']= 'https://pilot-payflowpro.paypal.com';
 		}
 
+		$type = (@$this->payment_params->validation ? 'A' : 'S');
+
 		$postdata =
 		"USER=" . $vars['USER'].
 		"&VENDOR=" . $vars['VENDOR'].
@@ -85,7 +87,7 @@ class plgHikashoppaymentPaypalAdvanced extends hikashopPaymentPlugin {
 		"&PWD=" . $vars['PWD'].
 		"&CREATESECURETOKEN=".'Y'.
 		"&SECURETOKENID=".$vars['SECURETOKENID'].
-		"&TRXTYPE=S".   // A for Authorize, S for Authorize&Capture
+		"&TRXTYPE=".$type.   // A for Authorize, S for Authorize&Capture
 		"&AMT=".$vars['AMT'].
 		"&CURRENCY=".$vars['CURRENCYCODE'].
 		"&SHOWAMOUNT=TRUE".

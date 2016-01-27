@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -123,6 +123,14 @@ defined('_JEXEC') or die('Restricted access');
 			echo JText::_('PRICES');
 		?></div>
 		<dl class="hika_options">
+<?php
+	$curr = '';
+	$mainCurr = $this->currencyClass->getCurrencies($this->main_currency_id, $curr);
+?>
+			<dt class="hikashop_product_msrp"><label for="data_variant__product_msrp"><?php echo JText::_('PRODUCT_MSRP'); ?></label></dt>
+			<dd class="hikashop_product_msrp">
+				<input type="text" id="data_variant__product_msrp" name="data[variant][product_msrp]" value="<?php echo $this->escape(@$this->product->product_msrp); ?>"/> <?php echo $mainCurr[$this->main_currency_id]->currency_symbol.' '.$mainCurr[$this->main_currency_id]->currency_code;?>
+			</dd>
 <?php if(hikashop_acl('product/variant/price')) { ?>
 
 			<dd class="hikashop_product_price"><?php

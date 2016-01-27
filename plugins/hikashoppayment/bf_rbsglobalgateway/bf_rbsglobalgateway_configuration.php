@@ -6,9 +6,9 @@
  * @author		 brainforge.co.uk
  * @copyright	 (C) 2011 Brainforge derived from Paypal plug-in by HIKARI SOFTWARE. All rights reserved.
  * @license		 GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
- * 
+ *
  * See: http://www.worldpay.com/support/kb/gg/submittingtransactionsredirect/rxml.html
- * 
+ *
  * In order to configure and use this plug-in you must have a RBS Worldpay Global Gateway account.
  * Worldpay Global Gateway is sometimes referred to as 'BiBit'.
  */

@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -173,7 +173,7 @@ class plgHikashopMassaction_address extends JPlugin
 			$mail->html = '1';
 			$csv = new stdClass();
 			$csv->name = basename($path);
-			$csv->filename = basename($path);
+			$csv->filename = $url['server'];
 			$csv->url = $url['web'];
 			$mail->attachments = array($csv);
 			$mail->dst_name = '';

@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -459,6 +459,24 @@ class productController extends hikashopController {
 					if(empty($module_options)){
 						$module_options = $config->get('default_params');
 					}
+
+					$data = $params->get('hikashopwishlistmodule');
+					if(HIKASHOP_J30 && (empty($data) || !is_object($data))){
+						$db = JFactory::getDBO();
+						$query = 'SELECT params FROM '.hikashop_table('modules',false).' WHERE id = '.(int)$module->id;
+						$db->setQuery($query);
+						$itemData = json_decode($db->loadResult());
+						if(!empty($itemData->hikashopwishlistmodule) && is_object($itemData->hikashopwishlistmodule)){
+							$data = $itemData->hikashopwishlistmodule;
+							$params->set('hikashopwishlistmodule',$data);
+						}
+					}
+					if(!empty($data) && is_object($data)){
+						foreach($data as $k => $v){
+							$module_options[$k] = $v;
+						}
+					}
+
 					foreach($module_options as $key => $optionElement){
 						$params->set($key,$optionElement);
 					}
@@ -488,7 +506,8 @@ class productController extends hikashopController {
 				}
 				$url = hikashop_completeLink($url,false,true);
 			}
-			$stay = JRequest::getInt('stay',0);
+			if(!isset($stay))
+				$stay = JRequest::getInt('stay',0);
 			if($stay == 0){
 				if(hikashop_disallowUrlRedirect($url)) return false;
 				if(JRequest::getVar('from_form',true)){
@@ -544,6 +563,24 @@ class productController extends hikashopController {
 				if(empty($module_options)){
 					$module_options = $config->get('default_params');
 				}
+
+				$data = $params->get('hikashopcartmodule');
+				if(HIKASHOP_J30 && (empty($data) || !is_object($data))){
+					$db = JFactory::getDBO();
+					$query = 'SELECT params FROM '.hikashop_table('modules',false).' WHERE id = '.(int)$module->id;
+					$db->setQuery($query);
+					$itemData = json_decode($db->loadResult());
+					if(!empty($itemData->hikashopcartmodule) && is_object($itemData->hikashopcartmodule)){
+						$data = $itemData->hikashopcartmodule;
+						$params->set('hikashopcartmodule',$data);
+					}
+				}
+				if(!empty($data) && is_object($data)){
+					foreach($data as $k => $v){
+						$module_options[$k] = $v;
+					}
+				}
+
 				foreach($module_options as $key => $optionElement){
 					$params->set($key,$optionElement);
 				}

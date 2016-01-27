@@ -273,7 +273,7 @@
 			// Update progress bar
 			entry.xhr.upload.addEventListener("progress", function (evt) {
 				// No data to calculate on
-				if(evt.lengthComputable)
+				if(!evt.lengthComputable)
 					return;
 
 				var p = Math.round((evt.loaded / evt.total) * 100) + "%";

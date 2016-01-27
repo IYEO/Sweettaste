@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -175,7 +175,7 @@ defined('_JEXEC') or die('Restricted access');
 						if($this->manage && !$this->popup){
 							$doc = JFactory::getDocument();
 							$doc->addScriptDeclaration(' var '."default_filter_status_".$row->order_id.'=\''.$row->order_status.'\'; ');
-							echo $this->category->display("filter_status_".$row->order_id,$row->order_status,'onchange="if(this.value==default_filter_status_'.$row->order_id.'){return;} hikashop.openBox(\'status_change_link\',\''.hikashop_completeLink('order&task=changestatus&order_id='.$row->order_id,true).'&status=\'+this.value, document.getElementById(\'status_change_link\').getAttribute(\'rel\') == null);this.value=default_filter_status_'.$row->order_id.';if(typeof(jQuery)!=\'undefined\'){jQuery(this).trigger(\'liszt:updated\');}"');
+							echo $this->category->display("filter_status_".$row->order_id,$row->order_status,'onchange="if(this.value==default_filter_status_'.$row->order_id.'){return;} hikashop.openBox(\'status_change_link\',\''.hikashop_completeLink('order&task=changestatus&order_id='.$row->order_id,true).'&status=\'+this.value);this.value=default_filter_status_'.$row->order_id.';if(typeof(jQuery)!=\'undefined\'){jQuery(this).trigger(\'liszt:updated\');}"');
 						} else {
 							echo $row->order_status;
 						}

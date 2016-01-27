@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -15,8 +15,11 @@ if(!empty($this->itemid))
 elseif(!empty($Itemid))
 	$url_itemid = '&Itemid='.$Itemid;
 
-if($this->config->get('show_quantity_field') == -2)
+if($this->config->get('show_quantity_field') == -2){
+	if(@$this->row->product_display_quantity_field == 0)
+		$this->row->product_display_quantity_field = 1;
 	$this->params->set('show_quantity_field', @$this->row->product_display_quantity_field);
+}
 
 $config =& hikashop_config();
 
@@ -84,7 +87,8 @@ if($end_date && $end_date < time()) {
 	if($min <= 0)
 		$min = 1;
 
-	$wishlistAjax =	'if(hikashopCheckChangeForm(\'item\''.$formName.')){ return hikashopModifyQuantity(\'' . (int)@$this->row->product_id . '\',field,1' . $formName . ',\'wishlist\','.$module_id.'); } else { return false; }';
+	$cleanFormName = str_replace(array('\'',','),'',$formName);
+	$wishlistAjax =	'if(hikashopCheckChangeForm(\'item\''.$formName.')){ var typeField = document.querySelector(\'form[name='.$cleanFormName.'] input[name=cart_type]\'); if(typeField !== null){typeField.value = \'wishlist\';} return hikashopModifyQuantity(\'' . (int)@$this->row->product_id . '\',field,1' . $formName . ',\'wishlist\','.$module_id.'); } else { return false; }';
 
 	if($this->row->product_quantity == -1 && !empty($this->element->main) && $this->element->main->product_quantity != -1)
 		$this->row->product_quantity = $this->element->main->product_quantity;
@@ -98,7 +102,7 @@ if($end_date && $end_date < time()) {
 				echo $this->cart->displayButton(JText::_('CHOOSE_OPTIONS'), 'choose_options', $this->params, hikashop_contentLink('product&task=show&product_id='.$this->row->product_id.'&name='.$this->row->alias.$url_itemid.$this->category_pathway,$this->row),'window.location = \''.str_replace("'","\'",hikashop_contentLink('product&task=show&product_id='.$this->row->product_id.'&name='.$this->row->alias.$url_itemid.$this->category_pathway,$this->row)).'\';return false;', '');
 		} else {
 			if($this->params->get('add_to_cart',1)) {
-				echo $this->cart->displayButton(JText::_('ADD_TO_CART'), 'add', $this->params,$url, $this->ajax, '', $max, $min);
+				echo $this->cart->displayButton(JText::_('ADD_TO_CART'), 'add', $this->params, $url, $this->ajax, '', $max, $min);
 				$btnType = 'wish';
 			}
 

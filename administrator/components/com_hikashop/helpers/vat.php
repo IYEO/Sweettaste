@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -73,7 +73,7 @@ class hikashopVatHelper{
 				}
 				if($zone->zone_code_2 != $code){
 					$app = JFactory::getApplication();
-					$this->message = 'Your VAT number can not be used with the country you selected. Please select the right country ( CODE: '.$code.') or make sure your VAT starts with '.$zone->zone_code_2;
+					$this->message = JText::sprintf('WRONG_VAT_NUMBER_COUNTRY_CODE',$code,$zone->zone_code_2);
 					if(@$_REQUEST['tmpl']=='component'){
 						hikashop_display($this->message,'error');
 					}else{

@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -504,7 +504,7 @@ class hikashopUpdateHelper{
 		return true;
 	}
 
-	function processJoomfishFile($file, $source, $destination, $force=true, $type='falang') {
+	function processJoomfishFile($file, $source, $destination, $force = true, $type = 'falang') {
 		$types = array(
 			'hikashop_product.xml' => array(
 				'type' => 'product',
@@ -623,9 +623,11 @@ class hikashopUpdateHelper{
 			$query = 'DELETE FROM `#__components` WHERE `admin_menu_link` LIKE \'%option=com\_hikashop%\' AND `parent`!=0';
 			$this->db->setQuery($query);
 			$this->db->query();
+
 			$query = 'SELECT id FROM `#__components` WHERE `option`=\'com_hikashop\' AND `parent`=0';
 			$this->db->setQuery($query);
 			$parent = (int)$this->db->loadResult();
+
 			$query  = "INSERT IGNORE INTO `#__components` (`admin_menu_link`,`admin_menu_img`,`admin_menu_alt`,`name`,`ordering`,`parent`) VALUES
 			('option=com_hikashop&amp;ctrl=product','../includes/js/ThemeOffice/document.png','Products','Products',1,".$parent."),
 			('option=com_hikashop&amp;ctrl=category&amp;filter_id=product','../includes/js/ThemeOffice/sections.png','Categories','Categories',2,".$parent."),
@@ -641,14 +643,15 @@ class hikashopUpdateHelper{
 			$query="SELECT a.id FROM ".hikashop_table('components',false).' AS a WHERE a.option=\''.HIKASHOP_COMPONENT.'\'';
 			$this->db->setQuery($query);
 			$componentid = $this->db->loadResult();
-			$query='UPDATE '.hikashop_table('menu',false).' SET componentid = '.$componentid.' WHERE menutype = '.$this->db->quote('hikashop_default');
+
+			$query = 'UPDATE '.hikashop_table('menu',false).' SET componentid = '.$componentid.' WHERE menutype = '.$this->db->quote('hikashop_default');
 			$this->db->setQuery($query);
 			$this->db->query();
-
-		}else{
+		} else {
 			$query = 'SELECT * FROM `#__menu` WHERE `title` IN (\'com_hikashop\',\'hikashop\',\'HikaShop\') AND `client_id`=1 AND `parent_id`=1 AND menutype IN (\'main\',\'mainmenu\',\'menu\')';
 			$this->db->setQuery($query);
 			$parentData = $this->db->loadObject();
+
 			$parent = $parentData->id;
 			$query = 'SELECT id FROM `#__menu` WHERE `parent_id`='.(int)$parent;
 			$this->db->setQuery($query);
@@ -657,19 +660,24 @@ class hikashopUpdateHelper{
 			} else {
 				$submenu = $this->db->loadColumn();
 			}
-			$old=count($submenu);
+			$old = count($submenu);
+
 			$query = 'DELETE FROM `#__menu` WHERE `parent_id`='.(int)$parent;
 			$this->db->setQuery($query);
 			$this->db->query();
+
 			$query = 'UPDATE `#__menu` SET `rgt`=`rgt`-'.($old*2).' WHERE `rgt`>='.$parentData->rgt;
 			$this->db->setQuery($query);
 			$this->db->query();
+
 			$query = 'UPDATE `#__menu` SET `rgt`=`rgt`+16 WHERE `rgt`>='.$parentData->rgt;
 			$this->db->setQuery($query);
 			$this->db->query();
+
 			$query = 'UPDATE `#__menu` SET `lft`=`lft`+16 WHERE `lft`>'.$parentData->lft;
 			$this->db->setQuery($query);
 			$this->db->query();
+
 			$left = $parentData->lft;
 			$cid = $parentData->component_id;
 			$query  = "INSERT IGNORE INTO `#__menu` (`type`,`link`,`menutype`,`img`,`alias`,`title`,`client_id`,`parent_id`,`level`,`language`,`lft`,`rgt`,`component_id`) VALUES
@@ -684,7 +692,8 @@ class hikashopUpdateHelper{
 			";
 			$this->db->setQuery($query);
 			$this->db->query();
-			$query='UPDATE '.hikashop_table('menu',false).' SET component_id = '.$cid.' WHERE menutype = '.$this->db->quote('hikashop_default');
+
+			$query = 'UPDATE '.hikashop_table('menu',false).' SET component_id = '.$cid.' WHERE menutype = '.$this->db->quote('hikashop_default');
 			$this->db->setQuery($query);
 			$this->db->query();
 		}
@@ -697,8 +706,7 @@ class hikashopUpdateHelper{
 		$this->db->setQuery($query);
 		try{$this->db->query();}catch(Exception $e){}
 
-
-		$query="INSERT IGNORE INTO `#__hikashop_category` (`category_id`, `category_parent_id`, `category_type`, `category_name`, `category_description`, `category_published`, `category_ordering`, `category_left`, `category_right`, `category_depth`, `category_namekey`) VALUES
+		$query = "INSERT IGNORE INTO `#__hikashop_category` (`category_id`, `category_parent_id`, `category_type`, `category_name`, `category_description`, `category_published`, `category_ordering`, `category_left`, `category_right`, `category_depth`, `category_namekey`) VALUES
 (1, 0, 'root', 'ROOT', '', 0, 0, 1, 22, 0, 'root'),
 (2, 1, 'product', 'product category', '', 1, 1, 2, 3, 1, 'product'),
 (3, 1, 'tax', 'taxation category', '', 1, 2, 4, 7, 1, 'tax'),

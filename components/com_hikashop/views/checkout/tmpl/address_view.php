@@ -1,17 +1,14 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
 ?><?php
-$same_address = false;
-if($this->shipping_address == $this->billing_address){
-	$same_address = true;
-}
+$same_address = ($this->shipping_address == $this->billing_address);
 
 if(!empty($this->addresses)) {
 ?>

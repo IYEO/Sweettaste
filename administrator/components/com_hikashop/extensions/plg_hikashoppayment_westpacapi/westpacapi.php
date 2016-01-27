@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -88,7 +88,7 @@ class plgHikashoppaymentWestpacapi extends hikashopPaymentPlugin
 
 		include dirname(__FILE__) . DS . 'westpacapi_qvalent.php';
 
-		$capath = JPath::clean(HIKASHOP_ROOT .'plugins' . DS . 'hikashoppayment' . DS . 'westpacApi' . DS . 'cacerts.crt');  
+		$capath = JPath::clean(HIKASHOP_ROOT .'plugins' . DS . 'hikashoppayment' . DS . 'westpacApi' . DS . 'cacerts.crt');
 
 		$initParams =
 		"certificateFile=" . $this->payment_params->certFile . "&" .
@@ -173,9 +173,8 @@ class plgHikashoppaymentWestpacapi extends hikashopPaymentPlugin
 		$element->payment_params->invalid_status = 'cancelled';
 		$element->payment_params->verified_status = 'confirmed';
 
-		$certpath = JPath::clean(HIKASHOP_ROOT .'plugins' . DS . 'hikashoppayment' . DS . 'westpacApi' . DS . 'ccapi.pem'); 		
+		$certpath = JPath::clean(HIKASHOP_ROOT .'plugins' . DS . 'hikashoppayment' . DS . 'westpacApi' . DS . 'ccapi.pem');
 
 		$element->payment_params->certFile = (file_exists($certpath ) ) ? $certpath : '.pem expected';
 	}
 }
-

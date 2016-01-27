@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -1290,7 +1290,7 @@ class hikashopMassactionClass extends hikashopClass{
 		return true;
 	}
 
-	function process(&$massaction,&$elements){
+	function process(&$massaction,$elements){
 		if(!isset($this->dispatcher)){
 			JPluginHelper::importPlugin('hikashop');
 			$this->dispatcher = JDispatcher::getInstance();
@@ -1322,22 +1322,23 @@ class hikashopMassactionClass extends hikashopClass{
 	}
 
 
-	function editionSquare($data,$data_id,$table,$column,$value,$id,$type){
+	function editionSquare($data, $data_id, $table, $column, $value, $id, $type) {
 		hikashop_securefield($column);
 		hikashop_securefield($table);
 		hikashop_securefield($data);
-		$database = JFactory::getDBO();
-		switch($type){
+		switch($type) {
 			case 'date':
 				$value = hikashop_getTime($value);
 				break;
 		}
-		if(!isset($this->dispatcher)){
+		if(!isset($this->dispatcher)) {
 			JPluginHelper::importPlugin('hikashop');
 			$this->dispatcher = JDispatcher::getInstance();
 		}
-		$this->dispatcher->trigger('onSaveEditionSquareMassAction',array($data,$data_id,$table,$column,$value,$id,$type));
+
+		$this->dispatcher->trigger('onSaveEditionSquareMassAction', array($data, $data_id, $table, $column, $value, $id, $type));
 	}
+
 	function checkInElement($element, $filter){
 		if(is_null($element)) return false;
 		if(!isset($this->datecolumns))$this->datecolumns = array();
@@ -1771,18 +1772,20 @@ class hikashopMassactionClass extends hikashopClass{
 		elseif($action['operation'] == 'float'){$value = (float)$action['value'];}
 		elseif($action['operation'] == 'string'){$value = $db->quote($action['value']);}
 		elseif($action['operation'] == 'operation'){
+			$strings = array();
+
 			$symbols = array('%','+','-','/','*','(',')');
 			$string = str_replace($symbols,'||',$action['value']);
-
-			$entry = array();
 			$entries = explode('||',$string);
+
 			foreach($entries as $entry){
 				$data = explode('.',$entry);
-				if(!isset($data[1]))
+				if(!isset($data[1]) || (is_numeric($data[0]) && is_numeric($data[1])))
 					continue;
 				$strings[]['table'] = $data[0];
 				$strings[]['column'] = $data[1];
 			}
+
 			$type = 'table';
 			if(!empty($mainFields)){
 				foreach($strings as $string){
@@ -2157,10 +2160,13 @@ class hikashopMassactionClass extends hikashopClass{
 							$database->setQuery($query);
 							$rows = $database->loadObjectList();
 							foreach($rows as $k => $row){
-								if(!isset($productClass->products[$row->price_product_id]))
-									$rows[$k]->price_value_with_tax = $rows[$k]->price_value;
+								if(isset($productClass->all_products[$row->price_product_id]) && $productClass->all_products[$row->price_product_id]->product_type == 'main')
+									$rows[$k]->price_value_with_tax = $currencyHelper->getTaxedPrice($row->price_value,$zone_id,$productClass->all_products[$row->price_product_id]->product_tax_id);
+								elseif(isset($productClass->all_products[$productClass->all_products[$row->price_product_id]->product_parent_id]->product_tax_id))
+									$rows[$k]->price_value_with_tax = $currencyHelper->getTaxedPrice($row->price_value,$zone_id,$productClass->all_products[$productClass->all_products[$row->price_product_id]->product_parent_id]->product_tax_id);
 								else
-									$rows[$k]->price_value_with_tax = $currencyHelper->getTaxedPrice($row->price_value,$zone_id,$productClass->products[$row->price_product_id]->product_tax_id);
+									$rows[$k]->price_value_with_tax = $rows[$k]->price_value;
+
 								if(!$priceValue)
 									unset($rows[$k]->price_value);
 							}
@@ -2169,9 +2175,9 @@ class hikashopMassactionClass extends hikashopClass{
 						}
 						break;
 					case 'category':
-						$query = 'SELECT '.hikashop_table('category').'.'.implode(',',$columns).','.hikashop_table('product_category').'.product_id,'.hikashop_table('category').'.category_id';
-						$query .= ' FROM '.hikashop_table('category');
-						$query .= ' INNER JOIN '.hikashop_table('product_category').' ON '.hikashop_table('product_category').'.category_id = '.hikashop_table('category').'.category_id';
+						$query = 'SELECT c.'.implode(',c.',$columns).',pc.product_id,c.category_id';
+						$query .= ' FROM '.hikashop_table('category').' AS c';
+						$query .= ' INNER JOIN '.hikashop_table('product_category').' AS pc ON pc.category_id = c.category_id';
 						$query .= ' WHERE product_id IN ('.implode(',',$ids).')';
 						$query .= ' ORDER BY product_category_id';
 						break;
@@ -2220,11 +2226,18 @@ class hikashopMassactionClass extends hikashopClass{
 						break;
 					case 'address':
 						foreach($columns as $k => $column){
-							$columns[$k] = 'address.'.$column;
+							if(preg_match('#_state_#',$column))
+								$columns[$k] = 'zone1.'.str_replace('_state','',$column).' AS '.$column;
+							elseif(preg_match('#_country_#',$column))
+								$columns[$k] = 'zone2.'.str_replace('_country','',$column).' AS '.$column;
+							else
+								$columns[$k] = 'address.'.$column;
 						}
 						$query = 'SELECT DISTINCT '.implode(',',$columns).', address.address_id, order1.order_id';
 						$query .= ' FROM '.hikashop_table('address').' AS address';
 						$query .= ' INNER JOIN '.hikashop_table('order').' AS order1 ON address.address_id = order1.order_shipping_address_id OR address.address_id = order1.order_billing_address_id';
+						$query .= ' LEFT JOIN '.hikashop_table('zone').' AS zone1 ON address.address_state = zone1.zone_namekey';
+						$query .= ' LEFT JOIN '.hikashop_table('zone').' AS zone2 ON address.address_country = zone2.zone_namekey';
 						$query .= ' WHERE order1.order_id IN ('.implode(',',$ids).')';
 						$query .= ' ORDER BY address_id ASC';
 						break;
@@ -2382,7 +2395,7 @@ class hikashopMassactionClass extends hikashopClass{
 						$find = false;
 						$square = '';
 						if(isset($element->$column) && ($key===$k1 || $key===$params->table) && is_string($this->displayByType($params->types,$element,$column))){
-							$square .= $this->displayByType($params->types,$element,$column,'%Y-%m-%d');
+							$square .= $this->displayByType($params->types,$element,$column,$params->action['date_format']);
 							$find = true;
 						}else{
 							$r = array();
@@ -2397,7 +2410,7 @@ class hikashopMassactionClass extends hikashopClass{
 										continue;
 									}
 									if($k != $key){continue;}
-									$r[] = $this->displayByType($params->types,$data,$column,'%Y-%m-%d');
+									$r[] = $this->displayByType($params->types,$data,$column,$params->action['date_format']);
 									$find = true;
 								}
 							}
@@ -2437,9 +2450,8 @@ class hikashopMassactionClass extends hikashopClass{
 	}
 
 	function setExportPaths($path){
-		if(preg_match('#{time}#',$path)){
+		if(preg_match('#{time}#',$path))
 			$path = str_replace('{time}',hikashop_getDate(time()),$path);
-		}
 
 		$path = str_replace(' ','_',trim($path));
 
@@ -2450,13 +2462,22 @@ class hikashopMassactionClass extends hikashopClass{
 			$serverUrl = $path;
 
 		}else{
-			if(in_array($path[0],array('/','\\')))
-				$path = substr($path, 1);
+			if(in_array($path[0],array('/','\\'))){
+				if(in_array(substr($oServerUrl,-1),array('/','\\')))
+					$oServerUrl = substr($oServerUrl,0,-1);
+				if(in_array(substr($webUrl,-1),array('/','\\')))
+					$webUrl = substr($webUrl,0,-1);
+			}else{
+				if(!in_array(substr($oServerUrl,-1),array('/','\\')))
+					$oServerUrl = $oServerUrl.'\\';
+				if(!in_array(substr($webUrl,-1),array('/','\\')))
+					$webUrl = $webUrl.'/';
+			}
 			$serverUrl = $oServerUrl.$path;
 			$webUrl = str_replace('\\','/',$webUrl.$path);
 		}
 
-		if(strpos($oServerUrl,'/'))
+		if(strstr($oServerUrl,'/'))
 			$serverUrl = str_replace('\\','/',$serverUrl);
 		else
 			$serverUrl = str_replace('/','\\',$serverUrl);
@@ -2467,28 +2488,28 @@ class hikashopMassactionClass extends hikashopClass{
 }
 
 
-class HikaShopQuery{
+class HikaShopQuery {
 	var $leftjoin = array();
 	var $join = array();
 	var $where = array();
-	var $from = '#__hikashop_product as product';
+	var $from = '#__hikashop_product AS hk_product';
 	var $select = array('product.*');
 	var $start = 0;
 	var $value = 500;
 	var $ordering = '';
 	var $direction = '';
 
-	function HikaShopQuery(){
+	function __construct() {
 		$this->db = JFactory::getDBO();
 	}
 
-	function count($type='hk_product.product_id'){
+	function count($type = 'hk_product.product_id') {
 		$myquery = $this->getQuery(array('COUNT(DISTINCT '.$type.')'));
 		$this->db->setQuery($myquery);
 		return $this->db->loadResult();
 	}
 
-	function execute(){
+	function execute() {
 		$this->db->setQuery($this->getQuery(),$this->start,$this->value);
 		return $this->db->loadObjectList();
 	}
@@ -2545,22 +2566,23 @@ class HikaShopQuery{
 		return $as.'.`'.hikashop_secureField($column).'` '.$operator.' '.$value;
 	}
 
-	function _replaceDate($mydate){
-
-		if(strpos($mydate,'{time}') === false) return $mydate;
+	function _replaceDate($mydate) {
+		if(strpos($mydate,'{time}') === false)
+			return $mydate;
 
 		$mydate = str_replace('{time}',time(),$mydate);
 		$operators = array('+','-');
-		foreach($operators as $oneOperator){
-			if(!strpos($mydate,$oneOperator)) continue;
+		foreach($operators as $oneOperator) {
+			if(!strpos($mydate, $oneOperator))
+				continue;
+
 			list($part1,$part2) = explode($oneOperator,$mydate);
-			if($oneOperator == '+'){
+			if($oneOperator == '+') {
 				$mydate = trim($part1) + trim($part2);
-			}elseif($oneOperator == '-'){
+			} elseif($oneOperator == '-') {
 				$mydate = trim($part1) - trim($part2);
 			}
 		}
-
 		return $mydate;
 	}
 }

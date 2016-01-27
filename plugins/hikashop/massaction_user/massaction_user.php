@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -230,7 +230,7 @@ class plgHikashopMassaction_user extends JPlugin
 			$mail->html = '1';
 			$csv = new stdClass();
 			$csv->name = basename($path);
-			$csv->filename = basename($path);
+			$csv->filename = $url['server'];
 			$csv->url = $url['web'];
 			$mail->attachments = array($csv);
 			$mail->dst_name = '';
@@ -353,15 +353,34 @@ class plgHikashopMassaction_user extends JPlugin
 				$user_ids[] = $element->user_cms_id;
 				$values[] = '('.$element->user_cms_id.','.$action['value'].')';
 			}
-
 			$db = JFactory::getDBO();
-			if($action['type'] == 'replace'){
-				$db->setQuery('DELETE FROM '.hikashop_table('user_usergroup_map',false).' WHERE user_id IN ('.implode(',',$user_ids).')');
+			if($action['type'] != 'add'){
+				$filters = '';
+				if($action['type'] == 'remove')
+					$filters = ' AND group_id = '.(int)$action['value'];
+
+				$db->setQuery('DELETE FROM '.hikashop_table('user_usergroup_map',false).' WHERE user_id IN ('.implode(',',$user_ids).')'.$filters);
 				$db->query();
 			}
+			if($action['type'] != 'remove'){
+				$db->setQuery('REPLACE INTO '.hikashop_table('user_usergroup_map',false).' VALUES '.implode(',',$values));
+				$db->query();
+			}
+		}
 
-			$db->setQuery('REPLACE INTO '.hikashop_table('user_usergroup_map',false).' VALUES '.implode(',',$values));
+		$app = JFactory::getApplication();
+		$config = JFactory::getConfig();
+		$handler = $config->get('session_handler', 'none');
+		if($handler=='database'){
+			$db->setQuery('DELETE FROM '.hikashop_table('session',false).' WHERE client_id=0 AND userid IN ('.implode(',',$user_ids).')');
 			$db->query();
+		}
+		if(!$app->isAdmin()){
+			foreach($user_ids as $user_id){
+				if($user_id != hikashop_loadUser())
+					continue;
+				$app->logout( $data->user_cms_id );
+			}
 		}
 	}
 	function onProcessUserMassActionsendEmail(&$elements,&$action,$k){

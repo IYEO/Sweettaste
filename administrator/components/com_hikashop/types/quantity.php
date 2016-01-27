@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -15,7 +15,9 @@ class hikashopQuantityType {
 		$this->values = array();
 		if($config) {
 			$this->values[] = JHTML::_('select.option', 2,JText::_('GLOBAL_ON_LISTINGS'));
-			$this->values[] = JHTML::_('select.option', -2,JText::_('ON_A_PER_PRODUCT_BASIS'));
+			$hkconfig = hikashop_config();
+			if($hkconfig->get('show_quantity_field',1) == '-2')
+				$this->values[] = JHTML::_('select.option', -2,JText::_('ON_A_PER_PRODUCT_BASIS'));
 		}
 		$this->values[] = JHTML::_('select.option', 1,JText::_('AJAX_INPUT'));
 		$this->values[] = JHTML::_('select.option', -1,JText::_('NORMAL_INPUT'));

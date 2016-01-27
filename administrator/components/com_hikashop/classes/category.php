@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -68,6 +68,8 @@ class hikashopCategoryClass extends hikashopClass {
 		$app = JFactory::getApplication();
 		if(method_exists($app,'stringURLSafe'))
 			$element->alias = $app->stringURLSafe(strip_tags($element->alias));
+		elseif(method_exists('JFilterOutput','stringURLUnicodeSlug'))
+			$element->alias = JFilterOutput::stringURLUnicodeSlug(strip_tags($element->alias));
 		else
 			$element->alias = JFilterOutput::stringURLSafe(strip_tags($element->alias));
 	}
@@ -592,7 +594,7 @@ class hikashopCategoryClass extends hikashopClass {
 		return $rows;
 	}
 
-	function loadAllWithTrans($type = '', $all = false, $filters = array(), $order = ' ORDER BY category_ordering ASC', $start = 0, $value = 500, $category_image = false) {
+	function loadAllWithTrans($type = '', $all = false, $filters = array(), $order = ' ORDER BY category_ordering ASC', $start = 0, $value = 500, $category_image = false, $locale = null) {
 		static $data = array();
 		static $queries = array();
 
@@ -623,8 +625,10 @@ class hikashopCategoryClass extends hikashopClass {
 
 		$translationHelper = hikashop_get('helper.translation');
 		if($translationHelper->isMulti()) {
-			$user = JFactory::getUser();
-			$locale = $user->getParam('language');
+			if(empty($locale)) {
+				$user = JFactory::getUser();
+				$locale = $user->getParam('language');
+			}
 			if(empty($locale)){
 				$config = JFactory::getConfig();
 				if(!HIKASHOP_J16){
@@ -841,7 +845,7 @@ class hikashopCategoryClass extends hikashopClass {
 		if($typeConfig['mode'] == 'list')
 			$order = ' ORDER BY c.category_name ASC';
 		else
-			$order = ' ORDER BY c.category_left ASC';
+			$order = ' ORDER BY c.category_parent_id ASC, c.category_ordering';
 
 		$query = 'SELECT '.implode(', ', $select) . ' FROM ' . implode(' ', $table) . ' WHERE ' . implode(' AND ', $where).$order;
 		$db->setQuery($query, $page, $limit);

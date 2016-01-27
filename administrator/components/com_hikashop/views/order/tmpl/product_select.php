@@ -1,16 +1,18 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
 ?><?php
+	$cart_type = JRequest::getCmd('cart_type', 'cart');
 	if($this->element->order_id == 0){
-		$parameters = '&cart_type='.JRequest::getString('cart_type','cart');
-		$parameters .= '&cart_id='.JRequest::getInt('cart_id','0');
+		$cart_id = JRequest::getInt($cart_type.'_id', 0);
+		$parameters = '&cart_type='.$cart_type;
+		$parameters .= '&cart_id='.$cart_id;
 	}else{
 		$parameters = '&order_id='.@$this->element->order_id;
 	}
@@ -150,11 +152,10 @@ defined('_JEXEC') or die('Restricted access');
 				<input type="hidden" id="filter_id" name="filter_id" value="<?php echo $this->pageInfo->filter->filter_id; ?>" />
 				<input type="hidden" name="filter_order" value="<?php echo $this->pageInfo->filter->order->value; ?>" />
 				<input type="hidden" name="filter_order_Dir" value="<?php echo $this->pageInfo->filter->order->dir; ?>" />
-						 <input type="hidden" name="data[order][order_id]" value="<?php echo @$this->element->order_id;?>" />
+				<input type="hidden" name="data[order][order_id]" value="<?php echo @$this->element->order_id;?>" />
 
-				<?php $cart_type = JRequest::getString('cart_type','cart');?>
-				<input type="hidden" name="cart_type" value="<?php echo $cart_type; ?>" />
-				<input type="hidden" name="<?php echo $cart_type.'_id';?>" value="<?php echo JRequest::getString($cart_type.'_id','0'); ?>" />
+				<input type="hidden" name="cart_type" value="<?php echo $this->escape($cart_type); ?>" />
+				<input type="hidden" name="<?php echo $cart_type.'_id';?>" value="<?php echo (int)@$cart_id; ?>" />
 
 				<?php echo JHTML::_( 'form.token' ); ?>
 			</form>

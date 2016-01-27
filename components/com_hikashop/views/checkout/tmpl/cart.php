@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -276,7 +276,7 @@ $app = JFactory::getApplication();
 		$taxes = round($this->full_total->prices[0]->price_value_with_tax-$this->full_total->prices[0]->price_value,$this->currencyHelper->getRounding($this->full_total->prices[0]->price_currency_id));
 		if(!empty($this->coupon) || !empty($this->shipping) || !empty($this->additional) || bccomp($taxes,0,5)) {
 ?>
-						<tr class="margin"><?php echo $td; ?><td></td></tr>
+				<tr class="margin"><?php echo $td; ?><td></td><td></td></tr>
 				<tr>
 					<?php echo $td; ?>
 					<td id="hikashop_checkout_cart_total2_title" class="hikashop_cart_subtotal_title hikashop_cart_title">
@@ -357,6 +357,38 @@ $app = JFactory::getApplication();
 <?php
 		}
 
+		 if(!empty($this->payment) && $this->payment->payment_price != 0) {
+?>
+				<tr>
+					<?php echo $td; ?>
+					<td id="hikashop_checkout_cart_payment_title" class="hikashop_cart_payment_title hikashop_cart_title">
+						<?php echo JText::_('HIKASHOP_PAYMENT'); ?>
+					</td>
+					<td class="hikashop_cart_payment_value" data-title="<?php echo Jtext::_('HIKASHOP_PAYMENT'); ?>">
+						<span class="hikashop_checkout_cart_payment">
+						<?php
+							if(!isset($this->payment->payment_price) && isset($this->payment->payment_price_with_tax) ) {
+								if(isset($this->value)) {
+									echo $this->value;
+								} else {
+									$this->payment->payment_price = 0.0;
+									$this->payment->payment_price_with_tax = 0.0;
+								}
+							}
+							if(isset($this->payment->payment_price)) {
+								if(bccomp($taxes,0,5)==0 || !$this->params->get('price_with_tax') || !isset($this->payment->payment_price_with_tax) ){
+									echo $this->currencyHelper->format(@$this->payment->payment_price,$this->full_total->prices[0]->price_currency_id);
+								}else{
+									echo $this->currencyHelper->format(@$this->payment->payment_price_with_tax,$this->full_total->prices[0]->price_currency_id);
+								}
+							}
+						?>
+						</span>
+					</td>
+				</tr>
+<?php
+		}
+
 		if(!empty($this->additional)) {
 			$exclude_additionnal = explode(',', $this->config->get('order_additional_hide', ''));
 			foreach($this->additional as $k => $additional) {
@@ -425,37 +457,7 @@ $app = JFactory::getApplication();
 <?php
 			}
 		}
-
-		 if(!empty($this->payment) && $this->payment->payment_price != 0) {
 ?>
-				<tr>
-					<?php echo $td; ?>
-					<td id="hikashop_checkout_cart_payment_title" class="hikashop_cart_payment_title hikashop_cart_title">
-						<?php echo JText::_('HIKASHOP_PAYMENT'); ?>
-					</td>
-					<td class="hikashop_cart_payment_value" data-title="<?php echo Jtext::_('HIKASHOP_PAYMENT'); ?>">
-						<span class="hikashop_checkout_cart_payment">
-						<?php
-							if(!isset($this->payment->payment_price) && isset($this->payment->payment_price_with_tax) ) {
-								if(isset($this->value)) {
-									echo $this->value;
-								} else {
-									$this->payment->payment_price = 0.0;
-									$this->payment->payment_price_with_tax = 0.0;
-								}
-							}
-							if(isset($this->payment->payment_price)) {
-								if(bccomp($taxes,0,5)==0 || !$this->params->get('price_with_tax') || !isset($this->payment->payment_price_with_tax) ){
-									echo $this->currencyHelper->format(@$this->payment->payment_price,$this->full_total->prices[0]->price_currency_id);
-								}else{
-									echo $this->currencyHelper->format(@$this->payment->payment_price_with_tax,$this->full_total->prices[0]->price_currency_id);
-								}
-							}
-						?>
-						</span>
-					</td>
-				</tr>
-				<?php } ?>
 				<tr>
 					<?php echo $td; ?>
 					<td id="hikashop_checkout_cart_final_total_title" class="hikashop_cart_total_title hikashop_cart_title">

@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -63,11 +63,16 @@ hikashopGallery.callbackSelection = function(tree,id) {
 				<ul class="hikaGallery">
 <?php
 if(!empty($this->dirContent)) {
+	hikashop_loadJsLib('tooltip');
 	foreach($this->dirContent as $k => $content) {
 		$chk_uid = 'hikaGalleryChk_' . $k . '_' . uniqid();
+
+		$tooltip = '';
+		if(strlen($content->filename) > 15)
+			$tooltip = ' data-toggle="hk-tooltip" data-title="'.htmlentities($content->filename).'"';
 ?>
 	<li class="hikaGalleryItem">
-		<a class="hikaGalleryPhoto" href="#" onclick="return window.hikagallery.select(this, '<?php echo $chk_uid; ?>');">
+		<a class="hikaGalleryPhoto" href="#" onclick="return window.hikagallery.select(this, '<?php echo $chk_uid; ?>');"<?php echo $tooltip; ?>>
 			<img src="<?php echo $content->thumbnail->url; ?>" alt="<?php echo $content->filename; ?>"/>
 			<span style="display:none;" class="hikaGalleryChk"><input type="checkbox" id="<?php echo $chk_uid ;?>" name="files[]" value="<?php echo $content->path; ?>"/></span>
 			<div class="hikaGalleryCommand">

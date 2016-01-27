@@ -1,15 +1,15 @@
 /**
  * @package    HikaShop for Joomla!
- * @version    2.6.0
+ * @version    2.6.1
  * @author     hikashop.com
- * @copyright  (C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright  (C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license    GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 (function() {
 	function preventDefault() { this.returnValue = false; }
 	function stopPropagation() { this.cancelBubble = true; }
 	var Oby = {
-		version: 20150320,
+		version: 20151124,
 		ajaxEvents : {},
 
 		hasClass : function(o,n) {
@@ -102,6 +102,13 @@
 		},
 		registerAjax : function(name, fct) {
 			var t = this;
+			if(typeof(name) == 'object') {
+				var r = [];
+				for(var k = name.length - 1; k >= 0; k--) {
+					r[r.length] = t.registerAjax(name[k], fct);
+				}
+				return r;
+			}
 			if( t.ajaxEvents[name] === undefined )
 				t.ajaxEvents[name] = {'_id':0};
 			var id = t.ajaxEvents[name]['_id'];
@@ -146,7 +153,8 @@
 				try { var ret = JSON.parse(text); return ret; } catch(e) { }
 			}
 			if(secure && !(/^[,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]*$/).test(text.replace(/\\./g, '@').replace(/"[^"\\\n\r]*"/g, ''))) return null;
-			return eval('(' + text + ')');
+			try { var ret = eval('(' + text + ')'); return ret; } catch(e) { }
+			return null;
 		},
 		getXHR : function() {
 			var xhr = null, w = window;
@@ -487,32 +495,68 @@
 			if(!elem)
 				return false;
 			try {
+				var hkpopup = elem.getAttribute('data-hk-popup');
 				if(jqmodal === undefined) {
 					jqmodal = false;
 					var test_rel = elem.getAttribute('rel');
-					if(test_rel == null && typeof(jQuery) != "undefined")
+					if(test_rel == null && hkpopup == null && typeof(jQuery) != "undefined")
 						jqmodal = true;
 				}
-				if(!jqmodal && w.SqueezeBox !== undefined) {
-					if(url !== undefined && url !== null) {
-						elem.href = url;
-					}
-					if(w.SqueezeBox.open !== undefined)
-						SqueezeBox.open(elem, {parse: 'rel'});
-					else if(w.SqueezeBox.fromElement !== undefined)
-						SqueezeBox.fromElement(elem);
-				} else if(typeof(jQuery) != "undefined") {
-					var id = elem.getAttribute('id');
-					jQuery('#modal-' + id).modal('show');
-					if(url) {
-						if(document.getElementById('modal-' + id + '-container'))
-							jQuery('#modal-' + id + '-container').find('iframe').attr('src', url);
-						else
-							jQuery('#modal-' + id).find('iframe').attr('src', url);
+				if(hkpopup) {
+					var fct = this['openBox_' + hkpopup.toLowerCase()];
+					if(fct) {
+						var ret = fct(elem, url);
+						if(ret == true)
+							return false;
 					}
 				}
-			} catch(e) {}
+				if(!jqmodal && this.openBox_squeezbox(elem, url))
+					return false;
+				if(this.openBox_bootstrap(elem, url))
+					return false;
+				console.log('no popup system found');
+			} catch(e) { console.log(e); }
 			return false;
+		},
+		openBox_squeezbox: function(elem, url) {
+			if(window.SqueezeBox === undefined)
+				return false;
+			if(url !== undefined && url !== null)
+				elem.href = url;
+			if(!elem.rel && elem.getAttribute('data-hk-popup') == 'squeezebox')
+				elem.rel = elem.getAttribute('data-squeezebox');
+			if(window.SqueezeBox.open !== undefined)
+				SqueezeBox.open(elem, {parse: 'rel'});
+			else if(window.SqueezeBox.fromElement !== undefined)
+				SqueezeBox.fromElement(elem);
+			return true;
+		},
+		openBox_bootstrap: function(elem, url) {
+			if(typeof(jQuery) == "undefined")
+				return false;
+			var id = elem.getAttribute('id');
+			jQuery('#modal-' + id).modal('show');
+			if(!url)
+				return true;
+			if(document.getElementById('modal-' + id + '-container'))
+				jQuery('#modal-' + id + '-container').find('iframe').attr('src', url);
+			else
+				jQuery('#modal-' + id).find('iframe').attr('src', url);
+			return true;
+		},
+		openBox_vex: function(elem, url) {
+			if(typeof(vex) == "undefined")
+				return false;
+			if(url !== undefined && url !== null)
+				elem.href = url;
+			settings = window.Oby.evalJSON(elem.getAttribute('data-vex'));
+			if(settings.x && settings.y && elem.href) {
+				settings.content = '<iframe style="border:0;margin:0;padding:0;" width="'+settings.x+'px" height="'+settings.y+'px" src="'+elem.href+'"></iframe>';
+				settings.afterOpen = function(context) { context.width(settings.x + 'px'); };
+			}
+			vex.defaultOptions.className = 'vex-theme-default';
+			vex.open( settings );
+			return true;
 		},
 		closeBox: function(parent) {
 			var d = document, w = window;
@@ -524,9 +568,11 @@
 				var e = d.getElementById('sbox-window');
 				if(e && typeof(e.close) != "undefined") {
 					e.close();
-				}else if(typeof(w.jQuery) != "undefined" && w.jQuery('div.modal.in') && w.jQuery('div.modal.in').hasClass('in')){
+				} else if(typeof(w.jQuery) != "undefined" && w.jQuery('div.modal.in') && w.jQuery('div.modal.in').hasClass('in')) {
 					w.jQuery('div.modal.in').modal('hide');
-				}else if(w.SqueezeBox !== undefined) {
+				} else if(typeof(vex) != 'undefined' && vex.close && vex.close() === true) {
+					return;
+				} else if(w.SqueezeBox !== undefined) {
 					w.SqueezeBox.close();
 				}
 			} catch(err) {}

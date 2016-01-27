@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -313,6 +313,18 @@ class plgHikaShopTaxcloud extends JPlugin {
 		if($app->isAdmin())
 			return;
 		$this->lookupAfterOrderCreate($order);
+
+		if(!empty($order->order_status)){
+			$config =& hikashop_config();
+			$confirmed_statuses = explode(',', trim($config->get('invoice_order_statuses','confirmed,shipped'), ','));
+			if(empty($confirmed_statuses))
+				$confirmed_statuses = array('confirmed','shipped');
+
+			if(in_array($order->order_status,$confirmed_statuses) && !in_array($order->old->order_status,$confirmed_statuses)){//if the actual status is confirmed and the old status wasn't confirmed
+				$this->AuthorizedWithCaptured($order);
+				return;
+			}
+		}
 	}
 
 	public function __construct(&$subject, $config) {

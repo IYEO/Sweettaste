@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -247,8 +247,8 @@ class orderController extends hikashopController{
 		$class = hikashop_get('class.order');
 		$order = $class->loadFullOrder($order_id,true);
 		if(empty($order->order_id)){
-			$app =& JFactory::getApplication();
-			$app->enqueueMessage('The order '.$order_id.' could not be found');
+			$app = JFactory::getApplication();
+			$app->enqueueMessage(JText::sprintf('ORDER_X_NOT_FOUND', $order_id));
 			parent::listing();
 			return false;
 		}
@@ -256,8 +256,8 @@ class orderController extends hikashopController{
 		$config =& hikashop_config();
 		$unpaid_statuses = explode(',',$config->get('order_unpaid_statuses','created'));
 		if(!in_array($order->order_status,$unpaid_statuses)){
-			$app =& JFactory::getApplication();
-			$app->enqueueMessage('The order '.$order->order_number.' cannot be paid anymore.');
+			$app = JFactory::getApplication();
+			$app->enqueueMessage(JText::sprintf('ORDER_X_NOT_PAID_ANYMORE', $order->order_number));
 			parent::listing();
 			return false;
 		}

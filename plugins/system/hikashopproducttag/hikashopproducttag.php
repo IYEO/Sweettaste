@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -57,9 +57,15 @@ class plgSystemHikashopproducttag extends JPlugin {
 				$pattern='/<(span|div) id="(hikashop_product_weight_main|hikashop_product_width_main|hikashop_product_length_main|hikashop_product_height_main|hikashop_product_characteristics|hikashop_product_options|hikashop_product_custom_item_info|hikashop_product_price_with_options_main|hikashop_product_quantity_main)"/';
 				$replacement='</div> <$1 id="$2"';
 				$product_page_parts[1] = preg_replace($pattern,$replacement,$product_page_parts[1],1);
-				$pattern='/class="hikashop_product_price_main"(.*)class="hikashop_product_price hikashop_product_price_0/msU';
-				$replacement='class="hikashop_product_price_main" $1 itemprop="price" class="hikashop_product_price hikashop_product_price_0';
-				$product_page_parts[1] = preg_replace($pattern,$replacement,$product_page_parts[1],1);
+
+				$pattern='/class="hikashop_product_price_main"(.*)class="hikashop_product_price hikashop_product_price_0(.*)>(.*)<\/span>/msU';
+				preg_match($pattern, $product_page_parts[1] , $matches);
+				if(isset($matches[3])){
+					$mainPrice = str_replace(array(' ',$data->currency_symbol),'',preg_replace('/\((.*)\)/','',$matches[3]));
+
+					$replacement = 'class="hikashop_product_price_main" $1 class="hikashop_product_price hikashop_product_price_0$2><span itemprop="price" style="display: none;">'.$mainPrice.'</span>$3</span>';
+					$product_page_parts[1] = preg_replace($pattern,$replacement,$product_page_parts[1],1);
+				}
 
 				$pattern='/class="hikashop_product_price_per_unit"/';
 				$replacement='class="hikashop_product_price_per_unit" itemprop="eligibleQuantity"';

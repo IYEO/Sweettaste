@@ -5,7 +5,7 @@
  * @author		brainforge.co.uk
  * @copyright	(C) 2011 Brainforge derived from Paypal plug-in by HIKARI SOFTWARE. All rights reserved.
  * @license		GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
- * 
+ *
  * See: http://www.worldpay.com/support/kb/gg/submittingtransactionsredirect/rxml.html
  *
  * In order to configure and use this plug-in you must have a Worldpay Global Gateway account.
@@ -19,9 +19,9 @@
  * output. Do not edit the templates distributed with the plug-in - your changes will get overwritten if you upgrade.
  * Always make a copy of one which looks closest to your objectives and give it a distinctive name. The list of
  * available templates, including your own, will appear on the Payment configuration page for this plug-in.
- * 
+ *
  * This template is derived from original RBS published XML examples.
- * 
+ *
  * Passed arguments from onAfterOrderConfirm()
  *  $params
  *  $order

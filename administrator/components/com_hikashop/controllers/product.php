@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -18,7 +18,7 @@ class ProductController extends hikashopController {
 	var $orderingMap ='ordering';
 	var $groupVal = 0;
 
-	function __construct($config = array()){
+	function __construct($config = array()) {
 		parent::__construct($config);
 		$this->display = array(
 			'unpublish','publish',
@@ -31,18 +31,15 @@ class ProductController extends hikashopController {
 			'selection','useselection',
 			'getTree','findTree',''
 		);
-		$this->modify[]='managevariant';
-		$this->modify[]='variants';
-		$this->modify_views[]='edit_translation';
-		$this->modify_views[]='priceaccess';
-		$this->modify[]='save_translation';
-		$this->modify[]='copy';
-		$this->modify[]='characteristic';
-		$this->modify_views[] = 'unpublish';
-		$this->modify_views[] = 'publish';
-		if(JRequest::getInt('variant')){
+		$this->modify = array_merge($this->modify, array(
+			'managevariant', 'variants', 'save_translation', 'copy', 'characteristic'
+		));
+		$this->modify_views = array_merge($this->modify_views, array(
+			'edit_translation', 'priceaccess', 'unpublish', 'publish'
+		));
+
+		if(JRequest::getInt('variant'))
 			$this->publish_return_view = 'variant';
-		}
 	}
 
 	function edit(){
@@ -78,12 +75,12 @@ class ProductController extends hikashopController {
 		$document->addScriptDeclaration('window.top.hikashop.closeBox();');
 	}
 
-	function managevariant(){
+	function managevariant() {
 		$id = $this->store();
-		if($id){
+		if($id) {
 			JRequest::setVar('cid',$id);
 			$this->variant();
-		}else{
+		} else {
 			$this->edit();
 		}
 	}
@@ -100,15 +97,15 @@ class ProductController extends hikashopController {
 		if(JRequest::getBool('variant')) {
 			JRequest::setVar('cid', JRequest::getInt('parent_id'));
 			$this->variant();
-		} else
+		} else {
 			$this->listing();
+		}
 	}
 
-	function save2new(){
+	function save2new() {
 		$result = $this->store(true);
-		if($result){
+		if($result)
 			JRequest::setVar('product_id', 0);
-		}
 		return $this->edit();
 	}
 
@@ -621,6 +618,11 @@ class ProductController extends hikashopController {
 				$file->file_name = substr($file->file_name, 0, strrpos($file->file_name, '.'));
 			}
 
+			if($file_type != 'product') {
+				$file->file_free_download = $config->get('upload_file_free_download', false);
+				$file->file_limit = 0;
+			}
+
 			$fileClass = hikashop_get('class.file');
 			$status = $fileClass->save($file, $file_type);
 
@@ -628,8 +630,8 @@ class ProductController extends hikashopController {
 			$ret->params->file_id = $status;
 
 			if($file_type != 'product') {
-				$ret->params->file_free_download = $config->get('upload_file_free_download', false);
-				$ret->params->file_limit = -1;
+				$ret->params->file_free_download = $file->file_free_download;
+				$ret->params->file_limit = $file->file_limit;
 				$ret->params->file_size = @filesize($uploadConfig['upload_dir'] . @$uploadConfig['options']['sub_folder'] . $file->file_name);
 			}
 

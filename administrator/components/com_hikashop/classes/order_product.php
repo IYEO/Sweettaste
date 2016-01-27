@@ -1,18 +1,18 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
 ?><?php
-class hikashopOrder_productClass extends hikashopClass{
+class hikashopOrder_productClass extends hikashopClass {
 	var $tables = array('order_product');
 	var $pkeys = array('order_product_id');
 
-	function save(&$products){
+	function save(&$products) {
 		if(empty($products))
 			return true;
 
@@ -38,14 +38,15 @@ class hikashopOrder_productClass extends hikashopClass{
 			'order_product_shipping_params'
 		);
 
-		if(hikashop_level(2)){
-			$element=null;
+		if(hikashop_level(2)) {
+			$element = null;
 			$fieldsClass = hikashop_get('class.field');
-			$itemFields = $fieldsClass->getFields('frontcomp',$element,'item');
-			if(!empty($itemFields)){
+			$itemFields = $fieldsClass->getFields('frontcomp', $element, 'item');
+			if(!empty($itemFields)) {
 				foreach($itemFields as $field){
-					if($field->field_type=='customtext') continue;
-					$fields[]=$field->field_namekey;
+					if($field->field_type == 'customtext')
+						continue;
+					$fields[] = $field->field_namekey;
 				}
 			}
 		}

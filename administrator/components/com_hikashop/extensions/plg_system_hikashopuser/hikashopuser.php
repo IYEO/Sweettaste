@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -29,6 +29,12 @@ class plgSystemHikashopuser extends JPlugin {
 		$this->entries = $app->getUserState('com_hikashop.entries_fields');
 		$this->checkout_fields_ok = $app->getUserState( 'com_hikashop.checkout_fields_ok',0);
 		$this->checkout_fields = $app->getUserState( 'com_hikashop.checkout_fields');
+
+		$app = JFactory::getApplication();
+		if($app->isAdmin() && @$_GET['option'] == 'com_plugins' && @$_GET['view']=='plugin' && (@$_GET['layout']=='edit' || @$_GET['task']=='edit')){
+			$lang = JFactory::getLanguage();
+			$lang->load('com_hikashop', JPATH_SITE, null, true);
+		}
 	}
 
 	function onContentPrepare( $context, &$article, &$params, $limitstart = 0) {
@@ -128,16 +134,32 @@ class plgSystemHikashopuser extends JPlugin {
 		return true;
 	}
 
-	function restoreSession(){
+	function restoreSession(&$user_id){
 		$app = JFactory::getApplication();
-			$cart = $app->getUserState('com_hikashop.cart_id');
-		if(empty($cart) && !empty($this->cart)){
+		$cart = $app->getUserState('com_hikashop.cart_id');
+		if(empty($cart) && !empty($this->cart))
 			$app->setUserState('com_hikashop.cart_id',$this->cart);
+		if(!empty($cart) || !empty($this->cart)){
 			if(!defined('DS'))
 				define('DS', DIRECTORY_SEPARATOR);
 			if(!include_once(rtrim(JPATH_ADMINISTRATOR,DS).DS.'components'.DS.'com_hikashop'.DS.'helpers'.DS.'helper.php')) return true;
-			$cartClass = hikashop_get('class.cart');
-			$cartClass->initCart();
+			$db = JFactory::getDBO();
+			$cart_id = $cart;
+			if(empty($cart_id))
+				$cart_id = $this->cart;
+			$db->setQuery('UPDATE '.hikashop_table('cart').' SET user_id = '.(int)$user_id.' WHERE cart_type = '.$db->quote('cart').' AND cart_id = '.(int)$cart_id);
+			$db->query();
+			$config = hikashop_config();
+			if( !$app->isAdmin() && !$config->get('enable_multicart') && !empty($user_id) ){
+				$db->setQuery('SELECT cart_id FROM #__hikashop_cart WHERE user_id='.(int)$user_id.' AND cart_type = '.$db->Quote('cart'));
+				$ids = $db->loadObjectList('cart_id');
+				if(isset($ids[$this->cart]))
+					unset($ids[$this->cart]);
+				if(count($ids)){
+					$db->setQuery('DELETE FROM '.hikashop_table('cart').' WHERE cart_id IN ('.implode(',',array_keys($ids)).')');
+					$db->Query();
+				}
+			}
 		}
 		$wishlist = $app->getUserState('com_hikashop.wishlist_id');
 		if(empty($wishlist) && !empty($this->wishlist)){
@@ -182,8 +204,8 @@ class plgSystemHikashopuser extends JPlugin {
 		if($app->isAdmin())
 			return true;
 
-		$this->restoreSession();
 
+		$user_id = 0;
 		if(empty($user['id'])){
 			if(!empty($user['username'])){
 				jimport('joomla.user.helper');
@@ -198,6 +220,8 @@ class plgSystemHikashopuser extends JPlugin {
 		} else {
 			$user_id = $user['id'];
 		}
+
+		$this->restoreSession($user_id);
 
 		if(empty($user_id))
 			return true;

@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -418,7 +418,7 @@ if($data->order_status != $confirmed && !empty($data->order_payment_method) && $
 	if($data->cart->full_total->prices[0]->price_value_with_tax>0)
 		echo '<p>' . JText::_('ORDER_VALID_AFTER_PAYMENT') . '</p>';
 
-	if(in_array($data->order_payment_method, array('banktransfer', 'check'))) {
+	if(in_array($data->order_payment_method, array('banktransfer', 'check', 'purchaseorder'))) {
 		$amount = $currencyHelper->format($data->cart->full_total->prices[0]->price_value_with_tax, $data->cart->order_currency_id);
 		$paymentClass = hikashop_get('class.payment');
 		$payment = $paymentClass->get($data->order_payment_id);
@@ -430,6 +430,8 @@ if($data->order_status != $confirmed && !empty($data->order_payment_method) && $
 			echo '<p>' . JText::sprintf('PLEASE_TRANSFERT_MONEY',$amount).'<br/>'.$information.'<br/>'.JText::sprintf('INCLUDE_ORDER_NUMBER_TO_TRANSFER',$data->order_number) . '</p>';
 		}elseif($data->order_payment_method=='check'){
 			echo '<p>' . JText::sprintf('PLEASE_SEND_CHECK',$amount).'<br/>'.$information.'<br/>'.JText::sprintf('INCLUDE_ORDER_NUMBER_TO_CHECK',$data->order_number) . '</p>';
+		}elseif($data->order_payment_method=='purchaseorder'){
+			echo '<p>' . JText::sprintf('PLEASE_SEND_PURCHASEORDER',$amount).'<br/>'.$information.'<br/>'.JText::sprintf('INCLUDE_ORDER_NUMBER_TO_PURCHASEORDER',$data->order_number) . '</p>';
 		}
 	} else {
 		if($data->cart->full_total->prices[0]->price_value_with_tax>0 && hikashop_level(1) && $config->get('allow_payment_button',1)) {

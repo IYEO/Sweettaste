@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -71,11 +71,17 @@ class hikashopEditorHelper {
 	}
 
 	function jsCode() {
-		return 'try{ ' .
-				$this->myEditor->save($this->name) .
-			' }catch(e){ try{ ' .
+		$name = $this->myEditor->get('_name');
+		$js = 'try{ ' .
 				$this->myEditor->save($this->id) .
+			' }catch(e){ try{ ' .
+				$this->myEditor->save($this->name) .
 			' } catch(f){}}';
+		if($name=='tinymce'){
+			$js = 'try{tinyMCE.execCommand(\'mceToggleEditor\', false, \''.$this->id.'\');}catch(h){'.$js.'}';
+		}
+
+		return $js;
 	}
 
 	function jsUnloadCode() {
@@ -90,8 +96,11 @@ class hikashopEditorHelper {
 	}
 
 	function displayCode($name, $content) {
-		if($this->hasCodeMirror())
-			$this->setEditor('codemirror');
+		$config =& hikashop_config();
+		$code_editor = $config->get('code_editor','codemirror');
+
+		if(!empty($code_editor) && $this->hasCodeEditor($code_editor))
+			$this->setEditor($code_editor);
 		else
 			$this->setEditor('none');
 
@@ -128,17 +137,17 @@ class hikashopEditorHelper {
 		self::$initialized[$this->editor] = true;
 	}
 
-	function hasCodeMirror() {
+	function hasCodeEditor($name = 'codemirror') {
 		static $has = null;
 		if($has !== null)
 			return $has;
 
-		if(version_compare(JVERSION,'1.6','<'))
-			$query = 'SELECT element FROM '.hikashop_table('plugins',false).' WHERE element=\'codemirror\' AND folder=\'editors\' AND published=1';
-		else
-			$query = 'SELECT element FROM '.hikashop_table('extensions',false).' WHERE element=\'codemirror\' AND folder=\'editors\' AND enabled=1 AND type=\'plugin\'';
-
 		$db = JFactory::getDBO();
+		if(version_compare(JVERSION,'1.6','<'))
+			$query = 'SELECT element FROM '.hikashop_table('plugins',false).' WHERE element='.$db->Quote($name).' AND folder=\'editors\' AND published=1';
+		else
+			$query = 'SELECT element FROM '.hikashop_table('extensions',false).' WHERE element='.$db->Quote($name).' AND folder=\'editors\' AND enabled=1 AND type=\'plugin\'';
+
 		$db->setQuery($query);
 		$editor = $db->loadResult();
 		$has = !empty($editor);

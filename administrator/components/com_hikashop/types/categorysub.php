@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -313,7 +313,7 @@ function callbackTree(tree,node,ev,skip) {
 				$type = array($type);
 			$type[]='root';
 		}
-		$typeConfig = array('params'=>array('category_type'=>$type), 'mode' => 'tree');
+		$typeConfig = array('params' => array('category_type' => $type), 'mode' => 'tree');
 		$fullLoad = false;
 		$options = array('depth' => 2, 'start' => $root);
 
@@ -324,13 +324,13 @@ function callbackTree(tree,node,ev,skip) {
 			$parents = array_reverse($parents);
 			$data = array();
 			$first = true;
-			foreach($parents as $p){
+			foreach($parents as $p) {
 				$o = new stdClass();
 				$o->status = 2;
-				if($first){
-					if($p->category_left+1==$p->category_right){
+				if($first) {
+					if($p->category_left + 1 == $p->category_right) {
 						$o->status = 4;
-					}else{
+					} else {
 						$o->status = 3;
 					}
 					$first = false;
@@ -345,25 +345,26 @@ function callbackTree(tree,node,ev,skip) {
 				$s->name = '...';
 				$s->value = -(int)$p->category_parent_id;
 				$s->data = array();
-				$data = array($o,$s);
+				$data = array($o, $s);
 			}
 
-			foreach($elements as $k => $el){
-				if($el->value != $data[0]->data[0]->value ) continue;
+			foreach($elements as $k => $el) {
+				if($el->value != $data[0]->data[0]->value)
+					continue;
 
-				if(count($el->data)){
+				if(count($el->data)) {
 					$found = false;
-					foreach($el->data as $j => $e){
-						if($e->value ==  $data[0]->data[0]->data[0]->value){
+					foreach($el->data as $j => $e) {
+						if($e->value == $data[0]->data[0]->data[0]->value) {
 							$elements[$k]->data[$j]->data = $data[0]->data[0]->data[0]->data;
 							$elements[$k]->data[$j]->status = 2;
 							$found = true;
 						}
 					}
-					if(!$found){
+					if(!$found) {
 						$elements[$k]->data[] = $data[0]->data[0]->data[0];
 					}
-				}else{
+				} else {
 					$elements[$k]->data = $data[0]->data[0]->data;
 					$elements[$k]->status = 2;
 				}

@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -262,14 +262,14 @@ if($status_vote == "comment" || $status_vote == "two" || $status_vote == "both" 
 			echo implode("\r\n",$this->element->extraData->bottomMiddle);
 		?>
 			<div class="hikashop_tabs_content" id="hikashop_show_tabular_comment">
-				<div id="hikashop_product_vote_listing" class="hikashop_product_vote_listing">
+				<div id="hikashop_vote_listing" data-votetype="product" class="hikashop_product_vote_listing">
 					<?php
 						echo $layout_vote_listing;
 					?>
 				</div>
 			</div>
 			<div class="hikashop_tabs_content" id="hikashop_show_tabular_new_comment">
-				<div id="hikashop_product_vote_form" class="hikashop_product_vote_form">
+				<div id="hikashop_vote_form" data-votetype="product" class="hikashop_product_vote_form">
 					<?php
 						echo $layout_vote_form;
 					?>

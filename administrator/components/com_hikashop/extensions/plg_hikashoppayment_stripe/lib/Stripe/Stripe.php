@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -20,31 +20,31 @@ abstract class Stripe
 
   public static function getApiKey()
   {
-    return self::$apiKey;
+	return self::$apiKey;
   }
 
   public static function setApiKey($apiKey)
   {
-    self::$apiKey = $apiKey;
+	self::$apiKey = $apiKey;
   }
 
   public static function getApiVersion()
   {
-    return self::$apiVersion;
+	return self::$apiVersion;
   }
 
   public static function setApiVersion($apiVersion)
   {
-    self::$apiVersion = $apiVersion;
+	self::$apiVersion = $apiVersion;
   }
 
   public static function getVerifySslCerts()
   {
-    return self::$verifySslCerts;
+	return self::$verifySslCerts;
   }
 
   public static function setVerifySslCerts($verify)
   {
-    self::$verifySslCerts = $verify;
+	self::$verifySslCerts = $verify;
   }
 }

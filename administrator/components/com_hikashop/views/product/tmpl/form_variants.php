@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -76,7 +76,8 @@ if(!hikashop_acl('product/edit/variants') || empty($this->product->product_id))
 		$variant_default = ($cpt == count($default_variants)) ? 'icon-publish' : 'icon-unpublish';
 		if($variant_default == 'icon-publish')
 			$default_found = true;
-
+		if(!HIKASHOP_J30)
+			$variant_default = ($variant_default == 'icon-publish') ? 'grid_true' : 'grid_false';
 ?>			<td style="cursor:pointer" onclick="return window.productMgr.editVariant(<?php echo $variant->product_id; ?>);"><?php echo $this->currencyClass->displayPrices(@$variant->prices);?></td>
 			<td style="cursor:pointer" onclick="return window.productMgr.editVariant(<?php echo $variant->product_id; ?>);"><?php echo (($variant->product_quantity == -1) ? JText::_('UNLIMITED') : $variant->product_quantity); ?></td>
 			<td style="text-align:center" href="#" onclick="return window.productMgr.publishVariant(event, <?php echo $variant->product_id; ?>);"><?php echo $this->toggleClass->display('product_published', $variant->product_published); ?></td>

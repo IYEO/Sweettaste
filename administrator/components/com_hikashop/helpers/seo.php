@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -23,7 +23,10 @@ class hikashopSeoHelper {
 				}
 				else $max=254;
 
-				$meta = substr($this->clean($element->$description),0,$max);
+				if(function_exists('mb_substr'))
+					$meta = mb_substr($this->clean($element->$description),0,$max);
+				else
+					$meta = substr($this->clean($element->$description),0,$max);
 				$element->$meta_description = $meta;
 			}
 			if(empty($element->$keyword)){
@@ -40,8 +43,11 @@ class hikashopSeoHelper {
 				$excluded_words = $config->get('keywords_exclusion_list',array());
 				$excluded_words = explode(',',$excluded_words);
 				$keywords = array();
+				$strlen = 'strlen';
+				if(function_exists('mb_strlen'))
+					$strlen = 'mb_strlen';
 				foreach($words as $word => $nb){
-					if(strlen($word)<3){
+					if($strlen($word)<3){
 						continue;
 					}
 					$skip=false;

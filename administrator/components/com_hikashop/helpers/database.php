@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -352,21 +352,17 @@ class hikashopDatabaseHelper {
 
 	public function getVersion()
 	{
-		 static $instance;
+		static $instance;
 
-		 if ( isset( $instance)) { return $instance; }
+		if ( isset( $instance)) { return $instance; }
 
-		 jimport( 'joomla.application.helper');
+		jimport('joomla.application.helper');
 		jimport('joomla.filesystem.folder');
 		jimport('joomla.filesystem.file');
-		 $version = "unknown";
+		$version = "unknown";
 
-		 $folder  = dirname(dirname(__FILE__));
-		 $pattern = '^'
-					 . substr( basename( dirname(dirname(__FILE__)),'.php'), 4)
-					 . '.*'
-					 . '\.xml$'
-					 ;
+		$folder  = dirname(dirname(__FILE__));
+		$pattern = '^' . substr( basename( dirname(dirname(__FILE__)),'.php'), 4) . '.*' . '\.xml$';
 		$xmlFilesInDir = JFolder::files( $folder, $pattern);
 		if ( !empty( $xmlFilesInDir)) {
 			foreach ($xmlFilesInDir as $xmlfile) {
@@ -398,10 +394,9 @@ class hikashopDatabaseHelper {
 		return $instance;
 	}
 
-	public function getVersion_NumberOnly( $verString=null)
-	{
-		 if ( empty( $verString)) {
-				$verString = $this->getVersion();
+	public function getVersion_NumberOnly($verString = null) {
+		 if(empty($verString)) {
+			$verString = $this->getVersion();
 		 }
 
 		 if ( preg_match( '#[A-Za-z0-9\.\s]+#i', $verString, $match)) {

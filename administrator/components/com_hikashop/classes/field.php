@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -214,7 +214,7 @@ class hikashopFieldClass extends hikashopClass {
 					$parents = $categoryClass->getParents($data->categories);
 				} else {
 					$productClass = hikashop_get('class.product');
-					if(!isset($data->product_type)) {
+					if(is_object($data) && !isset($data->product_type)) {
 						$prodData = $productClass->get($id);
 						if(!empty($prodData->product_type)) {
 							$data->product_type = $prodData->product_type;
@@ -466,9 +466,9 @@ foreach($results as $i => $oneResult){
 			if(!empty($field->field_value) && is_string($fields[$namekey]->field_value)) {
 				$fields[$namekey]->field_value = $this->explodeValues($fields[$namekey]->field_value);
 			}
+			if($data == null || empty($data))
+				$data = new stdClass();
 			if(is_object($data) && empty($data->$id) && !empty($namekey) && empty($data->$namekey)) {
-				if($data == null || empty($data))
-					$data = new stdClass();
 				if(empty($fields[$namekey]->field_options['pleaseselect'])) {
 					$data->$namekey = $field->field_default;
 				} else {
@@ -1276,6 +1276,11 @@ function hikashopToggleFields(new_value, namekey, field_type, id, prefix) {
 			$field->field_value = implode("\n", $field->field_value);
 		}
 
+		if(!preg_match('#^([a-z0-9_]+ *= *"[\p{L}\p{N}\p{Z} ]+" *)* *$#i', $fieldOptions['attribute'])){
+			$this->errors[] = 'Please specify a correct attribute';
+			return false;
+		}
+
 		if(empty($field->field_id) && $field->field_type != 'customtext') {
 			if(empty($field->field_namekey))
 				$field->field_namekey = $field->field_realname;
@@ -1593,6 +1598,8 @@ class hikashopText extends hikashopItem {
 			$size .= ' readonly="readonly"';
 		if(!empty($field->field_options['placeholder']))
 			$size .= ' placeholder="'.JText::_($field->field_options['placeholder']).'"';
+		if(!empty($field->field_options['attribute']))
+			$size .= $field->field_options['attribute'];
 
 		$js = '';
 		if($inside && strlen($value) < 1) {
@@ -1890,7 +1897,7 @@ class hikashopCoupon extends hikashopText {
 				$validCoupons[$value]++;
 			}
 
-			if($field->coupon[$value]->discount_quota>0){
+			if(!empty($field->coupon[$value]->discount_quota) && $field->coupon[$value]->discount_quota>0 ){
 				$left = ($field->coupon[$value]->discount_quota - $field->coupon[$value]->discount_used_times);
 				if($left<$validCoupons[$value]){
 					if($left>0){
@@ -1966,6 +1973,7 @@ class hikashopTextarea extends hikashopItem {
 		$rows = empty($field->field_options['rows']) ? '' : 'rows="'.intval($field->field_options['rows']).'"';
 		$options .= empty($field->field_options['readonly']) ? '' : ' readonly="readonly"';
 		$options .= empty($field->field_options['placeholder']) ? '' : ' placeholder="'.JText::_($field->field_options['placeholder']).'"';
+		$options .= empty($field->field_options['attribute']) ? '' : $field->field_options['attribute'];
 		return '<textarea class="inputbox" id="'.$this->prefix.@$field->field_namekey.$this->suffix.'" name="'.$map.'" '.$cols.' '.$rows.' '.$js.' '.$options.'>'.$value.'</textarea>'.$html;
 	}
 
@@ -2023,6 +2031,7 @@ class hikashopDropdown extends hikashopItem{
 		} else {
 			$options = str_replace('class="', 'class="hikashop_field_dropdown ', $options);
 		}
+		$options .= empty($field->field_options['attribute']) ? '' : $field->field_options['attribute'];
 		$string .= '<select id="'.$this->prefix.$field->field_namekey.$this->suffix.'" name="'.$map.'" '.$arg.$options.'>';
 		if(empty($field->field_value))
 			return $string.'</select>';
@@ -2040,8 +2049,9 @@ class hikashopDropdown extends hikashopItem{
 		foreach($field->field_value as $oneValue => $title) {
 			if(isset($field->field_default) && !$isValue) {
 				if(array_key_exists($field->field_default, $field->field_value)){
-					if($oneValue === $field->field_default){
-						$selected = (is_string($field->field_default) && $oneValue === $field->field_default) || is_array($field->field_default) && in_array($oneValue,$field->field_default) ? 'selected="selected" ' : '';
+					$defaultValueEqualToCurrentValue = (is_numeric($field->field_default) && is_numeric($oneValue) && $oneValue == $field->field_default) || (is_string($field->field_default) && $oneValue === $field->field_default);
+					if($defaultValueEqualToCurrentValue){
+						$selected = ($defaultValueEqualToCurrentValue || is_array($field->field_default) && in_array($oneValue,$field->field_default)) ? 'selected="selected" ' : '';
 					}else{
 						$selected = ((int)$title->disabled && !$admin) ? 'disabled="disabled" ' : '';
 					}
@@ -2174,6 +2184,9 @@ class hikashopZone extends hikashopSingledropdown{
 				$value = '';
 			return true;
 		}
+		if($field->field_required && @$field->field_options['zone_type'] == 'state')
+			return true;
+
 		if(!empty($this->report)) {
 			if($this->report === true) {
 				$app = JFactory::getApplication();
@@ -2247,6 +2260,7 @@ class hikashopRadioCheck extends hikashopItem {
 			$oneValue = htmlentities($oneValue, ENT_COMPAT, 'UTF-8');
 			$checked .= ((is_string($value) && $oneValue === $value) || is_array($value) && in_array($oneValue,$value)) ? 'checked="checked" ' : '';
 			$id = $this->prefix.$field->field_namekey.$this->suffix.'_'.$oneValue;
+			$options .= empty($field->field_options['attribute']) ? '' : $field->field_options['attribute'];
 
 			if(!$use_bootstrap)
 				$string .= '<input type="'.$type.'" name="'.$map.'" value="'.$oneValue.'" id="'.$id.'" '.$checked.' '.$options.' /><label for="'.$id.'">'.$this->trans($title->value).'</label>';

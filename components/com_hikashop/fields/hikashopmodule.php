@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -21,7 +21,7 @@ class JFormFieldHikashopmodule extends JFormField{
 
 		$config =& hikashop_config();
 		$id = JRequest::getInt('id');
-		if(HIKASHOP_J30){
+		if(HIKASHOP_J30 && !in_array(@$_REQUEST['option'],array('com_falang','com_joomfish'))){
 			if(preg_match('/hikashopmodule/',$this->name)){
 				$associated = false;
 				$cid = JRequest::getVar('id','');

@@ -1,16 +1,16 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
 ?><?php
 class ProductViewProduct extends HikaShopView {
 	var $type = 'main';
-	var $ctrl= 'product';
+	var $ctrl = 'product';
 	var $nameListing = 'PRODUCTS';
 	var $nameForm = 'PRODUCTS';
 	var $icon = 'product';
@@ -210,7 +210,8 @@ window.hikashop.ready( function() {
 			}
 		}
 		else{
-			$this->params->set('content_synchronize', '1');
+			if(HIKASHOP_J30)
+				$this->params->set('content_synchronize', '1');
 			$this->params->set('recently_viewed', '0');
 		}
 
@@ -397,8 +398,8 @@ window.hikashop.ready( function() {
 				if($config->get('hikarss_format') != 'none') {
 					$doc_title = $config->get('hikarss_name','');
 					if(empty($doc_title)) {
-						$category = hikashop_get('class.category');
-						$catData = $category->get($pageInfo->filter->cid);
+						$categoryClass = hikashop_get('class.category');
+						$catData = $categoryClass->get($pageInfo->filter->cid);
 						if($catData) $doc_title = $catData->category_name;
 					}
 					if($config->get('hikarss_format') != 'both') {
@@ -753,10 +754,10 @@ window.hikashop.ready( function() {
 					$item_keys = array('field_categories', 'field_products');
 					foreach($itemFields as &$itemField) {
 						foreach($item_keys as $k) {
-							if(strpos($itemField->$k, ',') !== false) {
+							if(is_string($itemField->$k) && strpos($itemField->$k, ',') !== false) {
 								$itemField->$k = explode(',', trim($itemField->$k, ','));
 								JArrayHelper::toInteger($itemField->$k);
-							} else if(!empty($itemField->$k))
+							} else if(!is_array($itemField->$k) && !empty($itemField->$k))
 								$itemField->$k = array( (int)$itemField->$k );
 						}
 
@@ -839,6 +840,7 @@ window.hikashop.ready( function() {
 				$menu	= $menus->getItem($Itemid);
 			}
 		}
+
 		$url_itemid = '';
 		if(!empty($Itemid)){
 			$url_itemid = '&Itemid='.(int)$Itemid;
@@ -846,8 +848,6 @@ window.hikashop.ready( function() {
 
 		if(isset($data->hk_product))
 			$this->modules = '';
-
-		$this->assignRef('modules', $this->modules);
 
 		$pagination = hikashop_get('helper.pagination', $pageInfo->elements->total, $pageInfo->limit->start, $pageInfo->limit->value);
 		$pagination->hikaSuffix = '_'.$this->params->get('main_div_name').$category_selected;
@@ -889,17 +889,17 @@ window.hikashop.ready( function() {
 
 			$pathway_sef_name = $config->get('pathway_sef_name','category_pathway');
 			if(empty($menu)){
-				$class = hikashop_get('class.category');
+				$categoryClass = hikashop_get('class.category');
 				$pathway = $app->getPathway();
 				$category_pathway = '&'.$pathway_sef_name.'='.JRequest::getVar('menu_main_category');
-				$categories = $class->getParents(reset($pageInfo->filter->cid));
+				$categories = $categoryClass->getParents(reset($pageInfo->filter->cid));
 				$one = true;
 				if(!empty($categories)){
 					foreach($categories as $category){
 						if($one){
 							$one = false;
 						}else{
-							$class->addAlias($category);
+							$categoryClass->addAlias($category);
 							$pathway->addItem($category->category_name,hikashop_completeLink('category&task=listing&cid='.(int)$category->category_id.'&name='.$category->alias));
 						}
 					}
@@ -1060,16 +1060,16 @@ window.hikashop.ready( function() {
 	function show() {
 		$app = JFactory::getApplication();
 		$product_id = (int)hikashop_getCID('product_id');
+
 		$config =& hikashop_config();
 		$this->assignRef('config',$config);
+
 		global $Itemid;
-		$menus	= $app->getMenu();
-		$menu	= $menus->getActive();
-		if(empty($menu)){
-			if(!empty($Itemid)){
-				$menus->setActive($Itemid);
-				$menu = $menus->getItem($Itemid);
-			}
+		$menus = $app->getMenu();
+		$menu = $menus->getActive();
+		if(empty($menu) && !empty($Itemid)) {
+			$menus->setActive($Itemid);
+			$menu = $menus->getItem($Itemid);
 		}
 
 
@@ -1208,7 +1208,7 @@ window.hikashop.ready( function() {
 			$order = 'characteristic_value ASC';
 		}
 
-		$query = 'SELECT a.*,b.* FROM '.hikashop_table('variant').' AS a LEFT JOIN '.hikashop_table('characteristic').' AS b ON a.variant_characteristic_id=b.characteristic_id WHERE a.variant_product_id IN ('.implode(',',$ids).') ORDER BY a.ordering ASC,b.'.$order;
+		$query = 'SELECT a.*,b.* FROM '.hikashop_table('variant').' AS a INNER JOIN '.hikashop_table('characteristic').' AS b ON a.variant_characteristic_id=b.characteristic_id WHERE a.variant_product_id IN ('.implode(',',$ids).') ORDER BY a.ordering ASC,b.'.$order;
 		$database->setQuery($query);
 		$characteristics = $database->loadObjectList();
 
@@ -1560,20 +1560,20 @@ window.hikashop.ready( function() {
 				$newObj->product_id = $element->product_id;
 				if(!empty($element->main->product_id)) $newObj->product_id = $element->main->product_id;
 				$newObj->product_canonical = str_replace(HIKASHOP_LIVE,'',hikashop_currentURL());
-				$productClass = hikashop_get('class.product');
-				$productClass->save($newObj);
+				if($force_canonical==2){
+					$productClass = hikashop_get('class.product');
+					$productClass->save($newObj);
+				}
 				$canonical = $newObj->product_canonical;
 			}
 		}
-		$this->assignRef('canonical',$canonical);
+		$this->assignRef('canonical', $canonical);
 	}
 
 	function compare() {
 		if(!hikashop_level(2)) { return; }
 		$app = JFactory::getApplication();
 		$cids = JRequest::getVar('cid', array(), '', 'array');
-
-
 
 		$config =& hikashop_config();
 		$this->assignRef('config',$config);
@@ -1749,34 +1749,35 @@ window.hikashop.ready( function() {
 	}
 
 	function orderVariants(&$element){
-		if(!empty($element->variants)){
-			$optionsVariants = array();
-			$config =& hikashop_config();
-			$sort = $config->get('characteristics_values_sorting');
-			if($sort=='old'){
-				$order = 'characteristic_id';
-			}elseif($sort=='alias'){
-				$order = 'characteristic_alias';
-			}elseif($sort=='ordering'){
-				$order = 'characteristic_ordering';
-			}else{
-				$order = 'characteristic_value';
-			}
-			foreach($element->variants as $k2 => $variant){
-				$key = '';
-				foreach($variant->characteristics as $char){
-					if(in_array($sort,array('old','ordering'))){
-						$key .= sprintf('%04d', $char->$order).'+';
-					}else{
-						$key .= $char->$order.'+';
-					}
-				}
-				$key.=$variant->product_id;
-				$optionsVariants[$key]=&$element->variants[$k2];
-			}
-			ksort($optionsVariants);
-			$element->variants = $optionsVariants;
+		if(empty($element->variants))
+			return;
+
+		$optionsVariants = array();
+		$config =& hikashop_config();
+		$sort = $config->get('characteristics_values_sorting');
+		if($sort == 'old') {
+			$order = 'characteristic_id';
+		}elseif($sort == 'alias') {
+			$order = 'characteristic_alias';
+		}elseif($sort == 'ordering') {
+			$order = 'characteristic_ordering';
+		}else{
+			$order = 'characteristic_value';
 		}
+		foreach($element->variants as $k2 => $variant) {
+			$key = '';
+			foreach($variant->characteristics as $char) {
+				if(in_array($sort,array('old','ordering'))) {
+					$key .= sprintf('%04d', $char->$order).'+';
+				} else {
+					$key .= $char->$order.'+';
+				}
+			}
+			$key .= $variant->product_id;
+			$optionsVariants[$key] = &$element->variants[$k2];
+		}
+		ksort($optionsVariants);
+		$element->variants = $optionsVariants;
 	}
 
 	function addCharacteristics(&$element,&$mainCharacteristics,&$characteristics) {
@@ -2008,7 +2009,7 @@ window.hikashop.ready( function() {
 		hikashop_nocache();
 
 		$module = hikashop_get('helper.module');
-		$module->initialize($this);
+		$module->initialize($this, false);
 
 		$app = JFactory::getApplication();
 		$database = JFactory::getDBO();

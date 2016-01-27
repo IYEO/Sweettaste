@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -493,6 +493,7 @@ function checkAllBox(id, type) {
 			$limit['unit'] = 1;
 
 		$packages = $this->getOrderPackage($order, array('weight_unit' => 'kg', 'volume_unit' => 'm', 'limit' => $limit, 'required_dimensions' => array('w','x','y','z')));
+
 		if(empty($packages))
 			return true;
 
@@ -503,33 +504,34 @@ function checkAllBox(id, type) {
 			$data['name'] = 'grouped package';
 		}
 
-		if(isset($packages['w']) || isset($packages['x']) || isset($packages['y']) || isset($packages['z'])) {
+		if(isset($packages['w']) && isset($packages['x']) && isset($packages['y']) && isset($packages['z'])) {
 			$this->nbpackage++;
 			$data['weight'] = $packages['w'];
 			$data['height'] = $packages['z'];
 			$data['length'] = $packages['y'];
 			$data['width'] = $packages['x'];
-			$data['quantity'] = 1; //$this->nbpackage;
+			$data['quantity'] = 1;
+			$data['XMLpackage'] .= $this->_createPackage($data, $rate, $order);
 		} else {
 			foreach($packages as $package){
+				if(!isset($package['w']) || $package['w'] == 0 || !isset($package['x']) || $package['x'] == 0 || !isset($package['y']) || $package['y'] == 0 || !isset($package['z']) || $package['z'] == 0)
+					continue;
 				$this->nbpackage++;
 				$data['weight'] = $package['w'];
 				$data['height'] = $package['z'];
 				$data['length'] = $package['y'];
 				$data['width'] = $package['x'];
-				$data['quantity'] = 1; //$this->nbpackage;
+				$data['quantity'] = 1;
+				$data['XMLpackage'] .= $this->_createPackage($data, $rate, $order);
 			}
 		}
-
-		$data['XMLpackage'] .= $this->_createPackage($data, $rate, $order) .
-			'</lineItems>' .
+		$data['XMLpackage'] .= '</lineItems>' .
 			'<city>' . $data['destCity'] . '</city>' .
 			'<provOrState>' . $data['destState']->zone_name . '</provOrState>' .
 			'<country>' . $data['destCountry'] . '</country>' .
 			'<postalCode>' . $data['destZip'] . '</postalCode>' .
 			'</ratesAndServicesRequest>'.
 			'</eparcel>';
-
 		$usableMethods = $this->_RequestMethods($data, $data['XMLpackage']);
 
 		return $usableMethods;
@@ -544,10 +546,10 @@ function checkAllBox(id, type) {
 				return (int)floor($limit_value / $divide);
 				break;
 			case 'length_girth':
-				$divide = $product['z'] + ($product['x'] + $product['y']) * 2;
-				if(!$divide || $divide > $limit_value)
+				$max_qty = (($limit_value - $product['z']) / 2 - $product['y']) / $product['x'];
+				if(!$max_qty || $max_qty < 1)
 					return false;
-				return (int)floor($limit_value / $divide);
+				return (int)floor($max_qty);
 				break;
 		}
 		return parent::processPackageLimit($limit_key, $limit_value , $product, $qty, $package, $units);
@@ -566,7 +568,8 @@ function checkAllBox(id, type) {
 			$data['length'] = $data['length'] + ($data['length'] * $rate->shipping_params->dim_approximation / 100);
 			$data['width'] = $data['width'] + ($data['width'] * $rate->shipping_params->dim_approximation / 100);
 		}
-
+		if($data['name'] == '')
+			$data['name'] = ' ';
 		$xml = '<item>' .
 			'<quantity>' . $data['quantity'] . '</quantity>' .
 			'<weight>' . $data['weight'] . '</weight>' .
@@ -629,6 +632,7 @@ function checkAllBox(id, type) {
 				'status_message' => $xml->ratesAndServicesResponse->statusMessage->__toString(),
 			);
 		}
+
 		return $shipment;
 	}
 }

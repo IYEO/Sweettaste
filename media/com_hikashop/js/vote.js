@@ -1,36 +1,156 @@
 /**
  * @package    HikaShop for Joomla!
- * @version    2.6.0
+ * @version    2.6.1
  * @author     hikashop.com
- * @copyright  (C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright  (C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license    GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 var hikaVote = function(el,opt) {
 	this.init(el,opt);
 };
-hikaVote.updateVote = function(type, ref_id, value) {
+hikaVote.options = {};
+hikaVote.setOptions = function(opts) {
+	for(var opt in opts) {
+		if(!opts.hasOwnProperty(opt))
+			continue;
+		hikaVote.options[opt] = opts[opt];
+	}
+};
+hikaVote.updateVote = function(type, ref_id, value, tooltip) {
 	for(var i = window.hikaVotes.length - 1; i >= 0; i--) {
 		if(window.hikaVotes[i].type != type)
 			continue;
 		if(window.hikaVotes[i].ref_id != ref_id)
 			continue;
-		window.hikaVotes[i].setRating(value);
+		window.hikaVotes[i].setRating(value, tooltip);
 	}
 };
+hikaVote.vote = function(val, from){
+	var d = document,
+		re = new RegExp('id_(.*?)_hikashop'),
+		m = re.exec(from),
+		ref_id = null,
+		infos = false;
+
+	if(m != null) {
+		ref_id = '';
+		for (i = 1; i < m.length; i++) {
+			ref_id = ref_id + m[i] + "\n";
+		}
+	} else {
+		infos = d.querySelector("[data-ref][id=\"hikashop_vote_rating_id\"]");
+		ref_id = infos.getAttribute("data-ref");
+	}
+
+	if(!infos) {
+		infos = d.querySelectorAll("input[data-ref=\""+parseInt(ref_id)+"\"]:not([id=\"hikashop_vote_rating_id\"])");
+		infos = infos[0];
+	}
+
+	var el = null;
+	if(from == "hikashop_vote_rating_id") {
+		el = d.getElementById("hikashop_vote_status_form");
+	} else {
+		el = d.getElementById("hikashop_vote_status_"+parseInt(ref_id));
+	}
+
+	var type = infos.getAttribute("data-votetype"), comment_task = 0;
+	if(hikaVote.options.both == '1' || (val == 0 && infos.id == "hikashop_vote_rating_id")) {
+		comment_task = 1;
+	}
+
+	var hikashop_vote_comment = "", pseudo_comment = 0, email_comment = 0;
+	if(d.getElementById("hikashop_vote_comment")) {
+		hikashop_vote_comment = d.getElementById("hikashop_vote_comment").value;
+		pseudo_comment = d.getElementById("pseudo_comment").value;
+		email_comment = d.getElementById("email_comment").value;
+	}
+
+	data = "vote_type=" + encodeURIComponent(type) + "&hikashop_vote_type=vote" +
+		"&hikashop_vote_ref_id=" + parseInt(ref_id) +
+		"&hikashop_vote=" + parseInt(val) +
+		"&hikashop_vote_comment=" + encodeURIComponent(hikashop_vote_comment) +
+		"&email_comment=" + encodeURIComponent(email_comment) +
+		"&pseudo_comment=" + encodeURIComponent(pseudo_comment);
+	window.Oby.xRequest(hikaVote.options.urls.save, {mode: "POST", data: data}, function(xhr) {
+		response = window.Oby.evalJSON(xhr.response);
+		if(response.error) {
+			el.innerHTML = response.error.message;
+			return;
+		}
+
+		if(!response.success)
+			return;
+
+		el.innerHTML = response.success.message;
+		setTimeout(function(){ el.innerHTML = ''; }, 3500);
+		if(comment_task) {
+			// Clear the comment textarea
+			d.getElementById('hikashop_vote_comment').value = '';
+
+			// Call a function to refresh the "vote / listing" only
+			var section = d.getElementById("hikashop_vote_listing");
+			if(!section)
+				section = d.getElementById("hikashop_product_vote_listing");
+			if(!section)
+				return;
+
+			data = "data_id="+parseInt(ref_id);
+			data += "&main_ctrl="+String(type);
+			window.Oby.xRequest(hikaVote.options.urls.show, {mode: "POST", data: data}, function(xhr) {
+				section.innerHTML = xhr.response;
+			});
+		}
+		if(response.values) {
+			// type / ref_id / value / tooltip
+			window.hikaVote.updateVote(String(type), parseInt(ref_id), parseInt(response.values.rounded), String(response.tooltip));
+		}
+	});
+};
+hikaVote.useful = function(vote_id, val) {
+	var section = document.getElementById("hikashop_vote_listing"),
+		type = 'product';
+	if(section) {
+		type = section.getAttribute('data-votetype');
+	} else {
+		section = document.getElementById("hikashop_product_vote_listing");
+	}
+	if(!section)
+		return;
+	var el = document.getElementById(vote_id);
+	data = "hikashop_vote_type=useful&value=" + parseInt(val) + "&hikashop_vote_id=" + parseInt(vote_id) + "&vote_type=" + encodeURIComponent(type);
+	window.Oby.xRequest(hikaVote.options.urls.save, {mode: "POST", data: data}, function(xhr) {
+		response = window.Oby.evalJSON(xhr.response);
+		if(response.error)
+			el.innerHTML = response.error.message;
+		else if(response.success)
+			el.innerHTML = response.success.message;
+	});
+
+	data = "data_id=" + parseInt(hikaVote.options.itemId) + "&main_ctrl=" + encodeURIComponent(type) + "&content_type=listing";
+	window.Oby.xRequest(hikaVote.options.urls.show, {mode: "POST", data: data}, function(xhr) {
+		setTimeout(function(){ section.innerHTML = xhr.response;}, 5000);
+	});
+};
+
 hikaVote.prototype = {
 	options : {},
 	selectBox: null,
 	container: null,
 	max: null,
 	cb: null,
-	type:null,
-	ref_id:null,
+	type: null,
+	ref_id: null,
 	/**
 	 *
 	 */
 	init: function(el, opt, cb) {
 		var t = this, d= document;
 		t.setOptions(opt);
+
+		this.options.style = 'star';
+		if(el.getAttribute('data-votestyle'))
+			this.options.style = el.getAttribute('data-votestyle');
 
 		if(typeof(el) == 'string')
 			t.selectBox = d.getElementById(el);
@@ -91,6 +211,8 @@ hikaVote.prototype = {
 		t.options.container = opt.container || null;
 		t.options.defaultRating = opt.defaultRating || null;
 		t.options.id = opt.id || 'hikashop_vote_';
+		t.type = opt.type;
+		t.ref_id = opt.ref_id;
 	},
 	setContainer: function() {
 		var t = this, d = document;
@@ -103,8 +225,9 @@ hikaVote.prototype = {
 	createContainer: function() {
 		var t = this, d = document;
 		t.container = d.createElement('div');
-		t.container.className = 'ui-rating';
-
+		t.container.className = 'hk-rating';
+		t.container.setAttribute('data-toggle', 'hk-tooltip');
+		t.container.setAttribute('data-original-title', t.selectBox.getAttribute('data-original-title'));
 		if(t.selectBox.nextSibling)
 			t.selectBox.parentNode.insertBefore(t.container, t.selectBox.nextSibling);
 		else
@@ -120,7 +243,7 @@ hikaVote.prototype = {
 		if(el) value = el.getAttribute('value');
 		var e = d.createElement('a');
 		e.id = t.options.id + '_' + value;
-		e.className = 'ui-rating-star ui-rating-empty';
+		e.className = 'hk-rate-' + this.options.style + ' state-empty';
 		e.title = '' + value;
 		e.value = value;
 
@@ -137,10 +260,10 @@ hikaVote.prototype = {
 			el = d.getElementById(el);
 		if(!el)
 			return;
-		t.addClass(el, 'ui-rating-hover');
+		t.addClass(el, 'state-hover');
 		var c = el.previousSibling;
 		while(c) {
-			t.addClass(c, 'ui-rating-hover');
+			t.addClass(c, 'state-hover');
 			c = c.previousSibling;
 		}
 	},
@@ -156,11 +279,11 @@ hikaVote.prototype = {
 			el = d.getElementById(el);
 		if(!el)
 			return;
-		t.removeClass(el, 'ui-rating-hover');
+		t.removeClass(el, 'state-hover');
 
 		var c = el.previousSibling;
 		while(c) {
-			t.removeClass(c, 'ui-rating-hover');
+			t.removeClass(c, 'state-hover');
 			c = c.previousSibling;
 		}
 	},
@@ -187,7 +310,7 @@ hikaVote.prototype = {
 		if(!el) return;
 		t.setRating(el.value);
 	},
-	setRating: function(rating) {
+	setRating: function(rating, tooltip) {
 		var t = this, d = document;
 		// use selected rating if none supplied
 		if (!rating) {
@@ -209,22 +332,28 @@ hikaVote.prototype = {
 
 		// highlight current and previous stars in yellow
 		if(current && rating != 0) {
-			current.className = 'ui-rating-star ui-rating-full';
+			current.className = 'hk-rate-'+this.options.style+' state-full';
 			var c = current.previousSibling;
 			while(c) {
-				c.className = 'ui-rating-star ui-rating-full';
+				c.className = 'hk-rate-'+this.options.style+' state-full';
 				c = c.previousSibling;
 			}
 
 			// remove highlight from higher ratings
 			var c = current.nextSibling;
 			while(c) {
-				c.className = 'ui-rating-star ui-rating-empty';
+				c.className = 'hk-rate-'+this.options.style+' state-empty';
 				c = c.nextSibling;
 			}
 		}
 		// synchronize the rate with the selectbox
 		t.selectBox.value = rating;
+
+		if(!tooltip)
+			return;
+
+		// update the tooltip
+		t.container.setAttribute('data-original-title', tooltip);
 	},
 	addEvent : function(d,e,f) {
 		if( d.attachEvent )
@@ -265,13 +394,15 @@ var initVote = function(){
 		return;
 	for(var i=0; i < voteContainers.length; i++) {
 		el = d.getElementById(voteContainers[i].id);
-		if(!el.getAttribute("data-type"))
+		if(!el.getAttribute("data-votetype"))
 			continue;
 		r = new hikaVote(el, {
-			id : 'hikashop_vote_rating_'+el.getAttribute("data-type")+'_'+el.getAttribute("data-ref"),
+			id : 'hikashop_vote_rating_'+el.getAttribute("data-votetype")+'_'+el.getAttribute("data-ref"),
 			showSelectBox : false,
 			container : null,
-			defaultRating :  el.getAttribute("data-rate")
+			defaultRating :  el.getAttribute("data-rate"),
+			type : el.getAttribute("data-votetype"),
+			ref_id : el.getAttribute("data-ref"),
 		});
 		window.hikaVotes.push(r);
 	}

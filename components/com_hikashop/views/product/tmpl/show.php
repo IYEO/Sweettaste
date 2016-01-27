@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -93,7 +93,7 @@ if($this->productlayout != 'show_tabular') {
 	if($config->get('enable_status_vote') == "comment" || $config->get('enable_status_vote') == "two" || $config->get('enable_status_vote') == "both" ) {
 ?>
 	<form action="<?php echo hikashop_currentURL() ?>" method="post" name="hikashop_comment_form" id="hikashop_comment_form">
-		<div id="hikashop_product_vote_listing" class="hikashop_product_vote_listing">
+		<div id="hikashop_vote_listing" data-votetype="product" class="hikashop_product_vote_listing">
 <?php
 		if($this->params->get('show_vote_product')){
 			$js = '';
@@ -106,7 +106,7 @@ if($this->productlayout != 'show_tabular') {
 			echo hikashop_getLayout('vote', 'listing', $this->params, $js);
 ?>
 		</div>
-		<div id="hikashop_product_vote_form" class="hikashop_product_vote_form">
+		<div id="hikashop_vote_form" data-votetype="product" class="hikashop_product_vote_form">
 <?php
 			$js = '';
 			if(isset($this->element->main)){
@@ -130,19 +130,18 @@ if($this->productlayout != 'show_tabular') {
 
 $contact = $this->config->get('product_contact',0);
 
-if(empty($this->element->variants) || $this->params->get('characteristic_display')=='list'){
-	if(hikashop_level(1) && !empty($this->element->options)){
+if(empty($this->element->variants) || $this->params->get('characteristic_display') == 'list') {
+	if(hikashop_level(1) && !empty($this->element->options)) {
 		$priceUsed = 0;
 		if(!empty($this->row->prices)){
 			foreach($this->row->prices as $price){
-				if(isset($price->price_min_quantity) && empty($this->cart_product_price)){
-					if($price->price_min_quantity<=1){
-						if($this->params->get('price_with_tax')){
-							$priceUsed = $price->price_value_with_tax;
-						} else {
-							$priceUsed = $price->price_value;
-						}
-					}
+				if(!isset($price->price_min_quantity) || !empty($this->cart_product_price) || $price->price_min_quantity > 1)
+					continue;
+
+				if($this->params->get('price_with_tax')){
+					$priceUsed = $price->price_value_with_tax;
+				} else {
+					$priceUsed = $price->price_value;
 				}
 			}
 		}

@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -44,6 +44,7 @@ class plgHikashopshippingUSPS extends hikashopShippingPlugin
 			'ASC' => 'Ascending',
 			'DESC' => 'Descending',
 		)),
+		'with_dimension' => array('Use product dimension', 'boolean'),
 		'firstclass_mail_type' => array('First class mail type', 'list',array(
 			'PARCEL' => 'Parcel',
 			'LETTER' => 'Letter',
@@ -217,22 +218,55 @@ class plgHikashopshippingUSPS extends hikashopShippingPlugin
 				}
 			}
 
-			$package = $this->getOrderPackage($order, array('weight_unit' => 'oz', 'volume_unit' => 'in', 'required_dimensions' => array('w','x','y','z')));
+			if(!isset($rate->shipping_params->with_dimension))
+				$rate->shipping_params->with_dimension = 1;
+			if($rate->shipping_params->with_dimension)
+				$required_dimensions = array('w','x','y','z');
+			else
+				$required_dimensions = array('w');
+			$limit = array();
 
-			if(isset($package[0]))
-				$package = $package[0];
+			$envelope = array(
+					'FLAT RATE ENVELOPE',
+					'PADDED FLAT RATE ENVELOPE',
+					'LEGAL FLAT RATE ENVELOPE',
+					'SM FLAT RATE ENVELOPE',
+					'WINDOW FLAT RATE ENVELOPE',
+					'GIFT CARD FLAT RATE ENVELOPE');
+			$variable = array(
+					'VARIABLE',
+					'FLAT RATE BOX',
+					'SM FLAT RATE BOX',
+					'MD FLAT RATE BOX',
+					'RECTANGULAR',
+					'NONRECTANGULAR');
+
+
+			if(in_array($rate->shipping_params->container, $variable)) {
+				$limit['w'] = 1120;
+				if($rate->shipping_params->with_dimension)
+					$limit['length_girth'] = 108;
+			} elseif(in_array($rate->shipping_params->container, $envelope)) {
+				if($rate->shipping_params->with_dimension) {
+					$limit = array(
+					'x' => 0.75,
+					'y' => 12,
+					'z' => 15);
+				} else
+					$limit['unit'] = 1;
+			} elseif($rate->shipping_params->container == 'LG FLAT RATE BOX'){
+				$limit['w'] = 1120;
+				if($rate->shipping_params->with_dimension)
+					$limit['length_girth'] = 130;
+			} else
+				$limit['unit'] = 1;
+
+			$packages = $this->getOrderPackage($order, array('weight_unit' => 'oz', 'volume_unit' => 'in', 'limit' => $limit, 'required_dimensions' => $required_dimensions));
+			if(empty($packages))
+				return true;
 
 			$max_weight = 1120;
-			if($package['w'] > $max_weight) {
-				$messages['items_weight_over_limit'] = JText::_('ITEMS_WEIGHT_TOO_BIG_FOR_SHIPPING_METHODS');
-				$cache_messages['items_weight_over_limit'] = JText::_('ITEMS_WEIGHT_TOO_BIG_FOR_SHIPPING_METHODS');
-				$this->setShippingCache($order, null, $cache_messages);
-				return true;
-			}
-
-			if($package['w'] < 1)
-				$package['w'] = 1; // Minimum 1oz
-
+			$parcels = array();
 			if(empty($order->shipping_address_full)) {
 				$cart = hikashop_get('class.cart');
 				$app = JFactory::getApplication();
@@ -240,40 +274,97 @@ class plgHikashopshippingUSPS extends hikashopShippingPlugin
 				$cart->loadAddress($order->shipping_address_full, $address, 'object', 'shipping');
 			}
 
+			if(isset($packages['w'])){
+				if($packages['w'] > $max_weight) {
+					$messages['items_weight_over_limit'] = JText::_('ITEMS_WEIGHT_TOO_BIG_FOR_SHIPPING_METHODS');
+					$cache_messages['items_weight_over_limit'] = JText::_('ITEMS_WEIGHT_TOO_BIG_FOR_SHIPPING_METHODS');
+					$this->setShippingCache($order, null, $cache_messages);
+					return true;
+				}
+
+				if($packages['w'] < 1)
+					$packages['w'] = 1; // Minimum 1oz
+				$parcel = new stdClass();
+				$parcel->Country = @$order->shipping_address_full->shipping_address->address_country->zone_code_2;
+				if(empty($parcel->Country))
+					$parcel->Country = 'US';
+				$parcel->Pickup_Postcode = substr(preg_replace('#[^a-z0-9]#i', '', @$rate->shipping_params->post_code), 0, 5);
+				$parcel->Destination_Postcode = substr(preg_replace('#[^a-z0-9]#i', '', $order->shipping_address->address_post_code), 0, 5);
+
+				if($rate->shipping_params->with_dimension == 1){
+					$girth = array($packages['y'], $packages['x'], $packages['z']);
+					sort($girth);
+
+					$parcel->Length = $girth[2];
+					$parcel->Width = $girth[1];
+					$parcel->Height = $girth[0];
+					$parcel->Girth = (($parcel->Height + $parcel->Width) * 2) + $parcel->Length;
+				} else {
+					$parcel->Length = '';
+					$parcel->Width = '';
+					$parcel->Height = '';
+					$parcel->Girth = '';
+				}
+
+				$parcel->Quantity = 1;
+				$parcel->Weight = round($packages['w'], 2);
+				$parcels[] = $parcel;
+			}else{
+				foreach($packages as $package){
+					if($package['w'] > $max_weight) {
+						$messages['items_weight_over_limit'] = JText::_('ITEMS_WEIGHT_TOO_BIG_FOR_SHIPPING_METHODS');
+						$cache_messages['items_weight_over_limit'] = JText::_('ITEMS_WEIGHT_TOO_BIG_FOR_SHIPPING_METHODS');
+						$this->setShippingCache($order, null, $cache_messages);
+						return true;
+					}
+
+					if($package['w'] < 1)
+						$package['w'] = 1; // Minimum 1oz
+					$parcel = new stdClass();
+					$parcel->Country = @$order->shipping_address_full->shipping_address->address_country->zone_code_2;
+					if(empty($parcel->Country))
+						$parcel->Country = 'US';
+					$parcel->Pickup_Postcode = substr(preg_replace('#[^a-z0-9]#i', '', @$rate->shipping_params->post_code), 0, 5);
+					$parcel->Destination_Postcode = substr(preg_replace('#[^a-z0-9]#i', '', $order->shipping_address->address_post_code), 0, 5);
+
+					if($rate->shipping_params->with_dimension == 1){
+						$girth = array($package['y'], $package['x'], $package['z']);
+						sort($girth);
+
+						$parcel->Length = $girth[2];
+						$parcel->Width = $girth[1];
+						$parcel->Height = $girth[0];
+						$parcel->Girth = (($parcel->Height + $parcel->Width) * 2) + $parcel->Length;
+					} else {
+						$parcel->Length = '';
+						$parcel->Width = '';
+						$parcel->Height = '';
+						$parcel->Girth = '';
+					}
+
+					$parcel->Quantity = 1;
+					$parcel->Weight = round($package['w'], 2);
+					$parcels[] = $parcel;
+				}
+			}
+
 			$query = 'SELECT currency_id FROM '.hikashop_table('currency').' WHERE currency_code=\'USD\'';
 			$db = JFactory::getDBO();
 			$db->setQuery($query);
 			$currency = $db->loadResult();
 
-			$parcel = new stdClass();
-			$parcel->Country = @$order->shipping_address_full->shipping_address->address_country->zone_code_2;
-			if(empty($parcel->Country))
-				$parcel->Country = 'US';
-			$parcel->Pickup_Postcode = substr(preg_replace('#[^a-z0-9]#i', '', @$rate->shipping_params->post_code), 0, 5);
-			$parcel->Destination_Postcode = substr(preg_replace('#[^a-z0-9]#i', '', $order->shipping_address->address_post_code), 0, 5);
-
-			$girth = array($package['y'], $package['x'], $package['z']);
-			sort($girth);
-
-			$parcel->Length = $girth[2];
-			$parcel->Width = $girth[1];
-			$parcel->Height = $girth[0];
-			$parcel->Girth = (($parcel->Height + $parcel->Width) * 2) + $parcel->Length;
-
-			$parcel->Quantity = 1;
-			$parcel->Weight = $package['w'];
 			$rates = array();
-			if($parcel->Country == 'US') {
+			if($parcels[0]->Country == 'US') {
 				$modes = array('PRIORITY', 'MEDIA', 'EXPRESS', 'FIRST CLASS');
 				foreach($modes as $mode) {
 					if(!empty($rate->shipping_params->$mode))
-						$this->addRate($rates, $mode, $parcel, $rate, $currency, false);
+						$this->addRate($rates, $mode, $parcels, $rate, $currency, false);
 				}
 			} else {
 				$modes = array('INTERNATIONAL', 'PRIORITYINTSMALL', 'PRIORITYINTDVD', 'PRIORITYINTLARGEVIDEO', 'PRIORITYINTMEDIUM', 'PRIORITYINTLARGE', 'EXPRESSINTBOX', 'EXPRESSINT', 'FIRSTCLASSINT', 'ENVELOPE');
 				foreach($modes as $mode) {
 					if(!empty($rate->shipping_params->$mode))
-						$this->addRate($rates, $mode, $parcel, $rate, $currency, true);
+						$this->addRate($rates, $mode, $parcels, $rate, $currency, true);
 				}
 			}
 
@@ -287,9 +378,7 @@ class plgHikashopshippingUSPS extends hikashopShippingPlugin
 			if(empty($rates)) {
 				$messages['no_shipping_quotes'] = 'Failed to obtain shipping quotes.';
 				$cache_messages['no_shipping_quotes'] = 'Failed to obtain shipping quotes.';
-				$this->setShippingCache($order, null, $cache_messages);
-
-				return true;
+				continue;
 			}
 			foreach($rates as $finalRate) {
 				$finalRate->shipping_ordering .= '_' . $i++;
@@ -308,88 +397,98 @@ class plgHikashopshippingUSPS extends hikashopShippingPlugin
 		return true;
 	}
 
-	function addRate(&$rates, $type, $parcel, &$rate, $currency, $isInternational) {
-		$parcel->Service_Type = $type;
+	function addRate(&$rates, $type, $parcels, &$rate, $currency, $isInternational) {
 		$app = JFactory::getApplication();
 
 		$usps_user_id = $rate->shipping_params->usps_user_id;
-		$package_weight_arr = $this->getUSPSweightDimensions($parcel->Weight);
-		$package_weight_lb = $package_weight_arr['Pounds'];
-		$package_weight_oz = $package_weight_arr['Ounces'];
 
-		$service = $parcel->Service_Type;
-		$origin_zip = $parcel->Pickup_Postcode;
-		$destination_zip = $parcel->Destination_Postcode;
+		$origin_zip = $parcels[0]->Pickup_Postcode;
+		$destination_zip = $parcels[0]->Destination_Postcode;
 		$this->countries = $this->USPS_country_list();
-		$destination_country = $this->countries[$parcel->Country];
+		$destination_country = $this->countries[$parcels[0]->Country];
 		$machinable = 'false';
 		$package_id = 1; //will change this when setting up for multiple packages.
 
 		if (isset($rate->shipping_params->MACHINABLE)) {
 			$machinable = "true";
 		}
-		$package_weight_oz = round($package_weight_oz,2);
-
-		if($parcel->Weight > 13 && $type =='FIRST CLASS')
-			return;
 
 		if($isInternational) {
 			$request = '<'.'?xml version="1.0"?'.'>'.
 				'<IntlRateV2Request USERID="' . $usps_user_id . '">';
 
-			if($parcel->Country == 'CA')
+			if($parcels[0]->Country == 'CA')
 				$request .= '<Revision>2</Revision>';
 			else
 				$request .= '<Revision />';
 
-			$request .=	'<Package ID="' . $package_id . '">'.
-				'<Pounds>' . $package_weight_lb . '</Pounds>'.
-				'<Ounces>' . $package_weight_oz . '</Ounces>'.
-				'<Machinable>' . $machinable . '</Machinable>'.
-				'<MailType>Package</MailType>'.
-				'<ValueOfContents>100</ValueOfContents>'.
-				'<Country>' . $destination_country . '</Country>'.
-				'<Container>' . $rate->shipping_params->container . '</Container>'.
-				'<Size>Regular</Size>'.
-				'<Width>'.$parcel->Width.'</Width>'.
-				'<Length>'.$parcel->Length.'</Length>'.
-				'<Height>'.$parcel->Height.'</Height>'.
-				'<Girth>'.$parcel->Girth.'</Girth>';
+			foreach($parcels as $parcel){
+				if($parcel->Weight > 13 && $type =='FIRST CLASS')
+					return;
+				$package_weight_arr = $this->getUSPSweightDimensions($parcel->Weight);
+				$package_weight_lb = $package_weight_arr['Pounds'];
+				$package_weight_oz = $package_weight_arr['Ounces'];
+				$package_weight_oz = round($package_weight_oz,2);
 
-			if($parcel->Country == 'CA')
+				$request .=	'<Package ID="' . $package_id . '">'.
+					'<Pounds>' . $package_weight_lb . '</Pounds>'.
+					'<Ounces>' . $package_weight_oz . '</Ounces>'.
+					'<Machinable>' . $machinable . '</Machinable>'.
+					'<MailType>Package</MailType>'.
+					'<ValueOfContents>100</ValueOfContents>'.
+					'<Country>' . $destination_country . '</Country>'.
+					'<Container>' . $rate->shipping_params->container . '</Container>'.
+					'<Size>Regular</Size>'.
+					'<Width>'.$parcel->Width.'</Width>'.
+					'<Length>'.$parcel->Length.'</Length>'.
+					'<Height>'.$parcel->Height.'</Height>'.
+					'<Girth>'.$parcel->Girth.'</Girth>';
+			}
+			if($parcels[0]->Country == 'CA')
 				$request .= '<OriginZip>' . $origin_zip . '</OriginZip>';
 
-				$request .= '</Package>'.
+			$request .= '</Package>'.
 				'</IntlRateV2Request>';
 		}
 		else {
 			$request = '<'.'?xml version="1.0"?'.'>'.
 				'<RateV4Request USERID="' . $usps_user_id . '">'.
-				'<Revision />'.
-				'<Package ID="' . $package_id . '">'.
-				'<Service>' . $service . '</Service>';
+				'<Revision />';
 
-			if($type =='FIRST CLASS'){
-				if(!empty($rate->shipping_params->firstclass_mail_type)){
-					$request .= '<FirstClassMailType>' . $rate->shipping_params->firstclass_mail_type . '</FirstClassMailType>';
+			foreach($parcels as $parcel){
+				if($parcel->Weight > 13 && $type =='FIRST CLASS')
+					return;
+
+				$request.='<Package ID="' . $package_id . '">'.
+					'<Service>' . $type . '</Service>';
+
+				if($type =='FIRST CLASS'){
+					if(!empty($rate->shipping_params->firstclass_mail_type)){
+						$request .= '<FirstClassMailType>' . $rate->shipping_params->firstclass_mail_type . '</FirstClassMailType>';
+					}
+					else{
+						$request .= '<FirstClassMailType>Parcel</FirstClassMailType>';
+					}
 				}
-				else{
-					$request .= '<FirstClassMailType>Parcel</FirstClassMailType>';
-				}
+				$package_weight_arr = $this->getUSPSweightDimensions($parcel->Weight);
+				$package_weight_lb = $package_weight_arr['Pounds'];
+				$package_weight_oz = $package_weight_arr['Ounces'];
+				$package_weight_oz = round($package_weight_oz,2);
+				$request .= '<ZipOrigination>' . $origin_zip . '</ZipOrigination>'.
+					'<ZipDestination>' . $destination_zip . '</ZipDestination>'.
+					'<Pounds>' . $package_weight_lb . '</Pounds>'.
+					'<Ounces>' . $package_weight_oz . '</Ounces>'.
+					'<Container>' . $rate->shipping_params->container . '</Container>'.
+					'<Size>Regular</Size>'.
+					'<Width>'.$parcel->Width.'</Width>'.
+					'<Length>'.$parcel->Length.'</Length>'.
+					'<Height>'.$parcel->Height.'</Height>'.
+					'<Girth>'.$parcel->Girth.'</Girth>'.
+					'<Machinable>' . $machinable . '</Machinable>'.
+					'</Package>';
+				$package_id++;
 			}
-			$request .= '<ZipOrigination>' . $origin_zip . '</ZipOrigination>'.
-				'<ZipDestination>' . $destination_zip . '</ZipDestination>'.
-				'<Pounds>' . $package_weight_lb . '</Pounds>'.
-				'<Ounces>' . $package_weight_oz . '</Ounces>'.
-				'<Container>' . $rate->shipping_params->container . '</Container>'.
-				'<Size>Regular</Size>'.
-				'<Width>'.$parcel->Width.'</Width>'.
-				'<Length>'.$parcel->Length.'</Length>'.
-				'<Height>'.$parcel->Height.'</Height>'.
-				'<Girth>'.$parcel->Girth.'</Girth>'.
-				'<Machinable>' . $machinable . '</Machinable>'.
-				'</Package>'.
-				'</RateV4Request>';
+			$request.='</RateV4Request>';
 		}
 
 
@@ -432,7 +531,7 @@ class plgHikashopshippingUSPS extends hikashopShippingPlugin
 
 			foreach($usps_rate_arr as $k) {
 				$id = (int)$k['@attributes']['ID'];
-				if(isset($decoding[$id]) && strcmp($parcel->Service_Type, $decoding[$id]) == 0) {
+				if(isset($decoding[$id]) && strcmp($type, $decoding[$id]) == 0) {
 					if(isset($k['ServiceErrors']) || $k['Postage'] == 0)
 						continue;
 
@@ -589,6 +688,17 @@ class plgHikashopshippingUSPS extends hikashopShippingPlugin
 		return $responseDoc;
 	}
 
+	function processPackageLimit($limit_key, $limit_value, $product, $qty, $package, $units) {
+		switch($limit_key) {
+			case 'length_girth':
+				$divide = $product['z'] + ($product['x'] + $product['y']) * 2;
+				if(!$divide || $divide > $limit_value)
+					return false;
+				return (int)floor($limit_value / $divide);
+				break;
+		}
+		return parent::processPackageLimit($limit_key, $limit_value , $product, $qty, $package, $units);
+	}
 
 	function getResponseXML($httpResponse) {
 		$lines = preg_split('/(\r\n|\r|\n)/', $httpResponse);

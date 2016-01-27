@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -138,7 +138,7 @@ window.productMgr.addCharacteristic = function() {
 		return false;
 
 <?php
-	if((int)$this->product->product_id > 0) {
+	if(!empty($this->product->product_id) && (int)$this->product->product_id > 0) {
 ?>
 	var url = '<?php echo hikashop_completeLink('product&task=characteristic&subtask=add&product_id='.(int)$this->product->product_id,true,false,true); ?>',
 		formData = encodeURI('characteristic_id') + '=' + encodeURIComponent(c) + '&' + encodeURI('characteristic_value_id') + '=' + encodeURIComponent(cv) + '&' + encodeURI('<?php echo hikashop_getFormToken(); ?>') + '=1';
@@ -153,7 +153,7 @@ window.productMgr.addCharacteristic = function() {
 
 	var htmlblocks = {
 		NAME: ct, ID: c, INPUT_NAME: 'data[characteristics][]',
-<?php if((int)$this->product->product_id > 0) { ?>
+<?php if(!empty($this->product->product_id) && (int)$this->product->product_id > 0) { ?>
 		INPUT_NAME_2: '', ID_2: ''
 <?php } else { ?>
 		INPUT_NAME_2: 'data[characteristics][]', ID_2: cv
@@ -172,7 +172,7 @@ window.productMgr.deleteCharacteristic = function(el, id) {
 		return false;
 
 <?php
-	if((int)$this->product->product_id > 0) {
+	if(!empty($this->product->product_id) && (int)$this->product->product_id > 0) {
 ?>
 	var url = '<?php echo hikashop_completeLink('product&task=characteristic&subtask=remove&product_id='.(int)$this->product->product_id,true,false,true); ?>',
 		formData = encodeURI('characteristic_id') + '=' + encodeURIComponent(id) + '&' + encodeURI('<?php echo hikashop_getFormToken(); ?>') + '=1';

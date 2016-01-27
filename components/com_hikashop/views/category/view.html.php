@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -197,38 +197,37 @@ class CategoryViewCategory extends HikaShopView {
 		$pageInfo->limit->start = $app->getUserStateFromRequest( $this->paramBase.'.limitstart', 'limitstart_'.$this->params->get('main_div_name').$category_selected, 0, 'int' );
 
 		if(empty($this->module)){
-				if($config->get('hikarss_format') != 'none'){
-					$doc_title = $config->get('hikarss_name','');
-					if(empty($doc_title)){
-						if(!isset($catData)){
-							$category = hikashop_get('class.category');
-							if(is_array($pageInfo->filter->cid)){
-								$cat = reset($pageInfo->filter->cid);
-							}else{
-								$cat = $pageInfo->filter->cid;
-							}
-							$catData = $category->get($cat);
+			if($config->get('hikarss_format') != 'none'){
+				$doc_title = $config->get('hikarss_name','');
+				if(empty($doc_title)){
+					if(!isset($catData)){
+						$category = hikashop_get('class.category');
+						if(is_array($pageInfo->filter->cid)){
+							$cat = reset($pageInfo->filter->cid);
+						}else{
+							$cat = $pageInfo->filter->cid;
 						}
-						if($catData) $doc_title = $catData->category_name;
+						$catData = $category->get($cat);
 					}
-					if(!HIKASHOP_PHP5) {
-						$doc =& JFactory::getDocument();
-					} else {
-						$doc = JFactory::getDocument();
-					}
-					if($config->get('hikarss_format') != 'both'){
-						$link	= '&format=feed&limitstart=';
-						$attribs = array('type' => 'application/rss+xml', 'title' => $doc_title.' RSS 2.0');
-						$doc->addHeadLink(JRoute::_($link.'&type='.$config->get('hikarss_format')), 'alternate', 'rel', $attribs);
-					}else{
-						$link	= '&format=feed&limitstart=';
-						$attribs = array('type' => 'application/rss+xml', 'title' => $doc_title.' RSS 2.0');
-						$doc->addHeadLink(JRoute::_($link.'&type=rss'), 'alternate', 'rel', $attribs);
-						$attribs = array('type' => 'application/atom+xml', 'title' => $doc_title.' Atom 1.0');
-						$doc->addHeadLink(JRoute::_($link.'&type=atom'), 'alternate', 'rel', $attribs);
-
-					}
+					if($catData) $doc_title = $catData->category_name;
 				}
+				if(!HIKASHOP_PHP5) {
+					$doc =& JFactory::getDocument();
+				} else {
+					$doc = JFactory::getDocument();
+				}
+				if($config->get('hikarss_format') != 'both'){
+					$link	= '&format=feed&limitstart=';
+					$attribs = array('type' => 'application/rss+xml', 'title' => $doc_title.' RSS 2.0');
+					$doc->addHeadLink(JRoute::_($link.'&type='.$config->get('hikarss_format')), 'alternate', 'rel', $attribs);
+				}else{
+					$link	= '&format=feed&limitstart=';
+					$attribs = array('type' => 'application/rss+xml', 'title' => $doc_title.' RSS 2.0');
+					$doc->addHeadLink(JRoute::_($link.'&type=rss'), 'alternate', 'rel', $attribs);
+					$attribs = array('type' => 'application/atom+xml', 'title' => $doc_title.' Atom 1.0');
+					$doc->addHeadLink(JRoute::_($link.'&type=atom'), 'alternate', 'rel', $attribs);
+				}
+			}
 
 			$cid = JRequest::getInt("cid",0);
 			if(empty($cid)){

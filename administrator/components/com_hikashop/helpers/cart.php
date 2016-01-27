@@ -1,9 +1,9 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.0
+ * @version	2.6.1
  * @author	hikashop.com
- * @copyright	(C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 defined('_JEXEC') or die('Restricted access');
@@ -78,14 +78,14 @@ class hikashopCartHelper{
 			}
 		}
 
-		if($map=='add'){
+		if($map == 'add') {
+			$show_quantity_field = $config->get('show_quantity_field',0);
+			if($params->get('show_quantity_field',0) == '-1')
+				$params->set('show_quantity_field', $show_quantity_field);
 
-			$show_quantity_field=$config->get('show_quantity_field',0);
-			if($params->get('show_quantity_field',0)=='-1')$params->set('show_quantity_field',$show_quantity_field);
-
-			if($params->get('show_quantity_field',0)==1){
-				$max_quantity=(int)$max_quantity;
-				$min_quantity=(int)$min_quantity;
+			if($params->get('show_quantity_field',0) == 1) {
+				$max_quantity = (int)$max_quantity;
+				$min_quantity = (int)$min_quantity;
 
 				static $first = false;
 				if(!$first && $map=='add'){
@@ -133,19 +133,19 @@ class hikashopCartHelper{
 						echo '<script type="text/javascript">'."<!--\n".$js."\n//-->\n".'</script>';
 					}
 				}
-				if($this->override && function_exists('hikashop_quantity_render')){
-					$html = hikashop_quantity_render($html,$i,$max_quantity,$min_quantity);
-				}else{
+				if($this->override && function_exists('hikashop_quantity_render')) {
+					$html = hikashop_quantity_render($html, $i, $max_quantity, $min_quantity);
+				} else {
 					$js = '';
-					$params->set('i',$i);
-					$params->set('min_quantity',$min_quantity);
-					$params->set('max_quantity',$max_quantity);
+					$params->set('i', $i);
+					$params->set('min_quantity', $min_quantity);
+					$params->set('max_quantity', $max_quantity);
 					$params->set('html',$html);
 					$html = hikashop_getLayout('product', 'show_quantity', $params, $js);
 				}
-			}elseif($params->get('show_quantity_field',0)==0){
+			} elseif($params->get('show_quantity_field', 0) == 0) {
 				$html.='<input id="hikashop_product_quantity_field_'.$i.'" type="hidden" value="'.$min_quantity.'" class="hikashop_product_quantity_field" name="quantity" />';
-			}elseif($params->get('show_quantity_field',0)==-1){
+			} elseif($params->get('show_quantity_field', 0) == -1) {
 				static $second = false;
 				if(!$second){
 					$second=true;
