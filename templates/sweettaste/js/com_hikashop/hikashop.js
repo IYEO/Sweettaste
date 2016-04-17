@@ -1,15 +1,15 @@
 /**
  * @package    HikaShop for Joomla!
- * @version    2.6.0
+ * @version    2.6.1
  * @author     hikashop.com
- * @copyright  (C) 2010-2015 HIKARI SOFTWARE. All rights reserved.
+ * @copyright  (C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license    GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 (function() {
 	function preventDefault() { this.returnValue = false; }
 	function stopPropagation() { this.cancelBubble = true; }
 	var Oby = {
-		version: 20150320,
+		version: 20151124,
 		ajaxEvents : {},
 
 		hasClass : function(o,n) {
@@ -102,6 +102,13 @@
 		},
 		registerAjax : function(name, fct) {
 			var t = this;
+			if(typeof(name) == 'object') {
+				var r = [];
+				for(var k = name.length - 1; k >= 0; k--) {
+					r[r.length] = t.registerAjax(name[k], fct);
+				}
+				return r;
+			}
 			if( t.ajaxEvents[name] === undefined )
 				t.ajaxEvents[name] = {'_id':0};
 			var id = t.ajaxEvents[name]['_id'];
@@ -146,7 +153,8 @@
 				try { var ret = JSON.parse(text); return ret; } catch(e) { }
 			}
 			if(secure && !(/^[,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]*$/).test(text.replace(/\\./g, '@').replace(/"[^"\\\n\r]*"/g, ''))) return null;
-			return eval('(' + text + ')');
+			try { var ret = eval('(' + text + ')'); return ret; } catch(e) { }
+			return null;
 		},
 		getXHR : function() {
 			var xhr = null, w = window;
@@ -487,32 +495,68 @@
 			if(!elem)
 				return false;
 			try {
+				var hkpopup = elem.getAttribute('data-hk-popup');
 				if(jqmodal === undefined) {
 					jqmodal = false;
 					var test_rel = elem.getAttribute('rel');
-					if(test_rel == null && typeof(jQuery) != "undefined")
+					if(test_rel == null && hkpopup == null && typeof(jQuery) != "undefined")
 						jqmodal = true;
 				}
-				if(!jqmodal && w.SqueezeBox !== undefined) {
-					if(url !== undefined && url !== null) {
-						elem.href = url;
+				if(hkpopup) {
+					var fct = this['openBox_' + hkpopup.toLowerCase()];
+					if(fct) {
+						var ret = fct(elem, url);
+						if(ret == true)
+							return false;
 					}
-					if(w.SqueezeBox.open !== undefined)
+				}
+				if(!jqmodal && this.openBox_squeezbox(elem, url))
+					return false;
+				if(this.openBox_bootstrap(elem, url))
+					return false;
+				console.log('no popup system found');
+			} catch(e) { console.log(e); }
+			return false;
+		},
+		openBox_squeezbox: function(elem, url) {
+			if(window.SqueezeBox === undefined)
+				return false;
+			if(url !== undefined && url !== null)
+						elem.href = url;
+			if(!elem.rel && elem.getAttribute('data-hk-popup') == 'squeezebox')
+				elem.rel = elem.getAttribute('data-squeezebox');
+			if(window.SqueezeBox.open !== undefined)
 						SqueezeBox.open(elem, {parse: 'rel'});
-					else if(w.SqueezeBox.fromElement !== undefined)
+			else if(window.SqueezeBox.fromElement !== undefined)
 						SqueezeBox.fromElement(elem);
-				} else if(typeof(jQuery) != "undefined") {
+			return true;
+		},
+		openBox_bootstrap: function(elem, url) {
+			if(typeof(jQuery) == "undefined")
+				return false;
 					var id = elem.getAttribute('id');
 					jQuery('#modal-' + id).modal('show');
-					if(url) {
+			if(!url)
+				return true;
 						if(document.getElementById('modal-' + id + '-container'))
 							jQuery('#modal-' + id + '-container').find('iframe').attr('src', url);
 						else
 							jQuery('#modal-' + id).find('iframe').attr('src', url);
+			return true;
+		},
+		openBox_vex: function(elem, url) {
+			if(typeof(vex) == "undefined")
+				return false;
+			if(url !== undefined && url !== null)
+				elem.href = url;
+			settings = window.Oby.evalJSON(elem.getAttribute('data-vex'));
+			if(settings.x && settings.y && elem.href) {
+				settings.content = '<iframe style="border:0;margin:0;padding:0;" width="'+settings.x+'px" height="'+settings.y+'px" src="'+elem.href+'"></iframe>';
+				settings.afterOpen = function(context) { context.width(settings.x + 'px'); };
 					}
-				}
-			} catch(e) {}
-			return false;
+			vex.defaultOptions.className = 'vex-theme-default';
+			vex.open( settings );
+			return true;
 		},
 		closeBox: function(parent) {
 			var d = document, w = window;
@@ -524,9 +568,11 @@
 				var e = d.getElementById('sbox-window');
 				if(e && typeof(e.close) != "undefined") {
 					e.close();
-				}else if(typeof(w.jQuery) != "undefined" && w.jQuery('div.modal.in') && w.jQuery('div.modal.in').hasClass('in')){
+				} else if(typeof(w.jQuery) != "undefined" && w.jQuery('div.modal.in') && w.jQuery('div.modal.in').hasClass('in')) {
 					w.jQuery('div.modal.in').modal('hide');
-				}else if(w.SqueezeBox !== undefined) {
+				} else if(typeof(vex) != 'undefined' && vex.close && vex.close() === true) {
+					return;
+				} else if(w.SqueezeBox !== undefined) {
 					w.SqueezeBox.close();
 				}
 			} catch(err) {}
@@ -853,12 +899,92 @@ function submitform(pressbutton) {
 function hikashopCheckChangeForm(type, form) {
 	if(!form)
 		return true;
-	var varform = document[form];
+	var d = document, varform = document[form], ActiveLoginTab = false;
+
+	jQuery(function () {
+	  jQuery('[data-toggle="tooltip"]').tooltip();
+	})				
+	
+	if ((form=='hikashop_checkout_form') && ((type=='register') || (type=='user'))) {
+		el = d.getElementById("login");		
+	    if (el.className.match(/(^| )active($| )/)) ActiveLoginTab = true;
+	    
+	    if (ActiveLoginTab) {
+	    	el = d.getElementById("username");
+	    	if (!jQuery(el).hasClass("required")) {
+	    		el.setAttribute("required", "required");
+	    		el.setAttribute("aria-required", "true");
+	    		jQuery(el).addClass("required");
+    		}
+	    	
+	    	el = d.getElementById("passwd");
+	    	if (!jQuery(el).hasClass("required")) {
+	    		el.setAttribute("required", "required");
+	    		el.setAttribute("aria-required", "true");
+	    		jQuery(el).addClass("required");
+	    	}	    		
+	    	
+	    	el = d.getElementById("register_email");	    	
+	    	if (jQuery(el).hasClass("required")) { 
+		    	el.removeAttribute("required");
+		    	el.removeAttribute("aria-required");
+				jQuery(el).removeClass("required");
+	    	}
+	    	
+	    	el = d.getElementById("register_password");
+	    	if (jQuery(el).hasClass("required")) {
+	    		el.removeAttribute("required");
+		    	el.removeAttribute("aria-required");
+	    		jQuery(el).removeClass("required");
+    		}
+	    	
+	    	el = d.getElementById("register_password2");
+	    	if (jQuery(el).hasClass("required")) {
+	    		el.removeAttribute("required");
+		    	el.removeAttribute("aria-required");
+	    		jQuery(el).removeClass("required");
+    		}
+	    } else {	    	
+	    	el = d.getElementById("register_email");	    	
+	    	if (!jQuery(el).hasClass("required")) {	    		
+	    		el.setAttribute("required", "required");
+	    		el.setAttribute("aria-required", "true");
+	    		jQuery(el).addClass("required");
+    		}
+	    	
+	    	el = d.getElementById("register_password");
+	    	if (!jQuery(el).hasClass("required")) {	    		
+	    		el.setAttribute("required", "required");
+	    		el.setAttribute("aria-required", "true");
+	    		jQuery(el).addClass("required");
+    		}	    	
+	    	
+	    	el = d.getElementById("register_password2");
+	    	if (!jQuery(el).hasClass("required")) {	    		
+	    		el.setAttribute("required", "required");
+	    		el.setAttribute("aria-required", "true");
+	    		jQuery(el).addClass("required");
+    		}
+	    	
+	    	el = d.getElementById("username");
+	    	if (jQuery(el).hasClass("required")) {
+		    	el.removeAttribute("required");
+		    	el.removeAttribute("aria-required");
+				jQuery(el).removeClass("required");		    	
+	    	}
+	    	
+	    	el = d.getElementById("passwd");
+	    	if (jQuery(el).hasClass("required")) { 
+		    	el.removeAttribute("required");
+		    	el.removeAttribute("aria-required");
+				jQuery(el).removeClass("required");		    	
+	    	}
+	    }	    	    
+	}
 
 	if(typeof(hikashopFieldsJs) == 'undefined' || typeof(hikashopFieldsJs['reqFieldsComp']) == 'undefined' || typeof(hikashopFieldsJs['reqFieldsComp'][type]) == 'undefined' || hikashopFieldsJs['reqFieldsComp'][type].length <= 0)
 		return true;
-
-	var d = document;
+	
 	for(var i = 0; i < hikashopFieldsJs['reqFieldsComp'][type].length; i++) {
 		elementName = 'data['+type+']['+hikashopFieldsJs['reqFieldsComp'][type][i]+']';
 		if(typeof(varform.elements[elementName]) == 'undefined')
@@ -895,12 +1021,14 @@ function hikashopCheckChangeForm(type, form) {
 			simplified_pwd = d.getElementById('data[register][registration_method]3');
 
 		if((simplified_pwd && simplified_pwd.checked) || (register && register.checked) || (!simplified_pwd && !register)) {
+			if (!ActiveLoginTab) {
 			// check password
 			if(typeof(varform.elements['data[register][password]']) != 'undefined' && typeof(varform.elements['data[register][password2]']) != 'undefined') {
 				passwd = varform.elements['data[register][password]'];
 				passwd2 = varform.elements['data[register][password2]'];
 				if(passwd.value != passwd2.value) {
-					//alert(hikashopFieldsJs['password_different']);                                    
+						if (jQuery(passwd).closest("div.form-group").hasClass("has-success")) jQuery(passwd).closest("div.form-group").removeClass("has-success");
+						if (!jQuery(passwd).closest("div.form-group").hasClass("has-error")) jQuery(passwd).closest("div.form-group").addClass("has-error");
                                         
                                     if (jQuery(passwd2).closest("div.form-group").hasClass("has-success")) jQuery(passwd2).closest("div.form-group").removeClass("has-success");
                                     if (!jQuery(passwd2).closest("div.form-group").hasClass("has-error")) jQuery(passwd2).closest("div.form-group").addClass("has-error");
@@ -913,15 +1041,36 @@ function hikashopCheckChangeForm(type, form) {
                                     jQuery(passwd2).focus();
                                     return false;
                                 } else {
+						if (jQuery(passwd).closest("div.form-group").hasClass("has-error")) {
+							jQuery(passwd).closest("div.form-group").removeClass("has-error");
+							jQuery(passwd).closest("div.form-group").addClass("has-success");
+						}
                                     if (jQuery(passwd2).closest("div.form-group").hasClass("has-error")) {
                                             jQuery(passwd2).closest("div.form-group").removeClass("has-error");
                                             jQuery(passwd2).closest("div.form-group").addClass("has-success");
                                     }
-
-                                    jQuery(passwd2).tooltip("hide");
-
-                                    jQuery(passwd2).removeAttr("data-toggle data-placement data-original-title");
+                                    if (jQuery(passwd).attr("data-toggle")) {
+		jQuery(passwd).tooltip("hide");
+		//jQuery(passwd).removeAttr("data-toggle data-placement data-original-title");
+                                    }
+                                    if (jQuery(passwd2).attr("data-toggle")) {
+                                        jQuery(passwd2).tooltip("hide");
+                                        //jQuery(passwd2).removeAttr("data-toggle data-placement data-original-title");
+                                    }
+                                    //jQuery(passwd2).tooltip("hide");
+                                    //jQuery(passwd2).removeAttr("data-toggle data-placement data-original-title");
                                 }	
+			}
+			} else {
+				var ReqElements = varform.getElementsByClassName("required");
+				for(var i = 0; i < ReqElements.length; i++) {
+					elementToCheck = ReqElements[i];
+					elementName = ReqElements[i].name;
+					if(elementToCheck && (typeof el == 'undefined' || el == null || typeof el.style == 'undefined' || el.style.display != 'none') && !hikashopCheckField(elementToCheck,type,1,elementName,varform.elements))
+						return false;
+		}
+
+				
 			}
 		}
 

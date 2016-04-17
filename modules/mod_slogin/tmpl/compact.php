@@ -12,6 +12,7 @@
 defined('_JEXEC') or die('(@)|(@)');
 ?>
 <noindex>
+<div class="jlslogin">
 <?php if ($type == 'logout') : ?>
 
 <form action="<?php echo JRoute::_('index.php', true, $params->get('usesecure')); ?>" method="post" id="login-form">
@@ -29,7 +30,7 @@ defined('_JEXEC') or die('(@)|(@)');
     </div>
 		<ul class="ul-jlslogin">
 			<?php	if ($params->get('slogin_link_auch_edit', 1) == 1) {?>
-				<li><a href="<?php echo JRoute::_('index.php?option=com_users&view=edit'); ?>"><?php echo JText::_('MOD_SLOGIN_EDIT_YOUR_PROFILE'); ?></a></li>
+				<li><a href="<?php echo JRoute::_('index.php?option=com_users&view=profile&layout=edit'); ?>"><?php echo JText::_('MOD_SLOGIN_EDIT_YOUR_PROFILE'); ?></a></li>
 			<?php }	?>
 			<?php	if ($params->get('slogin_link_profile', 1) == 1) {?>
 			<li><a href="<?php echo JRoute::_('index.php?option=com_slogin&view=fusion'); ?>"><?php echo JText::_('MOD_SLOGIN_EDIT_YOUR_SOCIAL_AUCH'); ?></a></li>
@@ -128,5 +129,6 @@ defined('_JEXEC') or die('(@)|(@)');
     </form>
     <?php endif; ?>
 <?php endif; ?>
+</div>
 </noindex>
 <?php echo $jll; ?>
