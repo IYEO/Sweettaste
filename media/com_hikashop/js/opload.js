@@ -689,7 +689,7 @@
 			if(t.uploadFilePopup)
 				return t.uploadFilePopup(el);
 			h.submitFct = function(data) { t._receiveFile(data); };
-			h.openBox(el,null,(el.getAttribute("rel") == null));
+			h.openBox(el,null);
 			return false;
 		},
 		/**
@@ -700,7 +700,7 @@
 			if(t.browseImagePopup)
 				return t.browseImagePopup(el);
 			h.submitFct = function(data) { t._receiveFile(data); };
-			h.openBox(el,null,(el.getAttribute("rel") == null));
+			h.openBox(el,null);
 			return false;
 		},
 		/**

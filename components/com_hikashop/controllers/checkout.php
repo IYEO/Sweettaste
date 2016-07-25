@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.1
+ * @version	2.6.3
  * @author	hikashop.com
  * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -454,6 +454,10 @@ class checkoutController extends hikashopController {
 			$old = $app->getUserState( HIKASHOP_COMPONENT.'.checkout_fields_ok',0);
 			$oldData = $app->getUserState( HIKASHOP_COMPONENT.'.checkout_fields');
 			$fieldClass = hikashop_get('class.field');
+			if(is_null($oldData))
+				$oldData = new stdClass();
+			$cart = $this->initCart();
+			$oldData->products = $cart->products;
 			$orderData = $fieldClass->getInput('order',$oldData,!$this->cart_update);
 			if($orderData!==false){
 				$app->setUserState( HIKASHOP_COMPONENT.'.checkout_fields_ok',1);
@@ -1250,7 +1254,8 @@ class checkoutController extends hikashopController {
 
 			if(!empty($paymentData->ask_cc)){
 				$paymentClass = hikashop_get('class.payment');
-				if(!$paymentClass->readCC()){
+				if(!$paymentClass->readCC()){ 
+					$app->enqueueMessage( JText::_('FILL_CREDIT_CARD_INFO') );
 					return false;
 				}
 			}
@@ -1292,7 +1297,7 @@ class checkoutController extends hikashopController {
 				$cc_CCV=$app->getUserState( HIKASHOP_COMPONENT.'.cc_CCV');
 				$cc_owner=$app->getUserState( HIKASHOP_COMPONENT.'.cc_owner');
 				if(empty($cc_number) || empty($cc_month) || empty($cc_year) || (empty($cc_CCV)&&!empty($paymentData->ask_ccv)) || (empty($cc_owner)&&!empty($paymentData->ask_owner))){
-					$app =& JFactory::getApplication();
+					$app = JFactory::getApplication();
 					$app->enqueueMessage( JText::_('FILL_CREDIT_CARD_INFO') );
 					$payment_done=false;
 				}

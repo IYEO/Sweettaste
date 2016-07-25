@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.1
+ * @version	2.6.3
  * @author	hikashop.com
  * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -74,9 +74,10 @@ class hikashopOrderClass extends hikashopClass{
 
 			$productClass = hikashop_get('class.order_product');
 			if(is_array($order->product)) {
-				foreach($order->product as $product) {
+				foreach($order->product as &$product) {
 					$productClass->update($product);
 				}
+				unset($product);
 			} else {
 				$productClass->update($order->product);
 			}
@@ -111,25 +112,32 @@ class hikashopOrderClass extends hikashopClass{
 					}
 				}
 				if(isset($order->order_shipping_tax_namekey)) {
-					$order->order_tax_info[$order->order_shipping_tax_namekey]=new stdClass();
+					if(!isset($order->order_tax_info[$order->order_shipping_tax_namekey]))
+						$order->order_tax_info[$order->order_shipping_tax_namekey] = new stdClass();
 					$order->order_tax_info[$order->order_shipping_tax_namekey]->tax_namekey = $order->order_shipping_tax_namekey;
 					$order->order_tax_info[$order->order_shipping_tax_namekey]->tax_amount_for_shipping = @$order->order_shipping_tax;
 					unset($order->order_shipping_tax_namekey);
 				}
 				if(isset($order->order_payment_tax_namekey)) {
-					$order->order_tax_info[$order->order_payment_tax_namekey]=new stdClass();
+					if(!isset($order->order_tax_info[$order->order_payment_tax_namekey]))
+						$order->order_tax_info[$order->order_payment_tax_namekey] = new stdClass();
 					$order->order_tax_info[$order->order_payment_tax_namekey]->tax_namekey = $order->order_payment_tax_namekey;
 					$order->order_tax_info[$order->order_payment_tax_namekey]->tax_amount_for_payment = @$order->order_payment_tax;
 					unset($order->order_payment_tax_namekey);
 				}
 				if(isset($order->order_discount_tax_namekey)) {
-					$order->order_tax_info[$order->order_discount_tax_namekey]=new stdClass();
+					if(!isset($order->order_tax_info[$order->order_discount_tax_namekey]))
+						$order->order_tax_info[$order->order_discount_tax_namekey] = new stdClass();
 					$order->order_tax_info[$order->order_discount_tax_namekey]->tax_namekey = $order->order_discount_tax_namekey;
 					$order->order_tax_info[$order->order_discount_tax_namekey]->tax_amount_for_coupon = @$order->order_discount_tax;
 					unset($order->order_discount_tax_namekey);
 				}
 			}
 			$recalculate = true;
+		} else {
+			unset($order->order_shipping_tax_namekey);
+			unset($order->order_payment_tax_namekey);
+			unset($order->order_discount_tax_namekey);
 		}
 
 		if($recalculate)
@@ -191,7 +199,8 @@ class hikashopOrderClass extends hikashopClass{
 				$this->capturePayment($order, 0);
 			}
 
-			if(!empty($order->order_status) && empty($order->order_invoice_id) && empty($order->old->order_invoice_id) && $order_type == 'sale') {
+			$already_invoice_number = ((!empty($order->order_invoice_number) && !empty($order->order_invoice_created)) || (!empty($order->old->order_invoice_number) && !empty($order->old->order_invoice_created)));
+			if(!empty($order->order_status) && empty($order->order_invoice_id) && empty($order->old->order_invoice_id) && $order_type == 'sale' && !$already_invoice_number) {
 				$valid_statuses = explode(',', $config->get('invoice_order_statuses','confirmed,shipped'));
 				if(empty($valid_statuses))
 					$valid_statuses = array('confirmed','shipped');
@@ -297,6 +306,9 @@ class hikashopOrderClass extends hikashopClass{
 							$order->cart->additional[$k]->order_product_code = 'order additional';
 							if(!empty( $p->value)) $order->cart->additional[$k]->order_product_options = $p->value;
 							if(!empty( $p->price_value)) $order->cart->additional[$k]->order_product_price = $p->price_value;
+							if(!empty( $p->price_value_with_tax)) $order->cart->additional[$k]->order_product_tax = $p->price_value_with_tax-$p->price_value;
+							if(!empty( $p->taxes)) $order->cart->additional[$k]->order_product_tax_info = $p->taxes;
+
 							$order->cart->additional[$k]->order_id = $order->order_id;
 						}
 						$productClass->save($order->cart->additional);
@@ -387,7 +399,11 @@ class hikashopOrderClass extends hikashopClass{
 								$order->mail->subject = JText::sprintf('NEW_ORDER_SUBJECT',$order->order_number,HIKASHOP_LIVE);
 							}
 							if(!empty($user_email)) {
-								$mail->mailer->addReplyTo(array($user_email,$user_name));
+								if(HIKASHOP_J30){
+									$mail->mailer->addReplyTo($user_email,$user_name);
+								}else{
+									$mail->mailer->addReplyTo(array($user_email,$user_name));
+								}
 							}
 							if(!empty($order->mail->dst_email)) {
 								$mail->sendMail($order->mail);
@@ -444,7 +460,7 @@ class hikashopOrderClass extends hikashopClass{
 
 		$order_payment_params = isset($order->order_payment_params) ? $order->order_payment_params : @$order->old->order_payment_params;
 		if(is_string($order_payment_params) && !empty($order_payment_params))
-			$order_payment_params = unserialize($order_payment_params);
+			$order_payment_params = hikashop_unserialize($order_payment_params);
 
 		if(empty($order_payment_params->payment_authorized))
 			return false;
@@ -509,6 +525,7 @@ class hikashopOrderClass extends hikashopClass{
 		$order = clone($oldOrder);
 		$order->history = new stdClass();
 		$data = JRequest::getVar('data', array(), '', 'array');
+		$validTasksForCustomFields = array('customfields', 'additional');
 
 		if(empty($order_id) || empty($order->order_id)) {
 			$this->sendEmailAfterOrderCreation = false;
@@ -587,6 +604,7 @@ class hikashopOrderClass extends hikashopClass{
 			}
 
 			if(!empty($data['order']['shipping'])) {
+				$order->order_shipping_params->prices = array();
 
 				if(is_string($data['order']['shipping'])) {
 					list($shipping_method, $shipping_id) = explode('_', $data['order']['shipping'], 2);
@@ -598,7 +616,6 @@ class hikashopOrderClass extends hikashopClass{
 				if(is_array($data['order']['shipping'])) {
 					$order->order_shipping_method = '';
 					$shippings = array();
-					$order->order_shipping_params->prices = array();
 
 					foreach($data['order']['shipping'] as $shipping_group => $shipping_value) {
 						list($shipping_method, $shipping_id) = explode('_', $shipping_value, 2);
@@ -660,6 +677,13 @@ class hikashopOrderClass extends hikashopClass{
 				$do = true;
 			}
 
+			if(isset($data['order']['additional'])) {
+				$task = 'products';
+				$data['products'] = '1';
+				$validTasksForCustomFields[] = $task;
+				$do = true;
+			}
+
 			if(!empty($data['notify'])) {
 				if(empty($order->history))
 					$order->history = new stdClass();
@@ -668,11 +692,10 @@ class hikashopOrderClass extends hikashopClass{
 		}
 
 		$currentTask = 'customfields';
-		$validTasks = array('customfields', 'additional');
-		if( (empty($task) || in_array($task, $validTasks)) && !empty($data[$currentTask]) ) {
+		if( (empty($task) || in_array($task, $validTasksForCustomFields)) && !empty($data[$currentTask]) ) {
 
 			$old = null;
-			$orderFields = $fieldsClass->getInput(array('orderfields','order'), $old, true, 'data', false, 'backend');
+			$orderFields = $fieldsClass->getInput(array('orderfields','order'), $old, true, 'data', false, 'display:field_order_form');
 			if(!empty($orderFields)) {
 				$do = true;
 				foreach($orderFields as $key => $value) {
@@ -828,7 +851,7 @@ class hikashopOrderClass extends hikashopClass{
 
 			if(!empty($product->order_product_tax_info)) {
 				if(is_string($product->order_product_tax_info))
-					$product_taxes = unserialize($product->order_product_tax_info);
+					$product_taxes = hikashop_unserialize($product->order_product_tax_info);
 				else
 					$product_taxes = $product->order_product_tax_info;
 
@@ -836,10 +859,15 @@ class hikashopOrderClass extends hikashopClass{
 					if(!isset($taxes[$tax->tax_namekey])) {
 						$taxes[$tax->tax_namekey] = 0;
 					}
-					$taxes[$tax->tax_namekey] += @$tax->tax_amount * $product->order_product_quantity;
+
+					if($product->order_product_code == 'order additional')
+						$taxes[$tax->tax_namekey] += @$tax->tax_amount;
+					else
+						$taxes[$tax->tax_namekey] += @$tax->tax_amount * $product->order_product_quantity;
 				}
 			}
 		}
+
 		if(empty($order->old) && !empty($order->order_id)) {
 			$order->old = $this->get($order->order_id);
 		}
@@ -867,13 +895,14 @@ class hikashopOrderClass extends hikashopClass{
 
 		if(!empty($order->order_tax_info) || $config->get('detailed_tax_display', 1)) {
 			if(is_string($order->order_tax_info))
-				$order->order_tax_info = unserialize($order->order_tax_info);
+				$order->order_tax_info = hikashop_unserialize($order->order_tax_info);
 
 			if(count($order->order_tax_info)){
 				foreach($order->order_tax_info as $k => $tax) {
 					$order->order_tax_info[$k]->todo = true;
 				}
 			}
+
 			if(!empty($taxes)) {
 				foreach($taxes as $namekey => $amount) {
 					$found = false;
@@ -954,10 +983,10 @@ class hikashopOrderClass extends hikashopClass{
 		}
 
 		if(!empty($order->order_payment_params) && is_string($order->order_payment_params))
-			$order->order_payment_params = unserialize($order->order_payment_params);
+			$order->order_payment_params = hikashop_unserialize($order->order_payment_params);
 
 		if(!empty($order->order_shipping_params) && is_string($order->order_shipping_params))
-			$order->order_shipping_params = unserialize($order->order_shipping_params);
+			$order->order_shipping_params = hikashop_unserialize($order->order_shipping_params);
 
 		if(!empty($order->order_shipping_id)) {
 			$order->shippings = array();
@@ -985,13 +1014,7 @@ class hikashopOrderClass extends hikashopClass{
 
 		$this->loadProducts($order);
 
-		if(!empty($order->additional)) {
-			foreach($order->additional as $additional) {
-				$order->order_subtotal -= $additional->order_product_price - $additional->order_product_tax;
-			}
-		}
-
-		$order->order_subtotal_no_vat = 0;
+		$order->order_subtotal_no_vat = $order->order_subtotal = 0;
 		JPluginHelper::importPlugin( 'hikashop' );
 		$dispatcher = JDispatcher::getInstance();
 		foreach($order->products as $k => $product) {
@@ -1005,14 +1028,16 @@ class hikashopOrderClass extends hikashopClass{
 			$dispatcher->trigger( 'onAfterCalculateProductPriceForQuantityInOrder', array( &$order->products[$k]) );
 
 			$order->order_subtotal_no_vat += $order->products[$k]->order_product_total_price_no_vat;
+			$order->order_subtotal += $order->products[$k]->order_product_total_price;
 			if(!empty($product->order_product_options)) {
-				$order->products[$k]->order_product_options=unserialize($product->order_product_options);
+				$order->products[$k]->order_product_options = hikashop_unserialize($product->order_product_options);
 			}
 		}
 
 		if($additionalData) {
 			$this->getOrderAdditionalInfo($order);
 		}
+
 		return $order;
 	}
 
@@ -1143,7 +1168,7 @@ class hikashopOrderClass extends hikashopClass{
 		$order->additional = array();
 		foreach($order->products as $k => $product) {
 			if(!empty($product->order_product_tax_info)) {
-				$order->products[$k]->order_product_tax_info = unserialize($order->products[$k]->order_product_tax_info);
+				$order->products[$k]->order_product_tax_info = hikashop_unserialize($order->products[$k]->order_product_tax_info);
 			}
 			if($product->order_product_code == 'order additional') {
 				unset($order->products[$k]);
@@ -1306,7 +1331,7 @@ class hikashopOrderClass extends hikashopClass{
 			$order->order_user_id = @$dbOrder->order_user_id;
 			if(empty($order->order_status)) $order->order_status = @$dbOrder->order_status;
 		}
-		if(empty($order->customer) || @$order->customer->user_id != $order->order_user_id) {
+		if(empty($order->customer) || (int)@$order->customer->user_id != (int)$order->order_user_id) {
 			$userClass = hikashop_get('class.user');
 			$order->customer = $userClass->get($order->order_user_id);
 		}
@@ -1357,13 +1382,7 @@ class hikashopOrderClass extends hikashopClass{
 					}
 				}
 				if(empty($order->mail_status)) {
-					$val = str_replace(' ','_',strtoupper($order->order_status));
-					$trans = JText::_($val);
-					if($val==$trans) {
-						$order->mail_status = $order->order_status;
-					} else {
-						$order->mail_status = $trans;
-					}
+					$order->mail_status = hikashop_orderStatus($order->order_status);
 				}
 			} else {
 				$order->mail_status = '';

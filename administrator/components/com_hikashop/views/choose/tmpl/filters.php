@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.1
+ * @version	2.6.3
  * @author	hikashop.com
  * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -56,7 +56,10 @@ defined('_JEXEC') or die('Restricted access');
 		<thead>
 			<tr>
 				<th class="title">
-					<?php echo 'Filter'; ?>
+					<?php echo JText::_('FILTER'); ?>
+				</th>
+				<th class="title">
+					<?php echo JText::_('HIKA_NAME'); ?>
 				</th>
 				<th class="title titleid">
 					<?php echo JText::_('ID'); ?>
@@ -72,8 +75,11 @@ defined('_JEXEC') or die('Restricted access');
 					<td>
 					<?php echo $row->filter_namekey; ?>
 					</td>
+					<td>
+						<?php echo $row->filter_name; ?>
+					</td>
 					<td align="center">
-						<?php echo $i; ?>
+						<?php echo $row->filter_id; ?>
 					</td>
 				</tr>
 			<?php

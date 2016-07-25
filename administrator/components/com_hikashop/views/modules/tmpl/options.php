@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.1
+ * @version	2.6.3
  * @author	hikashop.com
  * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -80,6 +80,9 @@ if(!isset($this->element['layout_type']))
 		$this->setLayout('options_product');
 		echo $this->loadTemplate();
 
+		$this->setLayout('options_display_restriction');
+			echo $this->loadTemplate();
+
 		?>
 		</div>
 
@@ -156,13 +159,13 @@ $js .= "
 	hkjQuery('#content_select_jform_params_hikashopmodule').change(function(){
 		if(hkjQuery(this).val() == 'product'){
 			hkjQuery('div[data-layout=\'product_inherit\']').html('".JText::_('HIKA_INHERIT')." ('+defaultParams['layout_type']+')');
-			hkjQuery('div[data-display-type=\'product\']').show();
+			hkjQuery('div[data-display-type=\'product\'], dl[data-display-type=\'product\']').show();
 			hkjQuery('div[data-display-type=\'category\']').hide();
 			hkjQuery('.hikashop_edit_display_type').children('div').removeClass('hkc-xl-4').addClass('hkc-xl-3');
 		}else{
 			if(defaultParams['layout_type'] == 'table')
 				hkjQuery('div[data-layout=\'product_inherit\']').html('".JText::_('HIKA_INHERIT')." (div)');
-			hkjQuery('div[data-display-type=\'product\']').hide();
+			hkjQuery('div[data-display-type=\'product\'], dl[data-display-type=\'product\']').hide();
 			hkjQuery('div[data-display-type=\'category\']').show();
 			hkjQuery('.hikashop_edit_display_type').children('div').removeClass('hkc-xl-3').addClass('hkc-xl-4');
 		}
@@ -209,6 +212,15 @@ $js .="
 		var cRow = hkjQuery('input[name=\''+name+'[rows]\']').val();
 		hkjQuery('input[name=\''+name+'[limit]\']').val(parseInt(cRow) * parseInt(cCol));
 		window.optionMgr.fillSelector(cCol,cRow, name);
+	});
+	hkjQuery('.listing_item_quantity_fields .hikashop_product_listing_input_button').click(function(){
+		var ref = hkjQuery(this).attr('data-ref'),
+		inc = hkjQuery(this).attr('data-inc');
+		if(inc == 'plus'){
+			hkjQuery('input[name=\''+ref+'\']').val(parseInt(hkjQuery('input[name=\''+ref+'\']').val()) + 1).trigger('change');
+		}else if(parseInt(hkjQuery('input[name=\''+ref+'\']').val()) > 1){
+			hkjQuery('input[name=\''+ref+'\']').val(parseInt(hkjQuery('input[name=\''+ref+'\']').val()) - 1).trigger('change');
+		}
 	});
 	hkjQuery('.listing_item_quantity_selector div').mouseover(function(){
 		var classes = hkjQuery(this).attr('class').split(' ');

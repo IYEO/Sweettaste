@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.1
+ * @version	2.6.3
  * @author	hikashop.com
  * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -17,9 +17,9 @@ class plgHikashoppaymentIveri extends hikashopPaymentPlugin
 		'applicationid' => array('Application ID', 'input'),
 		'invoice_prefix' => array('Invoice Prefix', 'input'),
 		'domain' => array('Payment Gateway', 'list',array(
-			'backoffice.iveri.co.za' => 'backoffice.iveri.co.za',
-			'backoffice.host.iveri.com' => 'backoffice.host.iveri.com',
-			'backoffice.ctlnigeria.iveri.com' => 'backoffice.ctlnigeria.iveri.com')
+			'backoffice.nedsecure.co.za' => 'backoffice.nedsecure.co.za',
+			'backoffice.host.nedsecure.com' => 'backoffice.host.nedsecure.com',
+			'backoffice.ctlnigeria.nedsecure.com' => 'backoffice.ctlnigeria.nedsecure.com')
 		),
 		'ask_ccv' => array('Ask for CCV', 'boolean','0'),
 		'debug' => array('DEBUG', 'boolean','0'),

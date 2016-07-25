@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.1
+ * @version	2.6.3
  * @author	hikashop.com
  * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -19,25 +19,51 @@ class hikashopMenusClass extends hikashopClass{
 		$obj = parent::get($id);
 		$config =& hikashop_config();
 		if(is_null($obj)) $obj = new stdClass();
-		if(!empty($obj->id)){
-			$obj->hikashop_params = $config->get('menu_'.$obj->id,null);
-		}
-		if(empty($obj->hikashop_params)){
-			$obj->hikashop_params = $config->get('default_params',null);
-		}
 
 		$this->loadParams($obj);
+
+		if(isset($obj->params->hk_product) && !isset($obj->params->hk_category)){
+			$obj->hikashop_params = array();
+			foreach($obj->params->hk_product as $k => $v){
+				$obj->hikashop_params[$k] = $v;
+				if($k == 'category' && !isset($obj->params->hk_product->selectparentlisting))
+					$obj->hikashop_params['selectparentlisting'] = $v;
+			}
+			$obj->hikashop_params['content_type'] = 'product';
+		} else if(isset($obj->params->hk_category)){
+			$obj->hikashop_params = array();
+			foreach($obj->params->hk_category as $k => $v){
+				$obj->hikashop_params[$k] = $v;
+				if($k == 'category' && !isset($obj->params->hk_category->selectparentlisting))
+					$obj->hikashop_params['selectparentlisting'] = $v;
+			}
+			$obj->hikashop_params['content_type'] = 'category';
+		}
+
+		if(empty($obj->hikashop_params)){
+			if(!empty($obj->id)){
+				$obj->hikashop_params = $config->get('menu_'.$obj->id,null);
+			}
+			if(empty($obj->hikashop_params)){
+				$obj->hikashop_params = $config->get('default_params',null);
+			}
+		}
+
 		return $obj;
 	}
 
 	function loadParams(&$result){
 		if(!empty($result->params)){
-			$lines = explode("\n",$result->params);
-			$result->params = array();
-			foreach($lines as $line){
-				$param = explode('=',$line,2);
-				if(count($param)==2){
-					$result->params[$param[0]]=$param[1];
+			if(HIKASHOP_J30){
+				$result->params = json_decode($result->params);
+			}else{
+				$lines = explode("\n",$result->params);
+				$result->params = array();
+				foreach($lines as $line){
+					$param = explode('=',$line,2);
+					if(count($param)==2){
+						$result->params[$param[0]]=$param[1];
+					}
 				}
 			}
 		}
@@ -98,9 +124,9 @@ class hikashopMenusClass extends hikashopClass{
 					$element[$column] = $safeHtmlFilter->clean(strip_tags($value), 'string');
 				}
 				if(empty($element['selectparentlisting'])){
-					$cat = hikashop_get('class.category');
+					$categoryClass = hikashop_get('class.category');
 					$mainProductCategory = 'product';
-					$cat->getMainElement($mainProductCategory);
+					$categoryClass->getMainElement($mainProductCategory);
 					$element['selectparentlisting']=$mainProductCategory;
 				}
 			}
@@ -119,12 +145,12 @@ class hikashopMenusClass extends hikashopClass{
 			if (!empty($element['modules']))
 			{
 				$modules = explode(',',$element['modules']);
-				$class = hikashop_get('class.modules');
+				$modulesClass = hikashop_get('class.modules');
 				foreach($modules as $moduleId){
 					$_REQUEST['moduleconfig']['params_'.$moduleId]['id']=$moduleId;
 				}
 				foreach($modules as $moduleId){
-					$status = $class->saveForm($moduleId);
+					$status = $modulesClass->saveForm($moduleId);
 				}
 			}
 		}
@@ -169,6 +195,16 @@ class hikashopMenusClass extends hikashopClass{
 				'a.published=1',
 				'b.title IS NOT NULL'
 			);
+
+
+			if(HIKASHOP_J25){
+				$user = JFactory::getUser();
+				$accesses = JAccess::getAuthorisedViewLevels(@$user->id);
+				if(!empty($accesses)){
+					$filters[]='a.access IN ('.implode(',',$accesses).')';
+				}
+			}
+
 			if(HIKASHOP_J25){
 				$filters[] = 'a.client_id=0';
 			}
@@ -176,6 +212,12 @@ class hikashopMenusClass extends hikashopClass{
 				$filters[] = 'a.link LIKE \'index.php?option=com_hikashop&view=%\'';
 			}else{
 				$filters[] = 'a.link='.$this->database->Quote('index.php?option=com_hikashop&view='.($view=='manufacturer'?'category':$view).'&layout='.$layout);
+			}
+
+			if(HIKASHOP_J25){
+				$lang = JFactory::getLanguage();
+				$tag = $lang->getTag();
+				$filters[] = "a.language IN ('*',".$this->database->Quote($tag).")";
 			}
 
 			$query="SELECT a.id FROM ".hikashop_table('menu',false).' AS a INNER JOIN `#__menu_types` as b on a.menutype = b.menutype WHERE '.implode(' AND ',$filters);
@@ -199,9 +241,26 @@ class hikashopMenusClass extends hikashopClass{
 
 
 		if(in_array($view,array('product','manufacturer','category'))){
-			$config = & hikashop_config();
 			if(is_array($cache[$view.'.'.$layout]) && count($cache[$view.'.'.$layout])){
+				$app = JFactory::getApplication();
+				$config = hikashop_config();
+
+				$this->database->setQuery('SELECT category_id FROM '.hikashop_table('category').' WHERE category_type = '.$this->database->quote('manufacturer'));
+				$brandId = $this->database->loadResult();
+				if(empty($brandId))
+					$brandId = 0;
+
 				foreach($cache[$view.'.'.$layout] as $current_id){
+
+					if(HIKASHOP_J30){
+						$menuItem = $app->getMenu()->getItem($current_id);
+						$categoryParams = new stdClass();
+						if(isset($menuItem->params))
+							$categoryParams = $menuItem->params->get('hk_category');
+						if((isset($categoryParams->content_type) && $categoryParams->content_type == 'manufacturer') || (isset($categoryParams->category) && $categoryParams->category == $brandId))
+							return $current_id;
+					}
+
 					$options = $config->get('menu_'.$current_id,null);
 					if (isset($options['content_type']) && $options['content_type'] == $view) {
 						return $current_id;
@@ -419,8 +478,8 @@ class hikashopMenusClass extends hikashopClass{
 			$module->module='mod_hikashop';
 			$module->client_id=0;
 			$module->showtitle=0;
-			$class = hikashop_get('class.modules');
-			return $class->save($module);
+			$modulesClass = hikashop_get('class.modules');
+			return $modulesClass->save($module);
 		}
 		return false;
 	}
@@ -430,7 +489,7 @@ class hikashopMenusClass extends hikashopClass{
 		$values = $config->values;
 		foreach ($values as $key => $value) {
 			if (preg_match('#menu_([0-9]+)#', $key, $match)  && is_string($value->config_value)) {
-				$options = unserialize(base64_decode($value->config_value));
+				$options = hikashop_unserialize(base64_decode($value->config_value));
 				if (isset($options['selectparentlisting']) && $options['selectparentlisting'] == $category_id) {
 					$id = $this->loadAMenuItemId($type,'listing',$match[1]);
 					if($id){

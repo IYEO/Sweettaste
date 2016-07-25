@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.1
+ * @version	2.6.3
  * @author	hikashop.com
  * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -117,6 +117,7 @@ class hikashopImportredsHelper extends hikashopImportHelper
 			case 11:
 				$next = $this->importDownloads();
 				break;
+			case 12:
 			case MAX_IMPORT_ID:
 				$next = $this->finishImport();
 				$ret = false;

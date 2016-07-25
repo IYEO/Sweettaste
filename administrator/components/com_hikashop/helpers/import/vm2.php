@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.1
+ * @version	2.6.3
  * @author	hikashop.com
  * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -1180,8 +1180,8 @@ class hikashopImportvm2Helper extends hikashopImportHelper
 		$data['address_country'] = 'vmc.country_3_code';
 		$sql1 = 'INSERT IGNORE INTO `#__hikashop_address` (`'.implode('`,`',array_keys($data)).'`) '.
 				'SELECT '.implode(',',$data).' FROM `'.$this->vmprefix.'virtuemart_userinfos` AS vmui '.
-				"INNER JOIN `".$this->vmprefix."virtuemart_states` vms ON vmui.virtuemart_state_id = vms.virtuemart_state_id ".
-				"INNER JOIN `".$this->vmprefix."virtuemart_countries` vmc ON vmui.virtuemart_country_id = vmc.virtuemart_country_id ".
+				"LEFT JOIN `".$this->vmprefix."virtuemart_states` vms ON vmui.virtuemart_state_id = vms.virtuemart_state_id ".
+				"LEFT JOIN `".$this->vmprefix."virtuemart_countries` vmc ON vmui.virtuemart_country_id = vmc.virtuemart_country_id ".
 				'INNER JOIN `#__hikashop_user` AS hku ON vmui.virtuemart_user_id = hku.user_cms_id '.
 				'WHERE vmui.virtuemart_user_id > '.$this->options->last_vm_user.' ORDER BY vmui.virtuemart_user_id ASC;';
 
@@ -1283,7 +1283,7 @@ class hikashopImportvm2Helper extends hikashopImportHelper
 			'INNER JOIN `#__hikashop_currency` hkcur ON CONVERT(vmc.currency_code_3 USING utf8) = CONVERT( hkcur.currency_code USING utf8) '. //needed ?
 			'LEFT JOIN `'.$this->vmprefix.'virtuemart_orderstates` AS vmos ON vmo.order_status = vmos.order_status_code '.
 			'LEFT JOIN `#__hikashop_category` AS hkc ON vmos.order_status_name = hkc.category_name AND hkc.category_type = \'status\' '. //No U founded
-			'INNER JOIN `#__hikashop_user` AS hkusr ON vmo.virtuemart_user_id = hkusr.user_cms_id '.
+			'LEFT JOIN `#__hikashop_user` AS hkusr ON vmo.virtuemart_user_id = hkusr.user_cms_id '.
 			'WHERE vmo.virtuemart_order_id > ' . (int)$this->options->last_vm_order . ' '.
 			'GROUP BY vmo.virtuemart_order_id '.
 			'ORDER BY vmo.virtuemart_order_id ASC;';

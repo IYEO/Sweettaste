@@ -19,8 +19,8 @@ class JConfig {
 	public $dbprefix = 'swtdb_';
 	public $live_site = '';
 	public $secret = 'Yi0qR0LNfjfIFuOc';
-	public $gzip = '1';
-	public $error_reporting = 'development';
+	public $gzip = '0';
+	public $error_reporting = 'default';
 	public $helpurl = 'https://help.joomla.org/proxy/index.php?option=com_help&keyref=Help{major}{minor}:{keyref}';
 	public $ftp_host = '';
 	public $ftp_port = '';
@@ -54,8 +54,8 @@ class JConfig {
 	public $sef_suffix = '0';
 	public $unicodeslugs = '0';
 	public $feed_limit = '10';
-	public $log_path = '/mnt/D/Work/Web/xampp/htdocs/sweettaste/logs';
-	public $tmp_path = '/mnt/D/Work/Web/xampp/htdocs/sweettaste/tmp';
+	public $log_path = 'D:\\Work\\xampp\\htdocs\\sweettaste\\logs';
+	public $tmp_path = 'D:\\Work\\xampp\\htdocs\\sweettaste\\tmp';
 	public $lifetime = '15';
 	public $session_handler = 'database';
 	public $memcache_persist = '1';
@@ -89,4 +89,5 @@ class JConfig {
 	public $redis_server_auth = '';
 	public $redis_server_db = '0';
 	public $massmailoff = '0';
+	public $cache_platformprefix = '0';
 }

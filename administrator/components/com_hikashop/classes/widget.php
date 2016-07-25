@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.1
+ * @version	2.6.3
  * @author	hikashop.com
  * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -19,7 +19,7 @@ class hikashopWidgetClass extends hikashopClass {
 		if(!empty($cid)){
 			$widget = parent::get($cid);
 			if(!empty($widget->widget_params)){
-				$widget->widget_params = unserialize($widget->widget_params);
+				$widget->widget_params = hikashop_unserialize($widget->widget_params);
 				if(!empty($widget->widget_params->status)){
 					$widget->widget_params->status = explode(',',$widget->widget_params->status);
 				}
@@ -36,7 +36,7 @@ class hikashopWidgetClass extends hikashopClass {
 		if(!empty($widgets)){
 			foreach($widgets as $k => $widget){
 				if(!empty($widget->widget_params)){
-					$widgets[$k]->widget_params = unserialize($widget->widget_params);
+					$widgets[$k]->widget_params = hikashop_unserialize($widget->widget_params);
 					if(!empty($widgets[$k]->widget_params->status)){
 						$widgets[$k]->widget_params->status = explode(',',$widgets[$k]->widget_params->status);
 					}
@@ -71,9 +71,9 @@ class hikashopWidgetClass extends hikashopClass {
 		if(!empty($formData)){
 			if(isset($formData['edit_row'])){
 				$widget_id=$formData['widget']['widget_id'];
-				$class = hikashop_get('class.widget');
+				$widgetClass = hikashop_get('class.widget');
 				if(!empty($widget_id)){
-					$widget = $class->get($widget_id);
+					$widget = $widgetClass->get($widget_id);
 				}
 
 
@@ -130,9 +130,9 @@ class hikashopWidgetClass extends hikashopClass {
 				$widget->widget_params->coupons = $coupons;
 				$widget->widget_params->table[$theKey]=$table;
 			}else if($formData['widget']['widget_params']['display']=='table'){
-				$class = hikashop_get('class.widget');
+				$widgetClass = hikashop_get('class.widget');
 				if(!empty($widget->widget_id)){
-					$widget = $class->get($widget->widget_id);
+					$widget = $widgetClass->get($widget->widget_id);
 				}
 				if($deleteRow>=0){
 					unset($widget->widget_params->table[$deleteRow]);
@@ -211,11 +211,11 @@ class hikashopWidgetClass extends hikashopClass {
 		$status=$this->save($widget);
 
 		if($status){
-			$orderClass = hikashop_get('helper.order');
-			$orderClass->pkey = 'widget_id';
-			$orderClass->table = 'widget';
-			$orderClass->orderingMap = 'widget_ordering';
-			$orderClass->reOrder();
+			$orderHelper = hikashop_get('helper.order');
+			$orderHelper->pkey = 'widget_id';
+			$orderHelper->table = 'widget';
+			$orderHelper->orderingMap = 'widget_ordering';
+			$orderHelper->reOrder();
 		}
 
 		return $status;
@@ -277,7 +277,7 @@ class hikashopWidgetClass extends hikashopClass {
 					$app->redirect(hikashop_completeLink("report&task=edit&cid[]=".$widget_id, false, true));
 				}
 				$this->data($widget,true);
-				$encodingClass = hikashop_get('helper.encoding');
+				$encodingHelper = hikashop_get('helper.encoding');
 				@ob_clean();
 				header("Pragma: public");
 				header("Expires: 0"); // set expiration time
@@ -307,7 +307,7 @@ class hikashopWidgetClass extends hikashopClass {
 						}
 					}
 					if(empty($missing)){
-						echo $encodingClass->change(implode($separator,$line),'UTF-8',$widget->widget_params->format).$eol;
+						echo $encodingHelper->change(implode($separator,$line),'UTF-8',$widget->widget_params->format).$eol;
 					}
 				}
 				if(!empty($missing)){
@@ -326,7 +326,7 @@ class hikashopWidgetClass extends hikashopClass {
 							if($convert_date && in_array($field,array('user_created','order_created','order_modified'))) $el->$field=hikashop_getDate($el->$field,$convert_date);
 							$line[]='"'.str_replace(array("\r","\n"),array('\r','\n'),$el->$field).'"';
 						}
-						echo $encodingClass->change(implode($separator,$line),'UTF-8',$widget->widget_params->format).$eol;
+						echo $encodingHelper->change(implode($separator,$line),'UTF-8',$widget->widget_params->format).$eol;
 					}
 				}
 				exit;
@@ -341,10 +341,10 @@ class hikashopWidgetClass extends hikashopClass {
 	function loadDatas(&$element){
 		$db = JFactory::getDBO();
 		if(isset($element->widget_params->filters) && !empty($element->widget_params->filters) && is_string($element->widget_params->filters)){
-			$element->widget_params->filters=unserialize($element->widget_params->filters);
+			$element->widget_params->filters=hikashop_unserialize($element->widget_params->filters);
 		}
 		if(isset($element->widget_params->compares) && !empty($element->widget_params->compares) && $element->widget_params->compares!='0:,' && is_string($element->widget_params->compares)){
-			$element->widget_params->compares=unserialize($element->widget_params->compares);
+			$element->widget_params->compares=hikashop_unserialize($element->widget_params->compares);
 		}
 
 		if(isset($element->widget_params->categories) && $element->widget_params->categories!='all' && is_string($element->widget_params->categories)){
@@ -386,7 +386,7 @@ class hikashopWidgetClass extends hikashopClass {
 		if(isset($element->widget_params->products) && is_string($element->widget_params->products)){
 			$element->widget_params->products_list = $element->widget_params->products;
 			$products=array();
-			$this->products= unserialize($element->widget_params->products);
+			$this->products = hikashop_unserialize($element->widget_params->products);
 			if(!empty($this->products)){
 				foreach($this->products as $k => $prod){
 					$products[$k] = new stdClass();
@@ -435,7 +435,8 @@ class hikashopWidgetClass extends hikashopClass {
 
 		if(isset($element->widget_params->coupons) && !empty($element->widget_params->coupons)){
 			$element->widget_params->coupons_list = $element->widget_params->coupons;
-			if(is_string($element->widget_params->coupons))$element->widget_params->coupons=unserialize($element->widget_params->coupons);
+			if(is_string($element->widget_params->coupons))
+				$element->widget_params->coupons = hikashop_unserialize($element->widget_params->coupons);
 			if(!empty($element->widget_params->coupons)){
 				foreach($element->widget_params->coupons as $k => $coupon){
 					if(is_object($coupon)){
@@ -940,7 +941,10 @@ class hikashopWidgetClass extends hikashopClass {
 					$filters=$this->_dateLimit($widget, $filters, $date_field);
 					$getLimit=$widget->widget_params->limit;
 					if(!empty($getLimit) && !$csv){	$limit=' LIMIT '.$getLimit;	}
-					$elements=$this->_getBestCustomers($filters, $widget, $limit);
+
+					unset($leftjoin['order']);
+					$leftjoin = implode(' ',$leftjoin);
+					$elements=$this->_getBestCustomers($filters, $widget, $limit, $leftjoin);
 					$widget->elements=$elements;
 					$first = reset($elements);
 					if(empty($first)){return false;}
@@ -1055,9 +1059,6 @@ class hikashopWidgetClass extends hikashopClass {
 						}else if(@$widget->widget_params->with_tax && @$widget->widget_params->include_shipping){
 							$sum = 'a.order_full_price';
 						}else if(!@$widget->widget_params->with_tax && @$widget->widget_params->include_shipping){
-							if(!isset($leftjoin['order_product'])){
-								$leftjoin['order_product'] = ' LEFT JOIN '.hikashop_table('order_product').' AS prod ON a.order_id=prod.order_id ';
-							}
 							$sum = 'a.order_full_price+a.order_discount_tax-a.order_shipping_tax-a.order_payment_tax-(SELECT SUM(subprod.order_product_tax*subprod.order_product_quantity) FROM '.hikashop_table('order_product').' AS subprod WHERE a.order_id=subprod.order_id)';
 						}else{
 							if(!isset($leftjoin['order_product'])){
@@ -1495,8 +1496,8 @@ class hikashopWidgetClass extends hikashopClass {
 
 					}
 				}
-				$class = hikashop_get('class.category');
-				$trans = $class->loadAllWithTrans('status');
+				$categoryClass = hikashop_get('class.category');
+				$trans = $categoryClass->loadAllWithTrans('status');
 				if(!empty($elements)){
 					foreach($elements as $k => $element){
 						if(!empty($element->$name)){
@@ -1706,7 +1707,7 @@ class hikashopWidgetClass extends hikashopClass {
 		return $currencies;
 	}
 
-	function _getBestCustomers($filters, $widget, $limit=''){
+	function _getBestCustomers($filters, $widget, $limit='', $leftjoin=''){
 		$db = JFactory::getDBO();
 
 		if($widget->widget_params->content=='customers'){
@@ -1759,7 +1760,7 @@ class hikashopWidgetClass extends hikashopClass {
 		$filters[]=' o.order_type=\''.$this->order_type.'\'';
 		$filters = (empty($filters)? ' ':' WHERE ').implode(' AND ',$filters);
 		$query='SELECT *,	SUM( '.$case.' ) AS Total, COUNT(o.order_id) AS order_number FROM '.hikashop_table('order').' as o LEFT JOIN '.hikashop_table('user').' as a ON '.$user_id.'=a.user_id	LEFT JOIN '.hikashop_table('users',false).' as u ON u.id=a.user_cms_id ' .
-				$filters.' GROUP BY a.user_id ORDER BY '.$orderBy.' DESC '.$limit;
+				$leftjoin.' '.$filters.' GROUP BY a.user_id ORDER BY '.$orderBy.' DESC '.$limit;
 		$db->setQuery($query);
 		$elements = $db->loadObjectList();
 		if(empty($elements))

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.1
+ * @version	2.6.3
  * @author	hikashop.com
  * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -258,16 +258,15 @@ window.productMgr.closeVariantEditor = function() { <?php echo $this->editor->js
 		?></div>
 <?php
 		if(!empty($this->fields) && hikashop_acl('product/edit/customfields')) {
-			$this->fieldsClass->prefix = 'variant_'.time().'_';
 			foreach($this->fields as $fieldName => $oneExtraField) {
 ?>
-		<dl id="hikashop_product_<?php echo $fieldName; ?>" class="hika_options">
+		<dl id="<?php echo $this->fieldsClass->prefix; ?>product_<?php echo $fieldName; ?>" class="hika_options">
 			<dt class="hikashop_product_<?php echo $fieldName; ?>"><label><?php echo $this->fieldsClass->getFieldName($oneExtraField); ?></label></dt>
 			<dd class="hikashop_product_<?php echo $fieldName; ?>"><?php
 				$onWhat = 'onchange';
 				if($oneExtraField->field_type == 'radio')
 					$onWhat = 'onclick';
-				echo $this->fieldsClass->display($oneExtraField, $this->product->$fieldName, 'data[variant]['.$fieldName.']', false, ' '.$onWhat.'="hikashopToggleFields(this.value,\''.$fieldName.'\',\'product\',0);"');
+				echo $this->fieldsClass->display($oneExtraField, $this->product->$fieldName, 'data[variant]['.$fieldName.']', false, ' '.$onWhat.'="hikashopToggleFields(this.value,\''.$fieldName.'\',\'product\',0,\''.$this->fieldsClass->prefix.'\');"');
 			?></dd>
 		</dl>
 <?php		}
@@ -336,12 +335,14 @@ window.productMgr.closeVariantEditor = function() { <?php echo $this->editor->js
 <?php
 $doc = JFactory::getDocument();
 foreach($doc->_custom as $custom) {
-	$custom = preg_replace('#<script .*type="text/javascript" src=".*"></script>#iU', '', $custom);
+	$custom = preg_replace('#<script .*(type="text/javascript")? src=".*"></script>#iU', '', $custom);
 	$custom = preg_replace('#<script .*type=[\'"]text/javascript[\'"]>#iU', '<script type="text/javascript">', $custom);
-	$custom = str_replace(
-		array('<script type="text/javascript">', '</script>'),
-		array('<script type="text/javascript">setTimeout(function(){', '},20);</script>'),
-		$custom);
+	if( strpos($custom,'<script type="text/javascript">') !== false ){
+		$custom = str_replace(
+			array('<script type="text/javascript">', '</script>'),
+			array('<script type="text/javascript">setTimeout(function(){', '},20);</script>'),
+			$custom);
+	}
 	echo $custom;
 }
 foreach($doc->_script as $script) {
