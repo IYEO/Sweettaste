@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.1
+ * @version	2.6.3
  * @author	hikashop.com
  * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -24,7 +24,7 @@ define('HIKASHOP_J30',version_compare($jversion,'3.0.0','>=') ? true : false);
 
 define('HIKASHOP_PHP5',version_compare(PHP_VERSION,'5.0.0', '>=') ? true : false);
 
-define('HIKASHOP_VERSION', '2.6.1');
+define('HIKASHOP_VERSION', '2.6.3');
 
 class hikashop{
 	function getDate($time = 0,$format = '%d %B %Y %H:%M'){ return hikashop_getDate($time,$format); }
@@ -190,6 +190,15 @@ function hikashop_currentURL($checkInRequest='',$safe=true){
 	$mode = $config->get('server_current_url_mode','REQUEST_URI');
 
 	switch($mode){
+		case 'REQUEST_URI':
+			$requestUri = $_SERVER["REQUEST_URI"];
+			if (!empty($_SERVER["REDIRECT_URL"]) && !empty($_SERVER['REDIRECT_QUERY_STRING']) && strpos($requestUri,'?')===false) $requestUri = rtrim($requestUri,'/').'?'.$_SERVER['REDIRECT_QUERY_STRING'];
+			break;
+		case 'REDIRECT_URL':
+			$requestUri = $_SERVER["REQUEST_URI"];
+			if (!empty($_SERVER['REDIRECT_QUERY_STRING'])) $requestUri = rtrim($requestUri,'/').'?'.$_SERVER['REDIRECT_QUERY_STRING'];
+			elseif (!empty($_SERVER['QUERY_STRING'])) $requestUri = rtrim($requestUri,'/').'?'.$_SERVER['QUERY_STRING'];
+			break;
 		case '0':
 		case 0:
 		case '':
@@ -209,15 +218,6 @@ function hikashop_currentURL($checkInRequest='',$safe=true){
 				$requestUri = $_SERVER['PHP_SELF'];
 				if (!empty($_SERVER['QUERY_STRING'])) $requestUri = rtrim($requestUri,'/').'?'.$_SERVER['QUERY_STRING'];
 			}
-			break;
-		case 'REQUEST_URI':
-			$requestUri = $_SERVER["REQUEST_URI"];
-			if (!empty($_SERVER["REDIRECT_URL"]) && !empty($_SERVER['REDIRECT_QUERY_STRING'])) $requestUri = rtrim($requestUri,'/').'?'.$_SERVER['REDIRECT_QUERY_STRING'];
-			break;
-		case 'REDIRECT_URL':
-			$requestUri = $_SERVER["REQUEST_URI"];
-			if (!empty($_SERVER['REDIRECT_QUERY_STRING'])) $requestUri = rtrim($requestUri,'/').'?'.$_SERVER['REDIRECT_QUERY_STRING'];
-			elseif (!empty($_SERVER['QUERY_STRING'])) $requestUri = rtrim($requestUri,'/').'?'.$_SERVER['QUERY_STRING'];
 			break;
 	}
 	if(strpos($requestUri, 'http://') === false && strpos($requestUri, 'https://') === false)
@@ -315,7 +315,7 @@ function hikashop_encode(&$data,$type='order', $format = '') {
 			$format = str_replace($matches[0],date($matches[1],$data->order_modified),$format);
 		}
 		if(strpos($format,'{automatic_code}')!==false){
-				$format = str_replace('{automatic_code}',hikashop_base($id),$format);
+			$format = str_replace('{automatic_code}',hikashop_base($id),$format);
 		}
 		if(preg_match_all('#\{user ([a-z_0-9]+)\}#i',$format,$matches)){
 			if(empty($data->customer)){
@@ -681,7 +681,7 @@ function hikashop_absoluteURL($text){
 function hikashop_disallowUrlRedirect($url){
 	$url = str_replace(array('http://www.','https://www.','https://'), array('http://','http://','http://'),strtolower($url));
 	$live = str_replace(array('http://www.','https://www.','https://'), array('http://','http://','http://'),strtolower(HIKASHOP_LIVE));
-	if(strpos($url,$live)!==0 && preg_match('#^http://.*#',$url)) return true;
+	if(strpos($url,$live)!==0 && strpos(urldecode($url),$live)!==0 && preg_match('#^http://.*#',$url)) return true;
 	jimport('joomla.filter.filterinput');
 	$safeHtmlFilter = & JFilterInput::getInstance(null, null, 1, 1);
 	if($safeHtmlFilter->clean($url,'string') != $url) return true;
@@ -689,6 +689,9 @@ function hikashop_disallowUrlRedirect($url){
 }
 
 function hikashop_setTitle($name,$picture,$link){
+	$app = JFactory::getApplication();
+	if(!$app->isAdmin())
+		return false;
 	$config =& hikashop_config();
 	$menu_style = $config->get('menu_style','title_bottom');
 	if(HIKASHOP_J30) $menu_style = 'content_top';
@@ -699,7 +702,6 @@ function hikashop_setTitle($name,$picture,$link){
 	JToolBarHelper::title( $html , $picture.'.png' );
 	if(HIKASHOP_J25) {
 		$doc = JFactory::getDocument();
-		$app = JFactory::getApplication();
 		$doc->setTitle($app->getCfg('sitename'). ' - ' .JText::_('JADMINISTRATION').' - '.$name);
 	}
 }
@@ -1024,7 +1026,7 @@ function hikashop_footer(){
 		$link.='?partner_id='.$aff;
 	}
 	$text = '<!--  HikaShop Component powered by '.$link.' -->
-	<!-- version '.$config->get('level').' : '.$config->get('version').' [1601262240] -->';
+	<!-- version '.$config->get('level').' : '.$config->get('version').' [1606171733] -->';
 	if(!$config->get('show_footer',true)) return $text;
 	$text .= '<div class="hikashop_footer" style="text-align:center" align="center"><a href="'.$link.'" target="_blank" title="'.HIKASHOP_NAME.' : '.strip_tags($description).'">'.HIKASHOP_NAME.' ';
 	$app= JFactory::getApplication();
@@ -2463,10 +2465,11 @@ class hikashopPaymentPlugin extends hikashopPlugin {
 	}
 
 	function onAfterOrderConfirm(&$order, &$methods, $method_id) {
-		$method = $methods[$method_id];
-		$this->payment_params =& $method->payment_params;
-		$this->payment_name = $method->payment_name;
+		$this->payment = $methods[$method_id];
+		$this->payment_params =& $this->payment->payment_params;
+		$this->payment_name = $this->payment->payment_name;
 		$this->loadOrderData($order);
+		$this->order = $order;
 	}
 
 	function onPaymentNotification(&$statuses) {
@@ -2572,7 +2575,7 @@ class hikashopPaymentPlugin extends hikashopPlugin {
 			$subject = JText::sprintf('PAYMENT_NOTIFICATION', $this->name, $payment_status);
 			$url = HIKASHOP_LIVE.'administrator/index.php?option=com_hikashop&ctrl=order&task=listing'. $this->url_itemid;
 			if(isset($order->order_id))
-				$url = HIKASHOP_LIVE.'administrator/index.php?option=com_hikashop&ctrl=order&task=edit&order_id=' . $order_id . $this->url_itemid;
+				$url = HIKASHOP_LIVE.'administrator/index.php?option=com_hikashop&ctrl=order&task=edit&order_id=' . $order->order_id . $this->url_itemid;
 			if(isset($order->order_number))
 				$order_number = $order->order_number;
 		} elseif($order_id !== false) {
@@ -2742,7 +2745,7 @@ class hikashopPaymentPlugin extends hikashopPlugin {
 	function writeToLog($data = null) {
 		$dbg = ($data === null) ? ob_get_clean() : $data;
 		if(!empty($dbg)) {
-			$dbg = '-- ' . date('m.d.y H:i:s') . ' --'. (empty($this->name) ? ('['.$this->name.']') : '') . "\r\n" . $dbg;
+			$dbg = '-- ' . date('m.d.y H:i:s') . ' --'. (!empty($this->name) ? ('['.$this->name.']') : '') . "\r\n" . $dbg;
 
 			jimport('joomla.filesystem.file');
 			$config = hikashop_config();
@@ -2817,10 +2820,16 @@ class hikashopShippingPlugin extends hikashopPlugin {
 					$price = $shipping_prices->real_without_tax;
 			}
 
-			if(bccomp($price, 0, 5) && isset($rate->shipping_params->shipping_percentage) && bccomp($rate->shipping_params->shipping_percentage, 0, 3))
-				$rate->shipping_price = $currencyClass->round($rate->shipping_price + $price * $rate->shipping_params->shipping_percentage / 100, $currencyClass->getRounding($rate->shipping_currency_id, true));
-			else
-				$rate->shipping_price = $currencyClass->round($rate->shipping_price, $currencyClass->getRounding($rate->shipping_currency_id, true));
+			if($rate->shipping_currency_id != hikashop_getCurrency()){
+				$rate->shipping_price = $currencyClass->convertUniquePrice($rate->shipping_price, $rate->shipping_currency_id, $rate->shipping_currency_id);
+				$rate->shipping_currency_id_orig = $rate->shipping_currency_id;
+				$rate->shipping_currency_id = hikashop_getCurrency();
+			}
+			if(bccomp($price, 0, 5) && isset($rate->shipping_params->shipping_percentage) && bccomp($rate->shipping_params->shipping_percentage, 0, 3)){
+				$rate->shipping_price = $rate->shipping_price + $price * $rate->shipping_params->shipping_percentage / 100;
+			}
+			$rate->shipping_price = $currencyClass->round($rate->shipping_price, $currencyClass->getRounding($rate->shipping_currency_id, true));
+
 			if(!empty($rate->shipping_params->shipping_min_price) && hikashop_toFloat($rate->shipping_params->shipping_min_price) > $price)
 				$rate->errors['min_price'] = (hikashop_toFloat($rate->shipping_params->shipping_min_price) - $price);
 
@@ -2890,7 +2899,16 @@ class hikashopShippingPlugin extends hikashopPlugin {
 				$db->setQuery($query);
 				$ret = $db->loadObjectList();
 				if(!empty($ret)) {
+					$product_to_unset = array();
 					foreach($ret as $ship) {
+						foreach($order->products as $ordered_product){
+							if($ordered_product->product_parent_id == 0)
+								continue;
+							if($ordered_product->product_parent_id == $ship->ref_id)
+								$product_to_unset[] = $ship->ref_id;
+						}
+						if(in_array($ship->ref_id,$product_to_unset))
+							continue;
 						if($ship->min_quantity <= $shipping_price->products[$ship->ref_id]) {
 							$order->shipping_prices[$key]->price_per_product[$ship->shipping_id]['products'][$ship->ref_id] = ($ship->price * $shipping_price->products[$ship->ref_id]) + $ship->fee;
 						}
@@ -3548,14 +3566,13 @@ if($configClass->get('bootstrap_back_design', HIKASHOP_J30)) {
 	define('HIKASHOP_BACK_RESPONSIVE', false);
 }
 
-if(HIKASHOP_J30 && (($app->isAdmin() && HIKASHOP_BACK_RESPONSIVE) || (!$app->isAdmin() && HIKASHOP_RESPONSIVE))) {
+if(HIKASHOP_J30 && (($app->isAdmin() && HIKASHOP_BACK_RESPONSIVE) || (!$app->isAdmin() && HIKASHOP_RESPONSIVE && $configClass->get('bootstrap_radios','1')))) {
 	include_once(dirname(__FILE__).DS.'joomla30.php');
 } else {
 	class JHtmlHikaselect extends JHTMLSelect {}
 }
 
-if(file_exists(HIKASHOP_INC.'compat.php'))
-	include_once HIKASHOP_INC.'compat.php';
+include_once HIKASHOP_INC.'compat.php';
 
 define('HIKASHOP_RESSOURCE_VERSION', str_replace('.', '', $configClass->get('version')));
 if($app->isAdmin()) {

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.1
+ * @version	2.6.3
  * @author	hikashop.com
  * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -62,7 +62,7 @@ class hikashopCategoryClass extends hikashopClass {
 		$jconfig = JFactory::getConfig();
 		if(!$jconfig->get('unicodeslugs')) {
 			$lang = JFactory::getLanguage();
-			$element->alias = $lang->transliterate($element->alias);
+			$element->alias = str_replace(',','-',$lang->transliterate($element->alias));
 		}
 
 		$app = JFactory::getApplication();
@@ -226,13 +226,13 @@ class hikashopCategoryClass extends hikashopClass {
 		if(empty($element->$pkey)) {
 			$element->$pkey = $status;
 			if($ordering) {
-				$orderClass = hikashop_get('helper.order');
-				$orderClass->pkey = 'category_id';
-				$orderClass->table = 'category';
-				$orderClass->groupMap = 'category_parent_id';
-				$orderClass->groupVal = $element->category_parent_id;
-				$orderClass->orderingMap = 'category_ordering';
-				$orderClass->reOrder();
+				$orderHelper = hikashop_get('helper.order');
+				$orderHelper->pkey = 'category_id';
+				$orderHelper->table = 'category';
+				$orderHelper->groupMap = 'category_parent_id';
+				$orderHelper->groupVal = $element->category_parent_id;
+				$orderHelper->orderingMap = 'category_ordering';
+				$orderHelper->reOrder();
 			}
 		}
 		$filter = '';
@@ -357,14 +357,14 @@ class hikashopCategoryClass extends hikashopClass {
 			$dispatcher->trigger('onAfterCategoryDelete', array( & $elements ) );
 
 			if(!empty($parentIds)){
-				$orderClass = hikashop_get('helper.order');
-				$orderClass->pkey = 'category_id';
-				$orderClass->table = 'category';
-				$orderClass->groupMap = 'category_parent_id';
-				$orderClass->orderingMap = 'category_ordering';
+				$orderHelper = hikashop_get('helper.order');
+				$orderHelper->pkey = 'category_id';
+				$orderHelper->table = 'category';
+				$orderHelper->groupMap = 'category_parent_id';
+				$orderHelper->orderingMap = 'category_ordering';
 				foreach($parentIds as $parentId){
-					$orderClass->groupVal = $parentId;
-					$orderClass->reOrder();
+					$orderHelper->groupVal = $parentId;
+					$orderHelper->reOrder();
 				}
 			}
 
@@ -391,13 +391,13 @@ class hikashopCategoryClass extends hikashopClass {
 					$this->database->setQuery($query);
 					$this->database->query();
 
-					$orderClass = hikashop_get('helper.order');
-					$orderClass->pkey = 'product_category_id';
-					$orderClass->table = 'product_category';
-					$orderClass->groupMap = 'category_id';
-					$orderClass->orderingMap = 'ordering';
-					$orderClass->groupVal = $root;
-					$orderClass->reOrder();
+					$orderHelper = hikashop_get('helper.order');
+					$orderHelper->pkey = 'product_category_id';
+					$orderHelper->table = 'product_category';
+					$orderHelper->groupMap = 'category_id';
+					$orderHelper->orderingMap = 'ordering';
+					$orderHelper->groupVal = $root;
+					$orderHelper->reOrder();
 				}
 			}
 
@@ -599,7 +599,7 @@ class hikashopCategoryClass extends hikashopClass {
 		static $queries = array();
 
 		if(is_array($type))
-			$typeQ = implode('_',$type);
+			$typeQ = implode('_', $type);
 		else
 			$typeQ = $type;
 
@@ -610,7 +610,7 @@ class hikashopCategoryClass extends hikashopClass {
 			return $data[$key];
 		}
 
-		$rows = $this->getChildren($type,$all,$filters,$order,$start,$value,$category_image,'a.*',false);
+		$rows = $this->getChildren($type, $all, $filters, $order, $start, $value, $category_image, 'a.*', false);
 		$queries[$key] = $this->query;
 
 		if(empty($rows)) {
@@ -967,6 +967,8 @@ class hikashopCategoryClass extends hikashopClass {
 				foreach($value as $v){
 					if(isset($ret[0][$v])){
 						$ret[1][$v] = $ret[0][$v];
+					}elseif(!empty($v)){
+						$ret[1][$v] = $v;
 					}
 				}
 				return $ret;

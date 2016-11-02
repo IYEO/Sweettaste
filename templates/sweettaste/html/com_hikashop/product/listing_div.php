@@ -9,8 +9,9 @@
 defined('_JEXEC') or die('Restricted access');
 ?><?php
 JHtml::_('jquery.framework');
-JFactory::getDocument()->addScript('http://imagesloaded.desandro.com/imagesloaded.pkgd.min.js', "text/javascript");
-JFactory::getDocument()->addScript('https://cdnjs.cloudflare.com/ajax/libs/masonry/3.3.2/masonry.pkgd.min.js', "text/javascript");
+//JFactory::getDocument()->addScript('http://imagesloaded.desandro.com/imagesloaded.pkgd.min.js', "text/javascript");
+//JFactory::getDocument()->addScript('https://cdnjs.cloudflare.com/ajax/libs/masonry/3.3.2/masonry.pkgd.min.js', "text/javascript");
+JFactory::getDocument()->addScript('https://unpkg.com/masonry-layout@4.1/dist/masonry.pkgd.min.js', "text/javascript");
 $app = JFactory::getApplication();
 $mainDivName = $this->params->get('main_div_name');
 $carouselEffect = $this->params->get('carousel_effect');
@@ -116,60 +117,62 @@ if ((!empty($this->rows) || !$this->module || JRequest::getVar('hikashop_front_e
                     }
 
                     foreach ($this->rows as $row) {
-                        if (!HIKASHOP_RESPONSIVE) { ?>                            
-                                <div class="msnry-item col-xs-12 col-sm-6 col-md-3 col-lg-3 hikashop_product hikashop_product_column_<?php echo $current_column; ?> hikashop_product_row_<?php echo $current_row; ?>"><?php
-                        } else { ?>
-                            <li class="<?php echo $span; ?> hikashop_product hikashop_product_column_<?php echo $current_column; ?> hikashop_product_row_<?php echo $current_row; ?>">
-                                <div class="hikashop_container">
-                                    <div class="hikashop_subcontainer <?php echo $this->borderClass; ?>"><?php
-                        }
+                        if (!HIKASHOP_RESPONSIVE) {
+                            ?>
+                            <div class="msnry-item col-xs-12 col-sm-6 col-md-3 col-lg-3 hikashop_product hikashop_product_column_<?php echo $current_column; ?> hikashop_product_row_<?php echo $current_row; ?>"><?php } else {
+                            ?>
+                                <li class="<?php echo $span; ?> hikashop_product hikashop_product_column_<?php echo $current_column; ?> hikashop_product_row_<?php echo $current_row; ?>">
+                                    <div class="hikashop_container">
+                                        <div class="hikashop_subcontainer <?php echo $this->borderClass; ?>"><?php
+                                        }
 
-                if (!empty($row->product_quantity_layout) && $row->product_quantity_layout != 'inherit') {
-                    $qLayout = $row->product_quantity_layout;
-                } else {
-                    $categoryQuantityLayout = '';
-                    if (!empty($row->categories)) {
-                        foreach ($row->categories as $category) {
-                            if (!empty($category->category_quantity_layout) && $this->quantityDisplayType->check($category->category_quantity_layout, $app->getTemplate())) {
-                                $categoryQuantityLayout = $category->category_quantity_layout;
-                                break;
-                            }
-                        }
-                    }
-                    if (!empty($categoryQuantityLayout) && $categoryQuantityLayout != 'inherit') {
-                        $qLayout = $categoryQuantityLayout;
-                    } else {
-                        $qLayout = $this->config->get('product_quantity_display', 'show_default');
-                    }
-                }
-                JRequest::setVar('quantitylayout', $qLayout);
+                                        if (!empty($row->product_quantity_layout) && $row->product_quantity_layout != 'inherit') {
+                                            $qLayout = $row->product_quantity_layout;
+                                        } else {
+                                            $categoryQuantityLayout = '';
+                                            if (!empty($row->categories)) {
+                                                foreach ($row->categories as $category) {
+                                                    if (!empty($category->category_quantity_layout) && $this->quantityDisplayType->check($category->category_quantity_layout, $app->getTemplate())) {
+                                                        $categoryQuantityLayout = $category->category_quantity_layout;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                            if (!empty($categoryQuantityLayout) && $categoryQuantityLayout != 'inherit') {
+                                                $qLayout = $categoryQuantityLayout;
+                                            } else {
+                                                $qLayout = $this->config->get('product_quantity_display', 'show_default');
+                                            }
+                                        }
+                                        JRequest::setVar('quantitylayout', $qLayout);
 
-                $this->row = & $row;
-                $this->setLayout('listing_' . $this->params->get('div_item_layout_type'));
-                echo $this->loadTemplate();
+                                        $this->row = & $row;
+                                        $this->setLayout('listing_' . $this->params->get('div_item_layout_type'));
+                                        echo $this->loadTemplate();
 
-                if (!HIKASHOP_RESPONSIVE) { ?>                        
-                    </div>
-                    <?php
-                } else { ?>                                        
-                                </div>
+                                        if (!HIKASHOP_RESPONSIVE) {
+                                            ?>
+                                        </div>
+                                    <?php } else {
+                                        ?>
+                                    </div>
                             </div>
                             </li>
-                    <?php
-                }
-                if ($current_column >= $columns) {
-                    $current_row++;
+                            <?php
+                        }
+                        if ($current_column >= $columns) {
+                            $current_row++;
 
-                    $current_column = 0;
-                }
-                $current_column++;
-            }
+                            $current_column = 0;
+                        }
+                        $current_column++;
+                    }
 
-            if (HIKASHOP_RESPONSIVE) {
-                echo '</ul></div>';
-            }
-        }
-        ?>
+                    if (HIKASHOP_RESPONSIVE) {
+                        echo '</ul></div>';
+                    }
+                }
+                ?>
                 <div style="clear:both"></div>
                 <?php
                 if ($this->config->get('show_quantity_field') >= 2) {
@@ -197,32 +200,35 @@ if ((!empty($this->rows) || !$this->module || JRequest::getVar('hikashop_front_e
                     <input type="hidden" name="task" value="updatecart"/>
                     <input type="hidden" name="return_url" value="<?php echo urlencode(base64_encode(urldecode($this->redirect_url))); ?>"/>
                 </form>
-            <?php
+                <?php
+            }
         }
-    }
-    ?>
+        ?>
     </div>
-        <?php if (in_array($pagination, array('bottom', 'both')) && $this->params->get('show_limit') && $this->pageInfo->elements->total) {
-            $this->pagination->form = '_bottom'; ?>
+    <?php
+    if (in_array($pagination, array('bottom', 'both')) && $this->params->get('show_limit') && $this->pageInfo->elements->total) {
+        $this->pagination->form = '_bottom';
+        ?>
         <form action="<?php echo hikashop_currentURL(); ?>" method="post" name="adminForm_<?php echo $this->params->get('main_div_name') . $this->category_selected; ?>_bottom">
             <div class="hikashop_products_pagination hikashop_products_pagination_bottom">
-                <?php echo $this->pagination->getListFooter($this->params->get('limit')); ?>
+        <?php echo $this->pagination->getListFooter($this->params->get('limit')); ?>
                 <span class="hikashop_results_counter"><?php echo $this->pagination->getResultsCounter(); ?></span>
             </div>
             <input type="hidden" name="filter_order_<?php echo $this->params->get('main_div_name') . $this->category_selected; ?>" value="<?php echo $this->pageInfo->filter->order->value; ?>" />
             <input type="hidden" name="filter_order_Dir_<?php echo $this->params->get('main_div_name') . $this->category_selected; ?>" value="<?php echo $this->pageInfo->filter->order->dir; ?>" />
-            <?php echo JHTML::_('form.token'); ?>
+        <?php echo JHTML::_('form.token'); ?>
         </form>
-    <?php
+        <?php
     }
 }
 ?>
-<script type="text/javascript">    
-    var $msnryContainer = jQuery('.msnryContainer').imagesLoaded( function() {
-       $msnryContainer.masonry({
-            itemSelector: '.msnry-item',
-            isOriginLeft: true,
-            isOriginTop: true
-        });
+<script type="text/javascript">
+    jQuery('.msnryContainer').masonry({
+        // options
+        itemSelector: '.msnry-item',
+        columnWidth: '.msnry-item',
+        percentPosition: true,
+        isOriginLeft: true,
+        isOriginTop: true
     });
- </script>
+</script>

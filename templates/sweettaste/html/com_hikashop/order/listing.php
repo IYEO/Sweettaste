@@ -15,7 +15,7 @@ defined('_JEXEC') or die('Restricted access');
 			<tr>
 				<td>
                                     <a href="<?php echo hikashop_completeLink('');?>" >
-                                        <span class="glyphicon glyphicon-share-alt" title="<?php echo JText::_('HIKA_BACK'); ?>" style="font-size: 25px"></span> 
+                                        <span class="glyphicon glyphicon-arrow-left" title="<?php echo JText::_('HIKA_BACK'); ?>" style="font-size: 25px"></span> 
                                         <?php echo JText::_('HIKA_BACK'); ?>
                                     </a>
 				</td>

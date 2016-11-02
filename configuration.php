@@ -13,15 +13,15 @@ class JConfig {
 	public $debug_lang = '0';
 	public $dbtype = 'mysqli';
 	public $host = 'localhost';
-	public $user = 'root';
-	public $password = '';
+	public $user = 'yeo';
+	public $password = 'root';
 	public $db = 'sweettaste';
 	public $dbprefix = 'swtdb_';
 	public $live_site = '';
 	public $secret = 'Yi0qR0LNfjfIFuOc';
 	public $gzip = '1';
 	public $error_reporting = 'development';
-	public $helpurl = 'https://help.joomla.org/proxy/index.php?option=com_help&keyref=Help{major}{minor}:{keyref}';
+	public $helpurl = 'https://help.joomla.org/proxy?keyref=Help{major}{minor}:{keyref}&lang={langcode}';
 	public $ftp_host = '';
 	public $ftp_port = '';
 	public $ftp_user = '';
@@ -54,8 +54,8 @@ class JConfig {
 	public $sef_suffix = '0';
 	public $unicodeslugs = '0';
 	public $feed_limit = '10';
-	public $log_path = '/mnt/D/Work/Web/xampp/htdocs/sweettaste/logs';
-	public $tmp_path = '/mnt/D/Work/Web/xampp/htdocs/sweettaste/tmp';
+	public $log_path = 'logs';
+	public $tmp_path = '/media/yeo/D/Work/Web/xampp/htdocs/sweettaste/tmp';
 	public $lifetime = '15';
 	public $session_handler = 'database';
 	public $memcache_persist = '1';
@@ -89,4 +89,5 @@ class JConfig {
 	public $redis_server_auth = '';
 	public $redis_server_db = '0';
 	public $massmailoff = '0';
+	public $cache_platformprefix = '0';
 }

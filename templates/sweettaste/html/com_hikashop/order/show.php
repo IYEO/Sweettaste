@@ -46,11 +46,10 @@ $config = hikashop_config();
 				<?php }
 				} ?>
 				<td>
-					<a id="hikashop_order_back_button" onclick="submitbutton('cancel'); return false;" href="#" >
-						<span class="icon-32-back" title="<?php echo JText::_('HIKA_BACK'); ?>">
-						</span>
-						<?php echo JText::_('HIKA_BACK'); ?>
-					</a>
+					<a href="<?php echo hikashop_completeLink('');?>" >
+                                            <span class="glyphicon glyphicon-arrow-left" title="<?php echo JText::_('HIKA_BACK'); ?>" style="font-size: 25px"></span> 
+                                            <?php echo JText::_('HIKA_BACK'); ?>
+                                        </a>
 				</td>
 			</tr>
 		</table>

@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.1
+ * @version	2.6.3
  * @author	hikashop.com
  * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -49,7 +49,7 @@ class hikashopMailClass {
 		if(empty($attach)){
 			$attach = array();
 		}else{
-			$attach = unserialize($attach);
+			$attach = hikashop_unserialize($attach);
 		}
 		$mail->attach=$attach;
 		if(empty($mail->from_name)){
@@ -90,7 +90,7 @@ class hikashopMailClass {
 		$mail->attach = array();
 		$old = $config->get($mail->mail_name.'.attach');
 		if(!empty($old)){
-			$oldAttachments = unserialize($old);
+			$oldAttachments = hikashop_unserialize($old);
 			foreach($oldAttachments as $oldAttachment){
 				$mail->attach[] = $oldAttachment;
 			}
@@ -240,7 +240,8 @@ class hikashopMailClass {
 			if(!empty($pathWithStatus)) $postload = $postloadWithStatus;
 		}
 
-		$currencyHelper = hikashop_get('class.currency');
+		$currencyClass = hikashop_get('class.currency');
+		$currencyHelper = $currencyClass;
 
 		ob_start();
 
@@ -480,32 +481,53 @@ class hikashopMailClass {
 		if(empty($this->mailer->Sender)) $this->mailer->Sender = '';
 
 		if(!empty($mail->dst_email)){
+			if(!is_array($mail->dst_email) && strpos($mail->dst_email,',')){
+				$mail->dst_email = explode(',',$mail->dst_email);
+			}
 			if(is_array($mail->dst_email)){
-				$this->mailer->addRecipient($mail->dst_email);
-			}else{
-				if(strpos($mail->dst_email,',')){
-					$mail->dst_email = explode(',',$mail->dst_email);
-					$this->mailer->addRecipient($mail->dst_email);
+				if(HIKASHOP_J30){
+					foreach($mail->dst_email as $dst_mail){
+						$this->mailer->addRecipient($dst_mail);
+					}
 				}else{
-					$addedName = $config->get('add_names',true) ? $this->cleanText(@$mail->dst_name) : '';
-					$this->mailer->AddAddress($this->cleanText($mail->dst_email),$addedName);
+					$this->mailer->addRecipient($mail->dst_email);
 				}
+			}else{
+				$addedName = $config->get('add_names',true) ? $this->cleanText(@$mail->dst_name) : '';
+				$this->mailer->AddAddress($this->cleanText($mail->dst_email),$addedName);
 			}
 		}
 		if(!empty($mail->cc_email)) {
 			if(!is_array($mail->cc_email))
 				$mail->cc_email = explode(',', $mail->cc_email);
-			$this->mailer->addCC($mail->cc_email);
+			if(HIKASHOP_J30){
+				foreach($mail->cc_email as $cc_email){
+					$this->mailer->addCC($cc_email);
+				}
+			}else{
+				$this->mailer->addCC($mail->cc_email);
+			}
 		}
 		if(!empty($mail->bcc_email)) {
 			if(!is_array($mail->bcc_email))
 				$mail->bcc_email = explode(',', $mail->bcc_email);
-			$this->mailer->addBCC($mail->bcc_email);
+			if(HIKASHOP_J30){
+				foreach($mail->bcc_email as $bcc_email){
+					$this->mailer->addBCC($bcc_email);
+				}
+			}else{
+				$this->mailer->addBCC($mail->bcc_email);
+			}
 		}
 		$this->setFrom($mail->from_email,@$mail->from_name);
 		if(!empty($mail->reply_email)){
 			$replyToName = $config->get('add_names',true) ? $this->cleanText(@$mail->reply_name) : '';
-			$this->mailer->AddReplyTo(array($this->cleanText($mail->reply_email),$replyToName));
+			if(HIKASHOP_J30){
+				$this->mailer->addReplyTo($this->cleanText($mail->reply_email),$replyToName);
+			}else{
+				$this->mailer->addReplyTo(array($this->cleanText($mail->reply_email),$replyToName));
+			}
+
 		}
 		$this->mailer->setSubject($mail->subject);
 		$this->mailer->IsHTML(@$mail->html);
@@ -594,7 +616,7 @@ class hikashopMailClass {
 		if(empty($attach)){
 			$attach = array();
 		}else{
-			$attachData = unserialize($attach);
+			$attachData = hikashop_unserialize($attach);
 			$uploadFolder = str_replace(array('/','\\'),DS,html_entity_decode($config->get('uploadfolder')));
 			if(preg_match('#^([A-Z]:)?/.*#',$uploadFolder)){
 				if(!$config->get('embed_files')){

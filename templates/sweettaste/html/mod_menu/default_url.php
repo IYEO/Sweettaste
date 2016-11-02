@@ -43,7 +43,7 @@ switch ($item->browserNav) :
 	default:
 	case 0:
         if (substr_count(trim($item->anchor_css), 'dropdown-toggle') > 0) { 	//если родительский пункт вложенного меню	?>
-<a <?php echo $class; ?>href="<?php echo $flink; ?>" <?php echo $title; ?> data-toggle="dropdown" role="button" aria-expanded="false"><?php echo $IconSpan; ?><?php echo $linktype; ?><span class="caret"></span></a><?php } 
+<a <?php echo $class; ?>href="<?php echo $flink; ?>" <?php echo $title; ?> data-toggle="dropdown" role="button" aria-expanded="false"><?php echo $IconSpan; ?><?php echo $linktype; ?></a><?php } 
 		elseif ((substr_count(trim($item->anchor_css), 'logout') > 0)) { 	//если ссылка на выход из системы	
 			$user = JFactory::getUser();	//получаем пользователя
 			if (!$user->guest) {	//если пользователь зарегистрирован в системе	?>

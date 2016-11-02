@@ -1,6 +1,6 @@
 /**
  * @package    HikaShop for Joomla!
- * @version    2.6.1
+ * @version    2.6.3
  * @author     hikashop.com
  * @copyright  (C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license    GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -8,8 +8,9 @@
 (function() {
 	function preventDefault() { this.returnValue = false; }
 	function stopPropagation() { this.cancelBubble = true; }
+
 	var Oby = {
-		version: 20151124,
+		version: 20160107,
 		ajaxEvents : {},
 
 		hasClass : function(o,n) {
@@ -224,6 +225,17 @@
 						}
 					}
 				}
+			}
+			return ret;
+		},
+		encodeFormData : function(data) {
+			var ret = '', v = null;
+			for(var k in data) {
+				if(!data.hasOwnProperty(k))
+					continue;
+				v = data[k];
+				if( ret != '' ) ret += '&';
+				ret += encodeURI(k) + '=' + encodeURIComponent(v);
 			}
 			return ret;
 		},
@@ -685,7 +697,7 @@
 			if(!window.jQuery)
 				return false;
 			jQuery('.no-chzn').each(function(i,el) {
-				var id = el.getAttribute('id'), chzn;
+				var id = el.getAttribute('id'), chzn = null;
 				if(id) {
 					id = id.replace('{','_').replace('}','_');
 					chzn = jQuery('#'+id+'_chzn');
@@ -713,7 +725,11 @@
 			if(!dest) return false;
 			for(var k = 0; k < tabs.length; k++) {
 				if(!tabs[k] || tabs[k].nodeName.toLowerCase() != 'li') continue;
-				var l = tabs[k].childNodes[0], lr = l.getAttribute('rel');
+				var i = 0, l = tabs[k].childNodes[i], lr = null;
+				while(l.nodeName.toLowerCase() != 'a' && i < tabs[k].childNodes.length)
+					l = tabs[k].childNodes[++i];
+				if(l.nodeName.toLowerCase() == 'a')
+					lr = l.getAttribute('rel');
 				if(!lr || lr.substring(0,4) != 'tab:') continue;
 				var lid = lr.substring(4);
 				if(lid == current) continue;
@@ -723,6 +739,7 @@
 			}
 			dest.style.display = '';
 			o.addClass(el.parentNode, 'active');
+			el.blur();
 			return false;
 		},
 		dlTitle: function(parent) {
@@ -1041,6 +1058,8 @@ function hikashopCheckField(elementToCheck, type, i, elementName, form) {
 }
 
 window.hikashop.ready(function(){
+	if(window.hikaVotes && typeOf(initVote) == 'function')
+		initVote();
 	window.hikashop.checkConsistency();
 });
 if(window.jQuery && typeof(jQuery.noConflict) == "function" && !window.hkjQuery) {

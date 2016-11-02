@@ -41,8 +41,14 @@ class Com_WeblinksInstallerScript
 			$category->access = 1;
 			$category->params = '{"category_layout":"","image":""}';
 			$category->metadata = '{"author":"","robots":""}';
+			$category->metadesc = '';
+			$category->metakey = '';
 			$category->language = '*';
 			$category->checked_out_time = JFactory::getDbo()->getNullDate();
+			$category->version = 1;
+			$category->hits = 0;
+			$category->modified_user_id = 0;
+			$category->checked_out = 0;
 
 			// Set the location in the tree
 			$category->setLocation(1, 'last-child');

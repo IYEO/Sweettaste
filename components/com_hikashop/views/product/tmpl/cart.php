@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.1
+ * @version	2.6.3
  * @author	hikashop.com
  * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -21,14 +21,21 @@ if($this->cart_type == 'cart') {
 	$emptyText = JText::_('WISHLIST_EMPTY');
 }
 
-$desc = trim($this->params->get('msg'));
-if(empty($desc) && $desc != '0') {
-	$this->params->set('msg', $emptyText);
+$hidecart = $this->params->get('hide_cart');
+$desc = trim($this->params->get('msg') );
+
+if(empty($desc) && $desc != '0')
 	$desc = $emptyText;
+
+if ($hidecart == '0' || !isset($hidecart) )
+	$desc = $emptyText;
+
+if ($hidecart == '2') {
+	$desc = "";
 }
 
 if(empty($this->rows)) {
-	if(!empty($desc) || $desc == '0') {
+ 	if(!empty($desc) || $desc == '0') {
 		echo $this->notice_html;
 ?>
 		<div id="hikashop_cart" class="hikashop_cart"><?php
@@ -38,7 +45,7 @@ if(empty($this->rows)) {
 <?php
 	}
 
-	if(JRequest::getWord('tmpl', '') == 'component') {
+	if (JRequest::getWord('tmpl', '') == 'component') {
 		if(!headers_sent())
 			header('Content-Type: text/css; charset=utf-8');
 		exit;
@@ -488,7 +495,7 @@ $this->params->set('show_quantity_field', 0);
 			if($row->product_parent_id != 0 && isset($row->main_product_quantity_layout))
 				$row->product_quantity_layout = $row->main_product_quantity_layout;
 			if($this->element->cart_id == $session->cart_id && $this->params->get('from','display') != 'module') {
-				if($row->product_quantity_layout == 'show_select' || (empty($this->row->product_quantity_layout) && $this->config->get('product_quantity_display', '') == 'show_select')) {
+				if($row->product_quantity_layout == 'show_select' || (empty($this->row->product_quantity_layout) && $this->config->get('product_quantity_display', 'show_default') == 'show_select')) {
 					$min_quantity = $row->product_min_per_order;
 					$max_quantity = $row->product_max_per_order;
 					if($min_quantity == 0)
@@ -522,7 +529,7 @@ $this->params->set('show_quantity_field', 0);
 						</div>
 <?php
 			} else {
-				if($row->product_quantity_layout == 'show_select' || (empty($row->product_quantity_layout) && $this->config->get('product_quantity_display', '') == 'show_select')) {
+				if($row->product_quantity_layout == 'show_select' || (empty($row->product_quantity_layout) && $this->config->get('product_quantity_display', 'show_default') == 'show_select')) {
 					$min_quantity = $row->product_min_per_order;
 					$max_quantity = $row->product_max_per_order;
 					if($min_quantity == 0)

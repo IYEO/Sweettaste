@@ -1,6 +1,6 @@
 /**
  * @package    HikaShop for Joomla!
- * @version    2.6.1
+ * @version    2.6.3
  * @author     hikashop.com
  * @copyright  (C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license    GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -201,7 +201,7 @@ td.key {
 	width: 100px;
 }
 
-.hikashop_orderadditional_history textarea{
+.hikashop_orderadditional_history textarea, .hikashop_orderadditional_usermsg textarea{
 	width:100%;
 }
 
@@ -2551,7 +2551,8 @@ img.hikashop_menu_block_img_selected {
 	height: 16px;
 }
 
-#hikashop_product_backend_page_edition div.hikashop_uploader_image_add span.hika_upload_btn, div.hikashop_uploader_file_add span.hika_upload_btn {
+#hikashop_product_backend_page_edition div.hikashop_uploader_image_add span.hika_upload_btn,
+#hikashop_product_backend_page_edition div.hikashop_uploader_file_add span.hika_upload_btn {
 	background-image: url('../images/upload.png');
 }
 
@@ -2677,3 +2678,17 @@ label.btn-default-lbl{
 #category_field td{
 	width: 100%;
 }
+
+.listing_item_quantity_fields .hikashop_product_listing_input{
+	width: 14px;
+}
+.listing_item_quantity_fields .add-on.hikashop_product_listing_input_buttons{
+	padding-top: 1px;
+	height: 21px;
+}
+.hikashop_product_listing_input_plus, .hikashop_product_listing_input_minus{
+	height: 12px;
+	line-height: 12px;
+	cursor: pointer;
+}
+

@@ -6564,6 +6564,9 @@ a.thumbnail:hover {
   #soc-contacts {
     text-align: right;
   }
+  .hikashop_product_checkout_cart_image {
+    width: auto;
+  }
 }
 @media (max-width: 767px) and (orientation: landscape) {
   .xs-social-padding {
@@ -6709,9 +6712,6 @@ a.thumbnail:hover {
     margin-bottom: 20px;
   }
 }
-.msnryContainer {
-  margin: 0 auto;
-}
 .glyphicon-menu-hamburger {
-  font-size: 15px;
+  font-size: 22px;
 }

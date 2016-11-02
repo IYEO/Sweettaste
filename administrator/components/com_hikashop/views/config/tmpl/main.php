@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.1
+ * @version	2.6.3
  * @author	hikashop.com
  * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -209,7 +209,12 @@ echo $this->leftmenu(
 								foreach($modules as $module){
 									$element = $modulesClass->get($module);
 									if(!empty($element->title)){
-										echo '<a href="'.hikashop_completeLink('modules&task=edit&cid[]='.@$element->id).'">'.JText::sprintf('OPTIONS_FOR_X',@$element->title).'</a><br/>';
+										if(HIKASHOP_J30){
+											$link = JRoute::_('index.php?option=com_modules&view=module&layout=edit&id='.@$element->id);
+										}else{
+											$link = hikashop_completeLink('modules&task=edit&cid[]='.@$element->id);
+										}
+										echo '<a href="'.$link.'">'.JText::sprintf('OPTIONS_FOR_X',@$element->title).'</a><br/>';
 									}
 								}
 							?>
@@ -954,7 +959,7 @@ echo $this->leftmenu(
 								<?php echo JText::_('VERSION');?>
 							</td>
 							<td>
-								HikaShop <?php echo $this->config->get('level').' '.$this->config->get('version'); ?> [1601262240]
+								HikaShop <?php echo $this->config->get('level').' '.$this->config->get('version'); ?> [1606171733]
 							</td>
 						</tr>
 <?php

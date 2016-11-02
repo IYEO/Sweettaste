@@ -1,7 +1,7 @@
 <?php
 /**
  * @package	HikaShop for Joomla!
- * @version	2.6.1
+ * @version	2.6.3
  * @author	hikashop.com
  * @copyright	(C) 2010-2016 HIKARI SOFTWARE. All rights reserved.
  * @license	GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
@@ -219,10 +219,28 @@ class hikashopVoteClass extends hikashopClass {
 		if($element->vote_id == 0)
 			$new = true;
 
+		$do = true;
+		$errors = array();
+
 		if($new)
-			$dispatcher->trigger('onBeforeVoteCreate', array( &$oldElement, &$do, &$element ) );
+			$dispatcher->trigger('onBeforeVoteCreate', array( &$element, &$do, &$errors ) );
 		else
-			$dispatcher->trigger('onBeforeVoteUpdate', array( &$oldElement, &$do, &$element ) );
+			$dispatcher->trigger('onBeforeVoteUpdate', array( &$element, &$do, &$oldElement, &$errors ) );
+
+		if(!$do){
+			if(empty($errors)){
+				$this->error = array('code' => '505019', 'message' => JText::_('HIKA_VOTE_DO_FALSE_FROM_PLUGIN'));
+			}else{
+				$message = '';
+				foreach($errors as $k => $error){
+					if($k != 0)
+						$errors .= '<br/>';
+					$message .= $error;
+				}
+				$this->error = array('code' => '505019', 'message' => $message);
+			}
+			return false;
+		}
 
 		$success = parent::save($element);
 		if(!$success){
@@ -273,7 +291,7 @@ class hikashopVoteClass extends hikashopClass {
 		}
 
 		if($element->vote_rating == 0)
-			return false;
+			return true;
 
 		if($element->vote_type == 'product') {
 			$newValues = $this->updateAverage($element, $oldElement, $data);
