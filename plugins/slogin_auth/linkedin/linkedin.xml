@@ -19,13 +19,23 @@
         <fields name="params">
             <fieldset name="basic" addfieldpath="plugins/slogin_auth/linkedin/element">
                 <field name="api_key" type="text" default=""
-                       description="API Key"
-                       label="API Key"
+                       description="Client ID"
+                       label="Client ID"
                         />
                 <field name="secret_key" type="text" default=""
                        description="Secret Key"
                        label="Secret Key"
                         />
+				<field
+						name="callback_url"
+						type="callbackurl"
+						label="Callback URI"
+						description="Callback URI"
+						filter="unset"
+						value="linkedin"
+						readonly="true"
+						class="readonly"
+				/>
             </fieldset>
         </fields>
     </config>

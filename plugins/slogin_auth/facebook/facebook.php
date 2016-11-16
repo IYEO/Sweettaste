@@ -17,15 +17,6 @@ class plgSlogin_authFacebook extends JPlugin
 
     public function onSloginAuth()
     {
-        if($this->params->get('allow_remote_check', 1))
-        {
-            $remotelUrl = JURI::getInstance($_SERVER['HTTP_REFERER'])->toString(array('host'));
-            $localUrl = JURI::getInstance()->toString(array('host'));
-            if($remotelUrl != $localUrl){
-                die('Remote authorization not allowed');
-            }
-        }
-
         $redirect = JURI::base().'?option=com_slogin&task=check&plugin=facebook';
 
         $scope = 'email,user_photos,user_about_me,user_hometown,public_profile,user_birthday';
@@ -107,8 +98,12 @@ class plgSlogin_authFacebook extends JPlugin
             return $returnRequest;
         }
         else{
-            echo 'Error - empty code';
-            exit;
+            $config = JComponentHelper::getParams('com_slogin');
+            JModel::addIncludePath(JPATH_ROOT.'/components/com_slogin/models');
+            $model = JModel::getInstance('Linking_user', 'SloginModel');
+            $redirect = base64_decode($model->getReturnURL($config, 'failure_redirect'));
+            $controller = JControllerLegacy::getInstance('SLogin');
+            $controller->displayRedirect($redirect, true);
         }
     }
 
